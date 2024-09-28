@@ -23,58 +23,56 @@ THE SOFTWARE.
 */
 package com.hyphenated.card.holder;
 
+import com.google.common.collect.Iterators;
+import com.hyphenated.card.Card;
+
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Iterator;
-
-import com.hyphenated.card.Card;
-import com.google.common.collect.Iterators;
 
 /**
  * A container designed for storing cards.
  */
 public class CardHolder implements Serializable {
 
-	private static final long serialVersionUID = -6289334212535961129L;
+    private final Card[] cards;
 
-	private final Card[] cards;
+    protected CardHolder(Card... cards) {
+        super();
+        this.cards = cards;
+    }
 
-	protected CardHolder(Card... cards) {
-		super();
-		this.cards = cards;
-	}
+    /**
+     * Returns a card at particular index.
+     *
+     * @param index index of the array of cards in this CardHolder
+     * @return a card at position index
+     */
+    public Card getCard(int index) {
+        return cards[index];
+    }
 
-	/**
-	 * Returns a card at particular index.
-	 * 
-	 * @param index index of the array of cards in this CardHolder
-	 * @return a card at position index
-	 */
-	public Card getCard(int index) {
-		return cards[index];
-	}
+    /**
+     * Returns the number of the cards stored in the container.
+     *
+     * @return the number of cards
+     */
+    public int getCardNumber() {
+        return cards.length;
+    }
 
-	/**
-	 * Returns the number of the cards stored in the container.
-	 * 
-	 * @return the number of cards
-	 */
-	public int getCardNumber() {
-		return cards.length;
-	}
+    /**
+     * Creates a card iterator for the cards stored in the container.
+     *
+     * @return unmodifiable card iterator
+     */
+    public Iterator<Card> iterator() {
+        return Iterators.forArray(cards);
+    }
 
-	/**
-	 * Creates a card iterator for the cards stored in the container.
-	 * 
-	 * @return unmodifiable card iterator
-	 */
-	public Iterator<Card> iterator() {
-		return Iterators.forArray(cards);
-	}
-
-	@Override
-	public String toString() {
-		return Arrays.toString(cards);
-	}
+    @Override
+    public String toString() {
+        return Arrays.toString(cards);
+    }
 
 }

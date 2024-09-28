@@ -23,49 +23,49 @@ THE SOFTWARE.
 */
 package com.hyphenated.card.holder;
 
-import java.util.Iterator;
-
-import com.hyphenated.card.Card;
 import com.google.common.collect.Iterators;
+import com.hyphenated.card.Card;
+
+import java.util.Iterator;
 
 /**
  * Iterator used for iterating over cards contained in several card holders.
  */
 public class CardIterator implements Iterator<Card> {
 
-	private final Iterator<CardHolder> cardHolderIterator;
-	private Iterator<Card> cardIterator;
+    private final Iterator<CardHolder> cardHolderIterator;
+    private Iterator<Card> cardIterator;
 
-	public CardIterator(CardHolder... cardHolders) {
-		super();
-		this.cardHolderIterator = Iterators.forArray(cardHolders);
-		this.cardIterator = Iterators.emptyIterator();
-	}
+    public CardIterator(CardHolder... cardHolders) {
+        super();
+        this.cardHolderIterator = Iterators.forArray(cardHolders);
+        this.cardIterator = Iterators.concat();
+    }
 
-	@Override
-	public boolean hasNext() {
-		scrollToNonemptyCardHolder();
-		return cardIterator.hasNext();
-	}
+    @Override
+    public boolean hasNext() {
+        scrollToNonemptyCardHolder();
+        return cardIterator.hasNext();
+    }
 
-	@Override
-	public Card next() {
-		scrollToNonemptyCardHolder();
-		return cardIterator.next();
-	}
+    @Override
+    public Card next() {
+        scrollToNonemptyCardHolder();
+        return cardIterator.next();
+    }
 
-	/**
-	 * Scrolls the iterators to the closest nonempty card holder.
-	 */
-	private void scrollToNonemptyCardHolder() {
-		while (!cardIterator.hasNext() && cardHolderIterator.hasNext()) {
-			cardIterator = cardHolderIterator.next().iterator();
-		}
-	}
+    /**
+     * Scrolls the iterators to the closest nonempty card holder.
+     */
+    private void scrollToNonemptyCardHolder() {
+        while (!cardIterator.hasNext() && cardHolderIterator.hasNext()) {
+            cardIterator = cardHolderIterator.next().iterator();
+        }
+    }
 
-	@Override
-	public void remove() {
-		throw new UnsupportedOperationException("operation not supported");
-	}
+    @Override
+    public void remove() {
+        throw new UnsupportedOperationException("operation not supported");
+    }
 
 }

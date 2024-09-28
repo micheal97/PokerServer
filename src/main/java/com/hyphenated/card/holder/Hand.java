@@ -30,16 +30,14 @@ import com.hyphenated.card.Card;
  */
 public class Hand extends CardHolder {
 
-	private static final long serialVersionUID = 6963213701843967416L;
-
-	/**
-	 * Creates new hand with two cards.
-	 * 
-	 * @param card1 first card
-	 * @param card2 second card
-	 */
-	public Hand(Card card1, Card card2) {
-		super(card1, card2);
-	}
+    /**
+     * Creates new hand with two cards.
+     *
+     * @param card1 first card
+     * @param card2 second card
+     */
+    public Hand(Card card1, Card card2) {
+        super(card1, card2);
+    }
 
 }

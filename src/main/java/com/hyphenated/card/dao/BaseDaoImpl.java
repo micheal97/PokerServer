@@ -23,61 +23,66 @@ THE SOFTWARE.
 */
 package com.hyphenated.card.dao;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.util.List;
 
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-
 public class BaseDaoImpl<T> implements BaseDao<T> {
+    @Autowired
+    SessionFactory sessionFactory;
+    private final Class<T> persistentClass;
 
-	@Autowired
-	private SessionFactory sessionFactory;
-	
-	private final Class<T> persistentClass;
-	
-	@SuppressWarnings("unchecked")
-	public BaseDaoImpl() {
-		this.persistentClass = (Class<T>) ((ParameterizedType) getClass()
-				.getGenericSuperclass()).getActualTypeArguments()[0];
-	}
-	
-	protected Session getSession(){
-		return sessionFactory.getCurrentSession();
-	}
-	
-	@SuppressWarnings("unchecked")
-	public T findById(Serializable id){
-		return (T) getSession().get(persistentClass, id);
-	}
+    @SuppressWarnings("unchecked")
+    public BaseDaoImpl() {
+        this.persistentClass = (Class<T>) ((ParameterizedType) getClass()
+                .getGenericSuperclass()).getActualTypeArguments()[0];
+    }
 
-	@Override
-	public Class<T> getEntityClass() {
-		return persistentClass;
-	}
+    protected Session getSession() {
+        return sessionFactory.getCurrentSession();
+    }
 
-	@SuppressWarnings("unchecked")
-	@Override
-	public List<T> findAll() {
-		return getSession().createCriteria(persistentClass).list();
-	}
-	
-	@Override
-	public void remove(T objToRemove){
-		getSession().delete(objToRemove);
-	}
-	
-	@Override
-	public T save(T objToSave){
-		getSession().saveOrUpdate(objToSave);
-		return objToSave;
-	}
-	
-	@SuppressWarnings("unchecked")
-	@Override
-	public T merge(T objToMerge){
-		return (T) getSession().merge(objToMerge);
-	}
+    public T findById(Serializable id) {
+        return (T) getSession().get(persistentClass, id);
+    }
+
+    @Override
+    public Class<T> getEntityClass() {
+        return persistentClass;
+    }
+
+    @Override
+    public List<T> findAll() {
+        Session session = getSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<T> query = builder.createQuery(persistentClass);
+        Root<T> root = query.from(persistentClass);
+        query.select(root);
+        return session.createQuery(query).getResultList();
+    }
+
+    @Override
+    @Transactional
+    public void remove(T objToRemove) {
+        getSession().remove(objToRemove);
+    }
+
+    @Override
+    public T save(T objToSave) {
+        getSession().merge(objToSave);
+        return objToSave;
+    }
+
+    @Override
+    public T merge(T objToMerge) {
+        return (T) getSession().merge(objToMerge);
+    }
 }

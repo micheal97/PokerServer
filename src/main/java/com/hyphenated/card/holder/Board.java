@@ -30,19 +30,17 @@ import com.hyphenated.card.Card;
  */
 public class Board extends CardHolder {
 
-	private static final long serialVersionUID = -4373461696894251713L;
-
-	/**
-	 * Creates new board with five community cards.
-	 * 
-	 * @param flop1 first card of the flop
-	 * @param flop2 second card of the flop
-	 * @param flop3 third card of the flop
-	 * @param turn turn card
-	 * @param river river card
-	 */
-	public Board(Card flop1, Card flop2, Card flop3, Card turn, Card river) {
-		super(flop1, flop2, flop3, turn, river);
-	}
+    /**
+     * Creates new board with five community cards.
+     *
+     * @param flop1 first card of the flop
+     * @param flop2 second card of the flop
+     * @param flop3 third card of the flop
+     * @param turn  turn card
+     * @param river river card
+     */
+    public Board(Card flop1, Card flop2, Card flop3, Card turn, Card river) {
+        super(flop1, flop2, flop3, turn, river);
+    }
 
 }

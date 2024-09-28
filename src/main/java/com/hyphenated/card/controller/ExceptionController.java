@@ -23,10 +23,8 @@ THE SOFTWARE.
 */
 package com.hyphenated.card.controller;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -34,65 +32,71 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Exception handling controller/controller advice.
  * <br /><br />
  * This class covers all other controller classes, and it will handle exceptions thrown in any of them.
  * This class will handle specific (and generic) exceptions and respond with the appropriate
- * HTTP Response Code as well as the appropriate JSON error message. 
- * 
+ * HTTP Response Code as well as the appropriate JSON error message.
+ *
  * @author jacobhyphenated
  */
 @ControllerAdvice
 public class ExceptionController {
-	
-	Logger log = Logger.getLogger(this.getClass());
 
-	/**
-	 * Handles any Illegal State Exception from a controller method
-	 * @param e The exception that was thrown
-	 * @return JSON Map with error messages specific to the illegal state exception thrown
-	 */
-	@ExceptionHandler(IllegalStateException.class)
-	@ResponseStatus(HttpStatus.FORBIDDEN)
-	public @ResponseBody Map<String,String> handleIOExcpetion(IllegalStateException e){
-		Map<String,String> error = new HashMap<String, String>();
-		error.put("error","Opperation not currently allowed.");
-		error.put("errorDetails", e.getMessage());
-		log.error("Error: " + e.getMessage());
-		return error;
-	}
-	
-	/**
-	 * MissingServletRequestParameterException handler.  This exception will occur whenever
-	 * a controller method does not receive a required request parameter.
-	 * @param e Exception being thrown
-	 * @return JSON Error messages specific to the missing parameter exception.
-	 */
-	@ExceptionHandler(MissingServletRequestParameterException.class)
-	@ResponseStatus(HttpStatus.BAD_REQUEST)
-	public @ResponseBody Map<String,String> handleBadParameterExcpetion(MissingServletRequestParameterException e){
-		Map<String,String> error = new HashMap<String, String>();
-		error.put("error","Required parameter not present.");
-		error.put("errorDetails", "The parameter " + e.getParameterName() + " is required and not present in the request.");
-		log.error("Error: " + e.getMessage());
-		return error;
-	}
-	
-	/**
-	 * Catch all exception handler for any other exception thrown in the controller.
-	 * @param e Exception that was thrown.
-	 * @return A more generic error message that does not give away any implementation details
-	 */
-	@ExceptionHandler(Exception.class)
-	@ResponseStatus(HttpStatus.I_AM_A_TEAPOT)
-	public @ResponseBody Map<String,String> handleExcpetion( Exception e){
-		Map<String,String> error = new HashMap<String, String>();
-		error.put("error","There was an error on the server");
-		error.put("errorDetails", "Make sure you request was formatted correctly, and all parameters were correct. " +
-				"If you believe you received this message by mistake, you are probably out of luck.");
-		log.error("Error: " + e.getMessage());
-		log.error("Class? " + e.getClass());
-		return error;
-	}
+    Logger log = LogManager.getLogger();
+
+    /**
+     * Handles any Illegal State Exception from a controller method
+     *
+     * @param e The exception that was thrown
+     * @return JSON Map with error messages specific to the illegal state exception thrown
+     */
+    @ExceptionHandler(IllegalStateException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public @ResponseBody Map<String, String> handleIOExcpetion(IllegalStateException e) {
+        Map<String, String> error = new HashMap<String, String>();
+        error.put("error", "Opperation not currently allowed.");
+        error.put("errorDetails", e.getMessage());
+        log.error("Error: " + e.getMessage());
+        return error;
+    }
+
+    /**
+     * MissingServletRequestParameterException handler.  This exception will occur whenever
+     * a controller method does not receive a required request parameter.
+     *
+     * @param e Exception being thrown
+     * @return JSON Error messages specific to the missing parameter exception.
+     */
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public @ResponseBody Map<String, String> handleBadParameterExcpetion(MissingServletRequestParameterException e) {
+        Map<String, String> error = new HashMap<String, String>();
+        error.put("error", "Required parameter not present.");
+        error.put("errorDetails", "The parameter " + e.getParameterName() + " is required and not present in the request.");
+        log.error("Error: " + e.getMessage());
+        return error;
+    }
+
+    /**
+     * Catch all exception handler for any other exception thrown in the controller.
+     *
+     * @param e Exception that was thrown.
+     * @return A more generic error message that does not give away any implementation details
+     */
+    @ExceptionHandler(Exception.class)
+    @ResponseStatus(HttpStatus.I_AM_A_TEAPOT)
+    public @ResponseBody Map<String, String> handleExcpetion(Exception e) {
+        Map<String, String> error = new HashMap<String, String>();
+        error.put("error", "There was an error on the server");
+        error.put("errorDetails", "Make sure you request was formatted correctly, and all parameters were correct. " +
+                "If you believe you received this message by mistake, you are probably out of luck.");
+        log.error("Error: " + e.getMessage());
+        log.error("Class? " + e.getClass());
+        return error;
+    }
 }

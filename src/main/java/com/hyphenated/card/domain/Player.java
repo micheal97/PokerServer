@@ -23,119 +23,138 @@ THE SOFTWARE.
 */
 package com.hyphenated.card.domain;
 
-import java.io.Serializable;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
-import javax.persistence.Transient;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
 import org.hibernate.annotations.GenericGenerator;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.io.Serializable;
 
 @Entity
-@Table(name="player")
-public class Player implements Comparable<Player>, Serializable{
+@Table(name = "player")
+public class Player implements Comparable<Player>, Serializable {
 
-	private static final long serialVersionUID = -1384636077333014255L;
-	private String id;
-	private Game game;
-	private String name;
-	private int chips;
-	private int gamePosition;
-	private int finishPosition;
-	private boolean sittingOut;
-	
-	@JsonIgnore
-	@Column(name="player_id")
-	@Id
-	@GeneratedValue(generator = "system-uuid")
+    private String id;
+    private Game game;
+    private TableStructure tableStructure;
+    private String name;
+    private int chips;
+    private int tableChips;
+    private int gamePosition;
+    private int finishPosition;
+    private boolean sittingOut;
+
+    @JsonIgnore
+    @Column(name = "player_id")
+    @Id
+    @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid2")
-	public String getId() {
-		return id;
-	}
-	public void setId(String id) {
-		this.id = id;
-	}
-	
-	@JsonIgnore
-	@ManyToOne
-	@JoinColumn(name="game_id")
-	public Game getGame() {
-		return game;
-	}
-	public void setGame(Game game) {
-		this.game = game;
-	}
-	
-	@Column(name="name")
-	public String getName() {
-		return name;
-	}
-	public void setName(String name) {
-		this.name = name;
-	}
-	
-	@Column(name="chips")
-	public int getChips() {
-		return chips;
-	}
-	public void setChips(int chips) {
-		this.chips = chips;
-	}
-	
-	@Column(name="game_position")
-	public int getGamePosition() {
-		return gamePosition;
-	}
-	public void setGamePosition(int gamePosition) {
-		this.gamePosition = gamePosition;
-	}
-	
-	@Column(name="finished_place")
-	public int getFinishPosition() {
-		return finishPosition;
-	}
-	public void setFinishPosition(int finishPosition) {
-		this.finishPosition = finishPosition;
-	}
-	
-	@Column(name="sitting_out")
-	public boolean isSittingOut() {
-		return sittingOut;
-	}
-	public void setSittingOut(boolean sittingOut) {
-		this.sittingOut = sittingOut;
-	}
-	
-	@Override
-	public boolean equals(Object o){
-		if(o == null || !(o instanceof Player)){
-			return false;
-		}
-		Player p = (Player) o;
-		if(this.getId() == null){
-			return this.getName().equals(p.getName());
-		}
-		return this.getId().equals(p.getId());
-	}
-	
-	@Override
-	public int hashCode(){
-		if(id == null){
-			return name.hashCode();
-		}
-		return id.hashCode();
-	}
-	
-	@Override
-	@Transient
-	public int compareTo(Player p){
-		return this.getGamePosition() - p.getGamePosition();
-	}
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    @JsonIgnore
+    @ManyToOne
+    @JoinColumn(name = "game_id")
+    public Game getGame() {
+        return game;
+    }
+
+    public void setGame(Game game) {
+        this.game = game;
+    }
+
+    @JsonIgnore
+    @OneToOne
+    @JoinColumn(name = "table_structure_id")
+    public TableStructure getTableStructure() {
+        return tableStructure;
+    }
+
+    public void setTableStructure(TableStructure tableStructure) {
+        this.tableStructure = tableStructure;
+    }
+
+    @Column(name = "name")
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    @Column(name = "chips")
+    public int getChips() {
+        return chips;
+    }
+
+    public void setChips(int chips) {
+        this.chips = chips;
+    }
+
+    @Column(name = "chips")
+    public int getTableChips() {
+        return tableChips;
+    }
+
+    public void setTableChips(int tableChips) {
+        this.tableChips = tableChips;
+    }
+
+
+    @Column(name = "game_position")
+    public int getGamePosition() {
+        return gamePosition;
+    }
+
+    public void setGamePosition(int gamePosition) {
+        this.gamePosition = gamePosition;
+    }
+
+    @Column(name = "finished_place")
+    public int getFinishPosition() {
+        return finishPosition;
+    }
+
+    public void setFinishPosition(int finishPosition) {
+        this.finishPosition = finishPosition;
+    }
+
+    @Column(name = "sitting_out")
+    public boolean isSittingOut() {
+        return sittingOut;
+    }
+
+    public void setSittingOut(boolean sittingOut) {
+        this.sittingOut = sittingOut;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Player p)) {
+            return false;
+        }
+        if (this.getId() == null) {
+            return this.getName().equals(p.getName());
+        }
+        return this.getId().equals(p.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        if (id == null) {
+            return name.hashCode();
+        }
+        return id.hashCode();
+    }
+
+    @Override
+    @Transient
+    public int compareTo(Player p) {
+        return this.getGamePosition() - p.getGamePosition();
+    }
 }
