@@ -23,11 +23,37 @@ THE SOFTWARE.
 */
 package com.hyphenated.card.dao;
 
-import org.springframework.stereotype.Repository;
-
 import com.hyphenated.card.domain.Player;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
+import org.hibernate.Session;
+import org.springframework.stereotype.Repository;
 
 @Repository
 public class PlayerDaoImpl extends BaseDaoImpl<Player> implements PlayerDao {
+    public boolean existsByName(String name) {
+        Session session = getSession();
+        CriteriaBuilder cb = session.getCriteriaBuilder();
+        CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+        Root<Player> root = cq.from(Player.class);
+        cq.select(cb.count(root));
+        cq.where(cb.equal(root.get("name"), name));
+        TypedQuery<Long> query = session.createQuery(cq);
+        Long count = query.getSingleResult();
+        return count > 0;
+    }
 
+    @Override
+    public Player findByNameAndPassword(String name, String password) {
+        Session session = getSession();
+        CriteriaBuilder cb = session.getCriteriaBuilder();
+        CriteriaQuery<Player> cq = cb.createQuery(Player.class);
+        Root<Player> root = cq.from(Player.class);
+        cq.select(root).where(cb.and(
+                cb.equal(root.get("name"), name),
+                cb.equal(root.get("password"), password)));
+        return session.createQuery(cq).getSingleResultOrNull();
+    }
 }

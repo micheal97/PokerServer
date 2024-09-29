@@ -23,13 +23,14 @@ THE SOFTWARE.
 */
 package com.hyphenated.card.controller;
 
-import com.hyphenated.card.domain.Game;
+import com.hyphenated.card.controller.dto.PlayerBet;
 import com.hyphenated.card.domain.Player;
 import com.hyphenated.card.domain.PlayerStatus;
-import com.hyphenated.card.service.GameService;
+import com.hyphenated.card.domain.TableStructure;
 import com.hyphenated.card.service.PlayerActionService;
 import com.hyphenated.card.service.PlayerServiceManager;
 import com.hyphenated.card.service.PokerHandService;
+import com.hyphenated.card.service.TableStructureService;
 import com.hyphenated.card.view.PlayerStatusObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
@@ -37,10 +38,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.servlet.ModelAndView;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -60,32 +61,43 @@ public class PlayerController {
     private PlayerServiceManager playerService;
 
     @Autowired
-    private GameService gameService;
+    private TableStructureService tableStructureService;
 
     @Autowired
     private PokerHandService handService;
+    @Autowired
+    private TasksController tasksController;
 
     @RequestMapping("/games")
-    public ModelAndView getGames() {
-        //TODO - Service method not yet written.  For now, use gameId from game controller
-        return null;
+    public @ResponseBody List<TableStructure> getGames() {
+        return tableStructureService.findAll();
     }
+
+    @RequestMapping("/register")
+    public @ResponseBody Map<String, Boolean> registerPlayer(@RequestParam String name, @RequestParam String password) {
+        Player player = new Player();
+        player.setChips(1000);
+        player.setPassword(password);
+        player.setName(name);
+        return Collections.singletonMap("success", playerService.registerPlayer(player));
+    }
+
+    @RequestMapping("/login")
+    public @ResponseBody Player login(@RequestParam String name, @RequestParam String password) {
+        return playerService.findPlayerByNameAndPassword(name, password);
+    }
+
 
     /**
      * Have a new player join a game.
-     *
-     * @param gameId     unique ID for the game to be joined
-     * @param playerName player name
-     * @return Map representing the JSON String of the new player's unique id.  The playerId will
-     * be used for that player's actions in future requests.  Example: {"playerId":xxx}
      */
     @RequestMapping("/join")
-    public @ResponseBody Map<String, String> joinGame(@RequestParam long gameId, @RequestParam String playerName) {
-        Game game = gameService.getGameById(gameId, false);
-        Player player = new Player();
-        player.setName(playerName);
-        player = gameService.addNewPlayerToGame(game, player);
-        return Collections.singletonMap("playerId", player.getId());
+    public @ResponseBody Map<String, Boolean> joinGame(@RequestParam long gameId, @RequestParam String playerId, @RequestParam int startingTableChips) {
+        TableStructure tableStructure = tableStructureService.getTableStructureById(gameId);
+        Player player = playerService.findPlayerById(playerId);
+        tableStructureService.addNewPlayerToTableStructure(tableStructure, player, startingTableChips);
+        tasksController.playerJoined(player.getName());
+        return Collections.singletonMap("success", true);
     }
 
     /**
@@ -109,14 +121,15 @@ public class PlayerController {
      * @param gameId   Unique ID of the game being played
      * @param playerId Unique ID of the player taking the action
      * @return Map with a single field for success, if the player successfully folded or not.
-     * If fold is not a legal action, or the it is not this players turn to act, success will be false.
+     * If fold is not a legal action, or it is not this players turn to act, success will be false.
      * Example: {"success":true}
      */
     @RequestMapping("/fold")
     public @ResponseBody Map<String, Boolean> fold(@RequestParam long gameId, @RequestParam String playerId) {
-        Game game = gameService.getGameById(gameId, false);
+        TableStructure tableStructure = tableStructureService.getTableStructureById(gameId);
         Player player = playerActionService.getPlayerById(playerId);
-        boolean folded = playerActionService.fold(player, game.getCurrentHand());
+        boolean folded = playerActionService.fold(player, tableStructure.getCurrentHand());
+        tasksController.playerFolded(player.getName());
         return Collections.singletonMap("success", folded);
     }
 
@@ -133,12 +146,13 @@ public class PlayerController {
     @RequestMapping("/call")
     @CacheEvict(value = "game", allEntries = true)
     public @ResponseBody Map<String, ? extends Object> call(@RequestParam long gameId, @RequestParam String playerId) {
-        Game game = gameService.getGameById(gameId, false);
+        TableStructure tableStructure = tableStructureService.getTableStructureById(gameId);
         Player player = playerActionService.getPlayerById(playerId);
-        boolean called = playerActionService.call(player, game.getCurrentHand());
-        Map<String, Object> resultMap = new HashMap<String, Object>();
+        boolean called = playerActionService.call(player, tableStructure.getCurrentHand());
+        Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("success", called);
         resultMap.put("chips", player.getChips());
+        tasksController.playerCalled(player.getName());
         return resultMap;
     }
 
@@ -153,9 +167,10 @@ public class PlayerController {
      */
     @RequestMapping("/check")
     public @ResponseBody Map<String, Boolean> check(@RequestParam long gameId, @RequestParam String playerId) {
-        Game game = gameService.getGameById(gameId, false);
+        TableStructure tableStructure = tableStructureService.getTableStructureById(gameId);
         Player player = playerActionService.getPlayerById(playerId);
-        boolean checked = playerActionService.check(player, game.getCurrentHand());
+        boolean checked = playerActionService.check(player, tableStructure.getCurrentHand());
+        tasksController.playerChecked(player.getName());
         return Collections.singletonMap("success", checked);
     }
 
@@ -179,12 +194,13 @@ public class PlayerController {
     @RequestMapping("/bet")
     @CacheEvict(value = "game", allEntries = true)
     public @ResponseBody Map<String, ?> bet(@RequestParam long gameId, @RequestParam String playerId, @RequestParam int betAmount) {
-        Game game = gameService.getGameById(gameId, false);
+        TableStructure tableStructure = tableStructureService.getTableStructureById(gameId);
         Player player = playerActionService.getPlayerById(playerId);
-        boolean bet = playerActionService.bet(player, game.getCurrentHand(), betAmount);
+        boolean bet = playerActionService.bet(player, tableStructure.getCurrentHand(), betAmount);
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("success", bet);
         resultMap.put("chips", player.getChips());
+        tasksController.playerBet(new PlayerBet(player.getName(), betAmount));
         return resultMap;
     }
 
@@ -199,6 +215,7 @@ public class PlayerController {
     public @ResponseBody Map<String, Boolean> sitIn(@RequestParam String playerId) {
         Player player = playerActionService.getPlayerById(playerId);
         playerActionService.sitIn(player);
+        tasksController.playerSitin(player.getName());
         return Collections.singletonMap("success", true);
     }
 

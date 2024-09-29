@@ -23,7 +23,6 @@ THE SOFTWARE.
 */
 package com.hyphenated.card.service;
 
-import com.hyphenated.card.Card;
 import com.hyphenated.card.Deck;
 import com.hyphenated.card.dao.HandDao;
 import com.hyphenated.card.dao.PlayerDao;
@@ -115,7 +114,7 @@ public class PokerHandServiceImpl implements PokerHandService {
     @Override
     @Transactional
     @GameAction
-    public void endHand(HandEntity hand) {
+    public Player endHand(HandEntity hand) {
         hand = handDao.merge(hand);
         if (!isActionResolved(hand)) {
             throw new IllegalStateException("There are unresolved betting actions");
@@ -154,7 +153,7 @@ public class PokerHandServiceImpl implements PokerHandService {
             }
         }
         if (tableStructure.getPlayers().size() < 2) {
-            //TODO stop game
+            return null;
         }
 
         //Rotate Button.  Use Simplified Moving Button algorithm (for ease of coding)
@@ -169,8 +168,9 @@ public class PokerHandServiceImpl implements PokerHandService {
         tableStructureDao.merge(tableStructure);
 
         //Remove Deck from database. No need to keep that around anymore
-        hand.setCards(new ArrayList<Card>());
+        hand.setCards(new ArrayList<>());
         handDao.merge(hand);
+        return nextButton;
     }
 
     @Override

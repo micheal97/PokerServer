@@ -38,13 +38,5 @@ public interface TableStructureService {
 
     public Player addNewPlayerToTableStructure(TableStructure tableStructure, Player player, int startingTableChips);
 
-    /**
-     * Persist any changes to a {@link Player} domain object.  Or create a new one.
-     *
-     * @param player Player to be saved
-     * @return Player attached to the persistent context
-     */
-    public Player savePlayer(Player player);
-
     public List<TableStructure> findAll();
 }

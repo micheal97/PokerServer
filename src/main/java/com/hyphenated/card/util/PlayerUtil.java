@@ -31,6 +31,7 @@ import com.hyphenated.card.eval.HandRankEvaluator;
 import com.hyphenated.card.eval.TwoPlusTwoHandEvaluator;
 import com.hyphenated.card.holder.Board;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -85,6 +86,7 @@ public class PlayerUtil {
      *                    compared to this player.
      * @return Player who will be next to act
      */
+    @Nullable
     public static Player getNextPlayerToAct(HandEntity hand, Player startPlayer) {
         List<PlayerHand> players = new ArrayList<>(hand.getPlayers());
         Player next = startPlayer;
@@ -96,6 +98,7 @@ public class PlayerUtil {
             next = PlayerUtil.getNextPlayerInGameOrderPH(players, next);
             //Escape condition
             if (next.equals(startPlayer) && hand.getTotalBetAmount() == 0 || next.equals(hand.getLastBetOrRaise())) {
+                next = null;
                 break;
             }
             //If the player is sitting out, it will not be next to act

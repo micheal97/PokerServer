@@ -51,7 +51,7 @@ public interface PokerHandService {
      *
      * @param hand Hand to be finished.
      */
-    public void endHand(HandEntity hand);
+    public Player endHand(HandEntity hand);
 
     /**
      * Get the hand from the persistence context based on the unique id

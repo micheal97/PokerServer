@@ -23,12 +23,13 @@ THE SOFTWARE.
 */
 package com.hyphenated.card.service;
 
+import com.hyphenated.card.dao.PlayerDao;
 import com.hyphenated.card.domain.*;
-import com.hyphenated.card.util.TableStructureUtil;
 import com.hyphenated.card.view.PlayerStatusObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class PlayerServiceManagerImpl implements PlayerServiceManager {
@@ -42,9 +43,11 @@ public class PlayerServiceManagerImpl implements PlayerServiceManager {
     @Autowired
     private PokerHandService handService;
 
+    @Autowired
+    private PlayerDao playerDao;
 
     @Override
-    @Cacheable("table_structure")
+    @Cacheable("game")
     public PlayerStatusObject buildPlayerStatus(long tableStructureId, String playerId) {
         TableStructure tableStructure = tableStructureService.getTableStructureById(tableStructureId);
         Player player = playerActionService.getPlayerById(playerId);
@@ -52,7 +55,7 @@ public class PlayerServiceManagerImpl implements PlayerServiceManager {
         //Get the player status.
         //In the special case of preflop, player is not current to act, see if the player is SB or BB
         PlayerStatus playerStatus = playerActionService.getPlayerStatus(player);
-        if (playerStatus == PlayerStatus.WAITING && TableStructureUtil.getGameStatus(tableStructure) == GameStatus.PREFLOP) {
+        if (playerStatus == PlayerStatus.WAITING && tableStructure.getGameStatus() == GameStatus.PREFLOP) {
             if (player.equals(handService.getPlayerInSB(tableStructure.getCurrentHand()))) {
                 playerStatus = PlayerStatus.POST_SB;
             } else if (player.equals(handService.getPlayerInBB(tableStructure.getCurrentHand()))) {
@@ -86,6 +89,40 @@ public class PlayerServiceManagerImpl implements PlayerServiceManager {
             }
         }
         return results;
+    }
+
+    @Override
+    @Transactional
+    public Player savePlayer(Player player) {
+        return playerDao.save(player);
+    }
+
+    @Override
+    @Transactional
+    public boolean playerExistsByName(String name) {
+        return playerDao.existsByName(name);
+    }
+
+    @Override
+    @Transactional
+    public boolean registerPlayer(Player player) {
+        if (playerDao.existsByName(player.getName())) {
+            return false;
+        }
+        playerDao.save(player);
+        return true;
+    }
+
+    @Override
+    @Transactional
+    public Player findPlayerByNameAndPassword(String name, String password) {
+        return playerDao.findByNameAndPassword(name, password);
+    }
+
+    @Override
+    @Transactional
+    public Player findPlayerById(String id) {
+        return playerDao.findById(id);
     }
 
 

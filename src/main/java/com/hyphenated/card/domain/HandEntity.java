@@ -25,11 +25,13 @@ package com.hyphenated.card.domain;
 
 import com.hyphenated.card.Card;
 import jakarta.persistence.*;
+import lombok.Setter;
 
 import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
 
+@Setter
 @Entity
 @Table(name = "hand")
 public class HandEntity implements Serializable {
@@ -42,7 +44,7 @@ public class HandEntity implements Serializable {
     private Player currentToAct;
     private Player lastBetOrRaise;
     private BlindLevel blindLevel;
-    private List<Card> cardList;
+    private List<Card> cards;
     private int pot;
     private int totalBetAmount;
     private int lastBetAmount;
@@ -54,18 +56,10 @@ public class HandEntity implements Serializable {
         return id;
     }
 
-    public void setId(long id) {
-        this.id = id;
-    }
-
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "game_id")
     public Game getGame() {
         return game;
-    }
-
-    public void setGame(Game game) {
-        this.game = game;
     }
 
     @OneToOne(fetch = FetchType.EAGER)
@@ -74,27 +68,15 @@ public class HandEntity implements Serializable {
         return tableStructure;
     }
 
-    public void setTableStructure(TableStructure tableStructure) {
-        this.tableStructure = tableStructure;
-    }
-
     @OneToOne(fetch = FetchType.EAGER, cascade = {CascadeType.ALL})
     @JoinColumn(name = "board_id")
     public BoardEntity getBoard() {
         return board;
     }
 
-    public void setBoard(BoardEntity board) {
-        this.board = board;
-    }
-
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "handEntity", cascade = {CascadeType.ALL}, orphanRemoval = true)
     public Set<PlayerHand> getPlayers() {
         return players;
-    }
-
-    public void setPlayers(Set<PlayerHand> players) {
-        this.players = players;
     }
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -103,18 +85,10 @@ public class HandEntity implements Serializable {
         return currentToAct;
     }
 
-    public void setCurrentToAct(Player currentToAct) {
-        this.currentToAct = currentToAct;
-    }
-
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "last_bet_or_raise_id")
     public Player getLastBetOrRaise() {
         return lastBetOrRaise;
-    }
-
-    public void setLastBetOrRaise(Player lastBetOrRaise) {
-        this.lastBetOrRaise = lastBetOrRaise;
     }
 
 
@@ -124,20 +98,12 @@ public class HandEntity implements Serializable {
         return blindLevel;
     }
 
-    public void setBlindLevel(BlindLevel blindLevel) {
-        this.blindLevel = blindLevel;
-    }
-
     @ElementCollection(targetClass = Card.class)
     @JoinTable(name = "hand_deck", joinColumns = @JoinColumn(name = "hand_id"))
     @Column(name = "card", nullable = false)
     @Enumerated(EnumType.STRING)
     public List<Card> getCards() {
-        return cardList;
-    }
-
-    public void setCards(List<Card> cards) {
-        cardList = cards;
+        return cards;
     }
 
     @Column(name = "pot")
@@ -145,17 +111,9 @@ public class HandEntity implements Serializable {
         return pot;
     }
 
-    public void setPot(int pot) {
-        this.pot = pot;
-    }
-
     @Column(name = "total_bet_amount")
     public int getTotalBetAmount() {
         return totalBetAmount;
-    }
-
-    public void setTotalBetAmount(int betAmount) {
-        this.totalBetAmount = betAmount;
     }
 
 
@@ -170,14 +128,10 @@ public class HandEntity implements Serializable {
         return lastBetAmount;
     }
 
-    public void setLastBetAmount(int lastBetAmount) {
-        this.lastBetAmount = lastBetAmount;
-    }
-
     @Transient
     @Override
     public boolean equals(Object o) {
-        if (o == null || !(o instanceof HandEntity)) {
+        if (!(o instanceof HandEntity)) {
             return false;
         }
         return ((HandEntity) o).getId() == this.getId();

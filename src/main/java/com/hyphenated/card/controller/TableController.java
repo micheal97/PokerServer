@@ -24,9 +24,8 @@ THE SOFTWARE.
 package com.hyphenated.card.controller;
 
 import com.hyphenated.card.domain.*;
-import com.hyphenated.card.service.GameService;
 import com.hyphenated.card.service.PokerHandService;
-import com.hyphenated.card.util.GameUtil;
+import com.hyphenated.card.service.TableStructureService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Controller;
@@ -48,10 +47,12 @@ import java.util.*;
 public class TableController {
 
     @Autowired
-    private GameService gameService;
+    private TableStructureService tableStructureService;
 
     @Autowired
     private PokerHandService handService;
+    @Autowired
+    private TasksController tasksController;
 
     /**
      * Get a list of currently available game structures
@@ -63,8 +64,7 @@ public class TableController {
      */
     @RequestMapping("/structures")
     public @ResponseBody List<CommonTournamentFormats> getGameStructures() {
-        List<CommonTournamentFormats> structures = Arrays.asList(CommonTournamentFormats.values());
-        return structures;
+        return Arrays.asList(CommonTournamentFormats.values());
     }
 
     /**
@@ -76,25 +76,22 @@ public class TableController {
      * Use the Spring to leverage the Enum type conversions. Return JSON response
      * with one value, gameId.
      *
-     * @param gameName      Name to identify this game
-     * @param gameStructure Type of the game that will be played
+     * @param gameName   Name to identify this game
+     * @param blindLevel Type of the game that will be played
      * @return {"gameId":xxxx}.  The Java Method returns the Map<String,Long> which is converted
      * by Spring to the JSON object.
      */
     @RequestMapping(value = "/create")
     public @ResponseBody Map<String, Long> createGame(@RequestParam String gameName,
-                                                      @RequestParam CommonTournamentFormats gameStructure) {
-        Game game = new Game();
-        game.setName(gameName);
-        game.setGameType(GameType.TOURNAMENT); //Until Cash games are supported
-        GameStructure gs = new GameStructure();
-        gs.setBlindLength(gameStructure.getTimeInMinutes());
-        gs.setBlindLevels(gameStructure.getBlindLevels());
-        gs.setStartingChips(gameStructure.getStartingChips());
-        game.setGameStructure(gs);
-        game = gameService.saveGame(game);
+                                                      @RequestParam int maxPlayers,
+                                                      @RequestParam BlindLevel blindLevel) {
+        TableStructure tableStructure = new TableStructure();
+        tableStructure.setName(gameName);
+        tableStructure.setMaxPlayers(maxPlayers);
+        tableStructure.setBlindLevel(blindLevel);
+        tableStructure = tableStructureService.saveTableStructure(tableStructure);
 
-        return Collections.singletonMap("gameId", game.getId());
+        return Collections.singletonMap("gameId", tableStructure.getId());
     }
 
     /**
@@ -109,27 +106,17 @@ public class TableController {
      * players:[{name:xxx,chips:xxx,finishPosition:xxx,gamePosition:xxx,sittingOut:false},...],cards:[Xx,Xx...]}
      */
     @RequestMapping(value = "/gamestatus")
-    public @ResponseBody Map<String, ? extends Object> getGameStatus(@RequestParam long gameId) {
-        Game game = gameService.getGameById(gameId, true);
-        GameStatus gs = GameUtil.getGameStatus(game);
-        Collection<Player> players = game.getPlayers();
+    public @ResponseBody Map<String, ?> getGameStatus(@RequestParam long gameId) {
+        TableStructure tableStructure = tableStructureService.getTableStructureById(gameId);
+        GameStatus gs = tableStructure.getGameStatus();
+        Collection<Player> players = tableStructure.getPlayers();
 
         Map<String, Object> results = new HashMap<String, Object>();
         results.put("gameStatus", gs);
         results.put("players", players);
-        //Before the game is started, there is no current blind level set.
-        if (game.getGameStructure().getCurrentBlindLevel() != null) {
-            results.put("smallBlind", game.getGameStructure().getCurrentBlindLevel().getSmallBlind());
-            results.put("bigBlind", game.getGameStructure().getCurrentBlindLevel().getBigBlind());
-        }
-        if (game.getGameStructure().getCurrentBlindEndTime() != null) {
-            long timeLeft = game.getGameStructure().getCurrentBlindEndTime().getTime() - new Date().getTime();
-            timeLeft = Math.max(0, timeLeft);
-            results.put("blindTime", timeLeft);
-        }
-        if (game.getCurrentHand() != null) {
-            results.put("pot", game.getCurrentHand().getPot());
-            results.put("cards", game.getCurrentHand().getBoard().getBoardCards());
+        if (tableStructure.getCurrentHand() != null) {
+            results.put("pot", tableStructure.getCurrentHand().getPot());
+            results.put("cards", tableStructure.getCurrentHand().getBoard().getBoardCards());
         }
         return results;
     }
@@ -144,32 +131,18 @@ public class TableController {
     @RequestMapping("/startgame")
     @CacheEvict(value = "game", allEntries = true)
     public @ResponseBody Map<String, Boolean> startGame(@RequestParam long gameId) {
-        Game game = gameService.getGameById(gameId, false);
-        if (!game.isStarted()) {
+        TableStructure tableStructure = tableStructureService.getTableStructureById(gameId);
+        if (tableStructure.getGameStatus() == GameStatus.NOT_STARTED) {
             try {
-                game = gameService.startGame(game);
+                tableStructureService.startGame(tableStructure);
+                HandEntity hand = handService.startNewHand(tableStructure);
+                tasksController.sendHandId(hand.getId());
                 return Collections.singletonMap("success", true);
             } catch (Exception e) {
                 //Failure of some sort starting the game. Probably IllegalStateException
             }
         }
         return Collections.singletonMap("success", false);
-    }
-
-    /**
-     * Start a new hand. This method should be called at the start of the game, or when
-     * a hand is finished and a new hand needs to be dealt.
-     *
-     * @param gameId unique Id for the game with the hand to be dealt
-     * @return Map translated to a JSON string with a single field for handId of the new hand.
-     * Example: {"handId":xxx}
-     */
-    @RequestMapping("/starthand")
-    @CacheEvict(value = "game", allEntries = true)
-    public @ResponseBody Map<String, Long> startHand(@RequestParam long gameId) {
-        Game game = gameService.getGameById(gameId, false);
-        HandEntity hand = handService.startNewHand(game);
-        return Collections.singletonMap("handId", hand.getId());
     }
 
     /**

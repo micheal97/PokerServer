@@ -25,6 +25,7 @@ package com.hyphenated.card.service;
 
 import com.hyphenated.card.dao.PlayerDao;
 import com.hyphenated.card.dao.TableStructureDao;
+import com.hyphenated.card.domain.GameStatus;
 import com.hyphenated.card.domain.Player;
 import com.hyphenated.card.domain.TableStructure;
 import com.hyphenated.card.view.GameAction;
@@ -61,23 +62,22 @@ public class TableStructureServiceImpl implements TableStructureService {
     @Transactional
     @GameAction
     public TableStructure startGame(TableStructure tableStructure) {
-        tableStructure = tableStructureDao.merge(tableStructure);
         if (tableStructure.getPlayers().size() < 2) {
             throw new IllegalStateException("Not Enough Players");
         }
         if (tableStructure.getPlayers().size() > 10) {
             throw new IllegalStateException("Too Many Players");
         }
-        if (tableStructure.isStarted()) {
+        if (tableStructure.getGameStatus() != GameStatus.NOT_STARTED) {
             throw new IllegalStateException("Game already started");
         }
 
         //Set started flag
-        tableStructure.setStarted(true);
+        tableStructure.setGameStatus(GameStatus.SEATING);
 
         //Get all players associated with the game.
         //Assign random position.  Save the player.
-        List<Player> players = new ArrayList<Player>(tableStructure.getPlayers());
+        List<Player> players = new ArrayList<>(tableStructure.getPlayers());
         Collections.shuffle(players);
         for (int i = 0; i < players.size(); i++) {
             Player p = players.get(i);
@@ -115,11 +115,6 @@ public class TableStructureServiceImpl implements TableStructureService {
         return player;
     }
 
-    @Override
-    @Transactional
-    public Player savePlayer(Player player) {
-        return playerDao.save(player);
-    }
 
     @Override
     public List<TableStructure> findAll() {

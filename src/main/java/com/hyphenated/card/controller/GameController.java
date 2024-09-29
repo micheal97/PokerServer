@@ -24,9 +24,8 @@ THE SOFTWARE.
 package com.hyphenated.card.controller;
 
 import com.hyphenated.card.domain.*;
-import com.hyphenated.card.service.GameService;
 import com.hyphenated.card.service.PokerHandService;
-import com.hyphenated.card.util.GameUtil;
+import com.hyphenated.card.service.TableStructureService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Controller;
@@ -48,7 +47,7 @@ import java.util.*;
 public class GameController {
 
     @Autowired
-    private GameService gameService;
+    private TableStructureService tableStructureService;
 
     @Autowired
     private PokerHandService handService;
@@ -75,26 +74,19 @@ public class GameController {
      * <br /><br />
      * Use the Spring to leverage the Enum type conversions. Return JSON response
      * with one value, gameId.
-     *
-     * @param gameName      Name to identify this game
-     * @param gameStructure Type of the game that will be played
-     * @return {"gameId":xxxx}.  The Java Method returns the Map<String,Long> which is converted
-     * by Spring to the JSON object.
      */
     @RequestMapping(value = "/create")
     public @ResponseBody Map<String, Long> createGame(@RequestParam String gameName,
-                                                      @RequestParam CommonTournamentFormats gameStructure) {
-        Game game = new Game();
-        game.setName(gameName);
-        game.setGameType(GameType.TOURNAMENT); //Until Cash games are supported
-        GameStructure gs = new GameStructure();
-        gs.setBlindLength(gameStructure.getTimeInMinutes());
-        gs.setBlindLevels(gameStructure.getBlindLevels());
-        gs.setStartingChips(gameStructure.getStartingChips());
-        game.setGameStructure(gs);
-        game = gameService.saveGame(game);
+                                                      @RequestParam BlindLevel blindLevel,
+                                                      @RequestParam int maxPlayers) {
+        TableStructure tableStructure = new TableStructure();
+        tableStructure.setGameStatus(GameStatus.NOT_STARTED);
+        tableStructure.setName(gameName);
+        tableStructure.setBlindLevel(blindLevel); //Until Cash games are supported
+        tableStructure.setMaxPlayers(maxPlayers);
+        tableStructure = tableStructureService.saveTableStructure(tableStructure);
 
-        return Collections.singletonMap("gameId", game.getId());
+        return Collections.singletonMap("tableStructureId", tableStructure.getId());
     }
 
     /**
@@ -109,27 +101,17 @@ public class GameController {
      * players:[{name:xxx,chips:xxx,finishPosition:xxx,gamePosition:xxx,sittingOut:false},...],cards:[Xx,Xx...]}
      */
     @RequestMapping(value = "/gamestatus")
-    public @ResponseBody Map<String, ? extends Object> getGameStatus(@RequestParam long gameId) {
-        Game game = gameService.getGameById(gameId, true);
-        GameStatus gs = GameUtil.getGameStatus(game);
-        Collection<Player> players = game.getPlayers();
+    public @ResponseBody Map<String, ?> getGameStatus(@RequestParam long gameId) {
+        TableStructure tableStructure = tableStructureService.getTableStructureById(gameId);
+        GameStatus gs = tableStructure.getGameStatus();
+        Collection<Player> players = tableStructure.getPlayers();
 
-        Map<String, Object> results = new HashMap<String, Object>();
+        Map<String, Object> results = new HashMap<>();
         results.put("gameStatus", gs);
         results.put("players", players);
-        //Before the game is started, there is no current blind level set.
-        if (game.getGameStructure().getCurrentBlindLevel() != null) {
-            results.put("smallBlind", game.getGameStructure().getCurrentBlindLevel().getSmallBlind());
-            results.put("bigBlind", game.getGameStructure().getCurrentBlindLevel().getBigBlind());
-        }
-        if (game.getGameStructure().getCurrentBlindEndTime() != null) {
-            long timeLeft = game.getGameStructure().getCurrentBlindEndTime().getTime() - new Date().getTime();
-            timeLeft = Math.max(0, timeLeft);
-            results.put("blindTime", timeLeft);
-        }
-        if (game.getCurrentHand() != null) {
-            results.put("pot", game.getCurrentHand().getPot());
-            results.put("cards", game.getCurrentHand().getBoard().getBoardCards());
+        if (tableStructure.getCurrentHand() != null) {
+            results.put("pot", tableStructure.getCurrentHand().getPot());
+            results.put("cards", tableStructure.getCurrentHand().getBoard().getBoardCards());
         }
         return results;
     }
@@ -144,10 +126,10 @@ public class GameController {
     @RequestMapping("/startgame")
     @CacheEvict(value = "game", allEntries = true)
     public @ResponseBody Map<String, Boolean> startGame(@RequestParam long gameId) {
-        Game game = gameService.getGameById(gameId, false);
-        if (!game.isStarted()) {
+        TableStructure tableStructure = tableStructureService.getTableStructureById(gameId);
+        if (tableStructure.getGameStatus() == GameStatus.NOT_STARTED) {
             try {
-                game = gameService.startGame(game);
+                tableStructureService.startGame(tableStructure);
                 return Collections.singletonMap("success", true);
             } catch (Exception e) {
                 //Failure of some sort starting the game. Probably IllegalStateException
@@ -167,14 +149,14 @@ public class GameController {
     @RequestMapping("/starthand")
     @CacheEvict(value = "game", allEntries = true)
     public @ResponseBody Map<String, Long> startHand(@RequestParam long gameId) {
-        Game game = gameService.getGameById(gameId, false);
-        HandEntity hand = handService.startNewHand(game);
+        TableStructure tableStructure = tableStructureService.getTableStructureById(gameId);
+        HandEntity hand = handService.startNewHand(tableStructure);
         return Collections.singletonMap("handId", hand.getId());
     }
 
     /**
      * Deal the flop for the hand. This should be called when preflop actions are complete
-     * and the the players are ready to deal the flop cards
+     * and the players are ready to deal the flop cards
      *
      * @param handId unique ID for the hand where the flop is being dealt
      * @return A map represented as a JSON String for the three cards dealt on the flop.
@@ -189,7 +171,7 @@ public class GameController {
     public @ResponseBody Map<String, String> flop(@RequestParam long handId) {
         HandEntity hand = handService.getHandById(handId);
         hand = handService.flop(hand);
-        Map<String, String> result = new HashMap<String, String>();
+        Map<String, String> result = new HashMap<>();
         result.put("card1", hand.getBoard().getFlop1().toString());
         result.put("card2", hand.getBoard().getFlop2().toString());
         result.put("card3", hand.getBoard().getFlop3().toString());
@@ -237,6 +219,7 @@ public class GameController {
      * @return Map represented as a JSON String determining if the action was successful.
      * Example: {"success":true}
      */
+    @Deprecated
     @RequestMapping("/endhand")
     @CacheEvict(value = "game", allEntries = true)
     public @ResponseBody Map<String, Boolean> endHand(@RequestParam long handId) {
@@ -259,6 +242,7 @@ public class GameController {
         boolean result = handService.sitOutCurrentPlayer(hand);
         return Collections.singletonMap("success", result);
     }
+
 
     /**
      * Sometimes it is nice to know that everything is working

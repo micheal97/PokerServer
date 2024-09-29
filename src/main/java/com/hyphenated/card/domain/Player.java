@@ -25,10 +25,12 @@ package com.hyphenated.card.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
 
 import java.io.Serializable;
 
+@Setter
 @Entity
 @Table(name = "player")
 public class Player implements Comparable<Player>, Serializable {
@@ -37,6 +39,7 @@ public class Player implements Comparable<Player>, Serializable {
     private Game game;
     private TableStructure tableStructure;
     private String name;
+    private String password;
     private int chips;
     private int tableChips;
     private int gamePosition;
@@ -52,10 +55,6 @@ public class Player implements Comparable<Player>, Serializable {
         return id;
     }
 
-    public void setId(String id) {
-        this.id = id;
-    }
-
     @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "game_id")
@@ -63,19 +62,9 @@ public class Player implements Comparable<Player>, Serializable {
         return game;
     }
 
-    public void setGame(Game game) {
-        this.game = game;
-    }
-
     @JsonIgnore
-    @OneToOne
-    @JoinColumn(name = "table_structure_id")
     public TableStructure getTableStructure() {
         return tableStructure;
-    }
-
-    public void setTableStructure(TableStructure tableStructure) {
-        this.tableStructure = tableStructure;
     }
 
     @Column(name = "name")
@@ -83,8 +72,9 @@ public class Player implements Comparable<Player>, Serializable {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    @Column(name = "password")
+    public String getPassword() {
+        return password;
     }
 
     @Column(name = "chips")
@@ -92,17 +82,9 @@ public class Player implements Comparable<Player>, Serializable {
         return chips;
     }
 
-    public void setChips(int chips) {
-        this.chips = chips;
-    }
-
     @Column(name = "chips")
     public int getTableChips() {
         return tableChips;
-    }
-
-    public void setTableChips(int tableChips) {
-        this.tableChips = tableChips;
     }
 
 
@@ -111,26 +93,14 @@ public class Player implements Comparable<Player>, Serializable {
         return gamePosition;
     }
 
-    public void setGamePosition(int gamePosition) {
-        this.gamePosition = gamePosition;
-    }
-
     @Column(name = "finished_place")
     public int getFinishPosition() {
         return finishPosition;
     }
 
-    public void setFinishPosition(int finishPosition) {
-        this.finishPosition = finishPosition;
-    }
-
     @Column(name = "sitting_out")
     public boolean isSittingOut() {
         return sittingOut;
-    }
-
-    public void setSittingOut(boolean sittingOut) {
-        this.sittingOut = sittingOut;
     }
 
     @Override
