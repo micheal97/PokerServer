@@ -86,6 +86,7 @@ public class TableController {
                                                       @RequestParam int maxPlayers,
                                                       @RequestParam BlindLevel blindLevel) {
         TableStructure tableStructure = new TableStructure();
+        tableStructure.setGameStatus(GameStatus.NOT_STARTED);
         tableStructure.setName(gameName);
         tableStructure.setMaxPlayers(maxPlayers);
         tableStructure.setBlindLevel(blindLevel);
@@ -111,7 +112,7 @@ public class TableController {
         GameStatus gs = tableStructure.getGameStatus();
         Collection<Player> players = tableStructure.getPlayers();
 
-        Map<String, Object> results = new HashMap<String, Object>();
+        Map<String, Object> results = new HashMap<>();
         results.put("gameStatus", gs);
         results.put("players", players);
         if (tableStructure.getCurrentHand() != null) {
@@ -162,7 +163,7 @@ public class TableController {
     public @ResponseBody Map<String, String> flop(@RequestParam long handId) {
         HandEntity hand = handService.getHandById(handId);
         hand = handService.flop(hand);
-        Map<String, String> result = new HashMap<String, String>();
+        Map<String, String> result = new HashMap<>();
         result.put("card1", hand.getBoard().getFlop1().toString());
         result.put("card2", hand.getBoard().getFlop2().toString());
         result.put("card3", hand.getBoard().getFlop3().toString());
