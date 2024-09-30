@@ -31,6 +31,8 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Service
 public class PlayerServiceManagerImpl implements PlayerServiceManager {
 
@@ -121,7 +123,7 @@ public class PlayerServiceManagerImpl implements PlayerServiceManager {
 
     @Override
     @Transactional
-    public Player findPlayerById(String id) {
+    public Player findPlayerById(UUID id) {
         return playerDao.findById(id);
     }
 

@@ -23,20 +23,24 @@ THE SOFTWARE.
 */
 package com.hyphenated.card.service;
 
+import com.hyphenated.card.controller.dto.TableStructureDTO;
 import com.hyphenated.card.domain.Player;
 import com.hyphenated.card.domain.TableStructure;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface TableStructureService {
 
-    public TableStructure getTableStructureById(long id);
+    TableStructure getTableStructureById(UUID id);
 
-    public TableStructure saveTableStructure(TableStructure tableStructure);
+    TableStructure saveTableStructure(TableStructure tableStructure);
 
-    public TableStructure startGame(TableStructure tableStructure);
+    TableStructure startGame(TableStructure tableStructure);
 
-    public Player addNewPlayerToTableStructure(TableStructure tableStructure, Player player, int startingTableChips);
+    Player addNewPlayerToTableStructure(TableStructure tableStructure, Player player, int startingTableChips);
 
-    public List<TableStructure> findAll();
+    List<TableStructureDTO> findAll();
+
+    void updateTables(List<String> blindLevel);
 }

@@ -24,6 +24,8 @@ THE SOFTWARE.
 package com.hyphenated.card.controller;
 
 import com.hyphenated.card.controller.dto.PlayerBet;
+import com.hyphenated.card.controller.dto.PlayerDTO;
+import com.hyphenated.card.controller.dto.TableStructureDTO;
 import com.hyphenated.card.domain.Player;
 import com.hyphenated.card.domain.PlayerHand;
 import com.hyphenated.card.domain.PlayerStatus;
@@ -41,6 +43,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Controller class that will handle the front-end API interactions regarding
@@ -62,10 +65,10 @@ public class PlayerController {
     private TableStructureService tableStructureService;
 
     @Autowired
-    private TasksController tasksController;
+    private TableTasksController tableTasksController;
 
     @RequestMapping("/games")
-    public @ResponseBody ResponseEntity<List<TableStructure>> getGames() {
+    public @ResponseBody ResponseEntity<List<TableStructureDTO>> getGames() {
         return ResponseEntity.ok(tableStructureService.findAll());
     }
 
@@ -79,8 +82,8 @@ public class PlayerController {
     }
 
     @RequestMapping("/login")
-    public @ResponseBody ResponseEntity<Player> login(@RequestParam String name, @RequestParam String password) {
-        return ResponseEntity.ok(playerService.findPlayerByNameAndPassword(name, password));
+    public @ResponseBody ResponseEntity<PlayerDTO> login(@RequestParam String name, @RequestParam String password) {
+        return ResponseEntity.ok(playerService.findPlayerByNameAndPassword(name, password).getPlayerDTO());
     }
 
 
@@ -88,11 +91,11 @@ public class PlayerController {
      * Have a new player join a game.
      */
     @RequestMapping("/join")
-    public @ResponseBody ResponseEntity.BodyBuilder joinGame(@RequestParam long gameId, @RequestParam String playerId, @RequestParam int startingTableChips) {
+    public @ResponseBody ResponseEntity.BodyBuilder joinGame(@RequestParam UUID gameId, @RequestParam UUID playerId, @RequestParam int startingTableChips) {
         TableStructure tableStructure = tableStructureService.getTableStructureById(gameId);
         Player player = playerService.findPlayerById(playerId);
         tableStructureService.addNewPlayerToTableStructure(tableStructure, player, startingTableChips);
-        tasksController.playerJoined(player.getName());
+        tableTasksController.playerJoined(player.getName());
         return ResponseEntity.ok();
     }
 
@@ -120,12 +123,12 @@ public class PlayerController {
      * Example: {"success":true}
      */
     @RequestMapping("/fold")
-    public @ResponseBody ResponseEntity.BodyBuilder fold(@RequestParam long gameId, @RequestParam long playerHandId) {
+    public @ResponseBody ResponseEntity.BodyBuilder fold(@RequestParam UUID gameId, @RequestParam UUID playerHandId) {
         TableStructure tableStructure = tableStructureService.getTableStructureById(gameId);
         PlayerHand playerHand = tableStructure.getCurrentHand().getPlayerHandById(playerHandId);
         boolean folded = playerActionService.fold(playerHand);
         if (folded) {
-            tasksController.playerFolded(playerHand.getPlayer().getName());
+            tableTasksController.playerFolded(playerHand.getPlayer().getName());
         }
         return ResponseEntity.ok();
     }
@@ -141,12 +144,12 @@ public class PlayerController {
      */
     @RequestMapping("/callAny")
     @CacheEvict(value = "game", allEntries = true)
-    public @ResponseBody ResponseEntity.BodyBuilder call(@RequestParam long gameId, @RequestParam long playerHandId) {
+    public @ResponseBody ResponseEntity.BodyBuilder call(@RequestParam UUID gameId, @RequestParam UUID playerHandId) {
         TableStructure tableStructure = tableStructureService.getTableStructureById(gameId);
         PlayerHand playerHand = tableStructure.getCurrentHand().getPlayerHandById(playerHandId);
         boolean called = playerActionService.callAny(playerHand);
         if (called) {
-            tasksController.playerCalled(playerHand.getPlayer().getName());
+            tableTasksController.playerCalled(playerHand.getPlayer().getName());
         }
         return ResponseEntity.ok();
     }
@@ -160,12 +163,12 @@ public class PlayerController {
      * Example: {"success":false}
      */
     @RequestMapping("/check")
-    public @ResponseBody ResponseEntity.BodyBuilder check(@RequestParam long gameId, @RequestParam long playerHandId) {
+    public @ResponseBody ResponseEntity.BodyBuilder check(@RequestParam UUID gameId, @RequestParam UUID playerHandId) {
         TableStructure tableStructure = tableStructureService.getTableStructureById(gameId);
         PlayerHand playerHand = tableStructure.getCurrentHand().getPlayerHandById(playerHandId);
         boolean checked = playerActionService.check(playerHand);
         if (checked) {
-            tasksController.playerChecked(playerHand.getPlayer().getName());
+            tableTasksController.playerChecked(playerHand.getPlayer().getName());
         }
         return ResponseEntity.ok();
     }
@@ -188,12 +191,12 @@ public class PlayerController {
      */
     @RequestMapping("/bet")
     @CacheEvict(value = "game", allEntries = true)
-    public @ResponseBody ResponseEntity.BodyBuilder bet(@RequestParam long gameId, @RequestParam long playerHandId, @RequestParam int betAmount) {
+    public @ResponseBody ResponseEntity.BodyBuilder bet(@RequestParam UUID gameId, @RequestParam UUID playerHandId, @RequestParam int betAmount) {
         TableStructure tableStructure = tableStructureService.getTableStructureById(gameId);
         PlayerHand playerHand = tableStructure.getCurrentHand().getPlayerHandById(playerHandId);
         boolean bet = playerActionService.bet(playerHand, betAmount);
         if (bet) {
-            tasksController.playerBet(new PlayerBet(playerHand.getPlayer().getName(), betAmount));
+            tableTasksController.playerBet(new PlayerBet(playerHand.getPlayer().getName(), betAmount));
         }
         return ResponseEntity.ok();
     }
@@ -206,10 +209,10 @@ public class PlayerController {
      */
     @RequestMapping("/sitin")
     @CacheEvict(value = "game", allEntries = true)
-    public @ResponseBody ResponseEntity.BodyBuilder sitIn(@RequestParam String playerId) {
+    public @ResponseBody ResponseEntity.BodyBuilder sitIn(@RequestParam UUID playerId) {
         Player player = playerActionService.getPlayerById(playerId);
         playerActionService.sitIn(player);
-        tasksController.playerSitin(player.getName());
+        tableTasksController.playerSitin(player.getName());
         return ResponseEntity.ok();
     }
 

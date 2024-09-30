@@ -1,5 +1,6 @@
 package com.hyphenated.card.domain;
 
+import com.hyphenated.card.controller.dto.TableStructureDTO;
 import jakarta.persistence.*;
 import lombok.Setter;
 
@@ -19,10 +20,15 @@ public class TableStructure implements Serializable {
     private Set<Player> players;
     private HandEntity currentHand;
     private GameStatus gameStatus;
+    private Player privateGameCreator;
+
+    public TableStructureDTO getTableStructureDTO() {
+        return new TableStructureDTO(id, blindLevel, maxPlayers, name, players.size(), gameStatus, privateGameCreator);
+    }
 
     @Column(name = "table_structure_id")
     @Id
-    @GeneratedValue(strategy = GenerationType.TABLE)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     public UUID getId() {
         return id;
     }
@@ -56,7 +62,7 @@ public class TableStructure implements Serializable {
         return name;
     }
 
-    @OneToOne(fetch = FetchType.EAGER)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "current_hand_id")
     public HandEntity getCurrentHand() {
         return currentHand;
@@ -65,6 +71,11 @@ public class TableStructure implements Serializable {
     @Column(name = "game_status")
     public GameStatus getGameStatus() {
         return gameStatus;
+    }
+
+    @Column(name = "private_game_creator")
+    public Player getPrivateGameCreator() {
+        return privateGameCreator;
     }
 
 }

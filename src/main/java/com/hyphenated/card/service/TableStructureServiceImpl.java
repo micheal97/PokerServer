@@ -23,12 +23,12 @@ THE SOFTWARE.
 */
 package com.hyphenated.card.service;
 
+import com.hyphenated.card.controller.dto.TableStructureDTO;
 import com.hyphenated.card.dao.PlayerDao;
 import com.hyphenated.card.dao.TableStructureDao;
 import com.hyphenated.card.domain.GameStatus;
 import com.hyphenated.card.domain.Player;
 import com.hyphenated.card.domain.TableStructure;
-import com.hyphenated.card.view.GameAction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class TableStructureServiceImpl implements TableStructureService {
@@ -47,8 +48,8 @@ public class TableStructureServiceImpl implements TableStructureService {
     private PlayerDao playerDao;
 
     @Override
-    @Transactional(readOnly = true)
-    public TableStructure getTableStructureById(long id) {
+    @Transactional(readOnly = true)//TODO:readonly everywhere
+    public TableStructure getTableStructureById(UUID id) {
         return tableStructureDao.findById(id);
     }
 
@@ -60,7 +61,6 @@ public class TableStructureServiceImpl implements TableStructureService {
 
     @Override
     @Transactional
-    @GameAction
     public TableStructure startGame(TableStructure tableStructure) {
         if (tableStructure.getPlayers().size() < 2) {
             throw new IllegalStateException("Not Enough Players");
@@ -117,8 +117,16 @@ public class TableStructureServiceImpl implements TableStructureService {
 
 
     @Override
-    public List<TableStructure> findAll() {
-        return tableStructureDao.findAll();
+    public List<TableStructureDTO> findAll() {
+        return tableStructureDao.findAll().stream().map(TableStructure::getTableStructureDTO).toList();
     }
+
+    @Override
+    public void updateTables(List<String> blindLevels) {
+        blindLevels.forEach(blindLevel -> {
+            tableStructureDao.updateTables(blindLevel);
+        });
+    }
+
 
 }

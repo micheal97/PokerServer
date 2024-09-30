@@ -46,7 +46,7 @@ public class GameStructure implements Serializable {
 
     @Column(name = "game_structure_id")
     @Id
-    @GeneratedValue(strategy = GenerationType.TABLE)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     public UUID getId() {
         return id;
     }

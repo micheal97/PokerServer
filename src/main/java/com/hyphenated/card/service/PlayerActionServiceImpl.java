@@ -32,6 +32,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class PlayerActionServiceImpl implements PlayerActionService {
@@ -43,7 +44,7 @@ public class PlayerActionServiceImpl implements PlayerActionService {
 
     @Override
     @Transactional
-    public Player getPlayerById(String playerId) {
+    public Player getPlayerById(UUID playerId) {
         return playerDao.findById(playerId);
     }
 

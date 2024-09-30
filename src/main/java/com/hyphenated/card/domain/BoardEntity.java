@@ -67,7 +67,7 @@ public class BoardEntity implements Serializable {
 
     @Column(name = "board_id")
     @Id
-    @GeneratedValue(strategy = GenerationType.TABLE)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     public UUID getId() {
         return id;
     }

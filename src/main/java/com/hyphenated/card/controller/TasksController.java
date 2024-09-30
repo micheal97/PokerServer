@@ -1,47 +1,22 @@
 package com.hyphenated.card.controller;
 
-import com.hyphenated.card.controller.dto.PlayerBet;
+import com.hyphenated.card.domain.BlindLevel;
+import com.hyphenated.card.service.TableStructureService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.stereotype.Component;
+import org.springframework.scheduling.annotation.Scheduled;
 
-import java.util.UUID;
+import java.util.Arrays;
 
-@Component
 public class TasksController {
-
     @Autowired
     private SimpMessagingTemplate template;
+    @Autowired
+    TableStructureService tableStructureService;
 
-    public void playerJoined(String name) {
-        template.convertAndSend("/playerJoined", name);
-    }
-
-    public void playerFolded(String name) {
-        template.convertAndSend("/playerFolded", name);
-    }
-
-    public void playerCalled(String name) {
-        template.convertAndSend("/playerCalled", name);
-    }
-
-    public void playerChecked(String name) {
-        template.convertAndSend("/playerChecked", name);
-    }
-
-    public void playerBet(PlayerBet playerBet) {
-        template.convertAndSend("/playerBet", playerBet);
-    }
-
-    public void playerSitin(String name) {
-        template.convertAndSend("/playerSitin", name);
-    }
-
-    public void sendPlayerHandId(UUID playerId, UUID playerHandId) {
-        template.convertAndSendToUser(playerId.toString(), "/handId", playerHandId);
-    }
-
-    public void playersTurn(String name) {
-        template.convertAndSend("/playersTurn", name);
+    @Scheduled(fixedRate = 5_000L)
+    public void updateTables() {
+        tableStructureService.updateTables(Arrays.stream(BlindLevel.values()).map(Enum::name).toList());
+        template.convertAndSend("/tables", tableStructureService.findAll());
     }
 }

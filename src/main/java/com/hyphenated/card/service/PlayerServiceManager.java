@@ -26,6 +26,8 @@ package com.hyphenated.card.service;
 import com.hyphenated.card.domain.Player;
 import com.hyphenated.card.view.PlayerStatusObject;
 
+import java.util.UUID;
+
 /**
  * Class that handles Player interactions that are not related to Player Actions.
  * Class also gathers Player related resources for better organization
@@ -61,6 +63,6 @@ public interface PlayerServiceManager {
 
     Player findPlayerByNameAndPassword(String name, String password);
 
-    Player findPlayerById(String playerId);
+    Player findPlayerById(UUID playerId);
 
 }

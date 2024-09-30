@@ -24,6 +24,7 @@ THE SOFTWARE.
 package com.hyphenated.card.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.hyphenated.card.controller.dto.PlayerDTO;
 import jakarta.persistence.*;
 import lombok.Setter;
 
@@ -36,7 +37,6 @@ import java.util.UUID;
 public class Player implements Comparable<Player>, Serializable {
 
     private UUID id;
-    private Game game;
     private TableStructure tableStructure;
     private String name;
     private String password;
@@ -46,21 +46,20 @@ public class Player implements Comparable<Player>, Serializable {
     private int finishPosition;
     private boolean sittingOut;
 
+    public PlayerDTO getPlayerDTO() {
+        return new PlayerDTO(id, name, chips, tableChips, gamePosition, sittingOut);
+    }
+
     @JsonIgnore
     @Column(name = "player_id")
     @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     public UUID getId() {
         return id;
     }
 
     @JsonIgnore
-    @ManyToOne
-    @JoinColumn(name = "game_id")
-    public Game getGame() {
-        return game;
-    }
-
-    @JsonIgnore
+    @JoinColumn(name = "table_structure_id")
     public TableStructure getTableStructure() {
         return tableStructure;
     }

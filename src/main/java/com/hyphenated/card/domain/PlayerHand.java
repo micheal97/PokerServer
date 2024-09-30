@@ -49,13 +49,13 @@ public class PlayerHand implements Comparable<PlayerHand>, Serializable {
 
 
     @Id
-    @GeneratedValue(strategy = GenerationType.TABLE)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "player_hand_id")
     public UUID getId() {
         return id;
     }
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "player_id")
     public Player getPlayer() {
         return player;

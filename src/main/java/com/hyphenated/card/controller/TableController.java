@@ -24,6 +24,7 @@ THE SOFTWARE.
 package com.hyphenated.card.controller;
 
 import com.hyphenated.card.domain.*;
+import com.hyphenated.card.service.PlayerServiceManager;
 import com.hyphenated.card.service.PokerHandService;
 import com.hyphenated.card.service.TableStructureService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,7 +54,9 @@ public class TableController {
     @Autowired
     private PokerHandService handService;
     @Autowired
-    private TasksController tasksController;
+    private TableTasksController tableTasksController;
+    @Autowired
+    private PlayerServiceManager playerServiceManager;
 
     /**
      * Get a list of currently available game structures
@@ -85,12 +88,14 @@ public class TableController {
     @RequestMapping(value = "/create")
     public @ResponseBody ResponseEntity<UUID> createGame(@RequestParam String gameName,
                                                          @RequestParam int maxPlayers,
-                                                         @RequestParam BlindLevel blindLevel) {
+                                                         @RequestParam BlindLevel blindLevel,
+                                                         @RequestParam UUID playerId) {
         TableStructure tableStructure = new TableStructure();
         tableStructure.setGameStatus(GameStatus.NOT_STARTED);
         tableStructure.setName(gameName);
         tableStructure.setMaxPlayers(maxPlayers);
         tableStructure.setBlindLevel(blindLevel);
+        tableStructure.setPrivateGameCreator(playerServiceManager.findPlayerById(playerId));
         tableStructure = tableStructureService.saveTableStructure(tableStructure);
 
         return ResponseEntity.ok(tableStructure.getId());
@@ -108,7 +113,7 @@ public class TableController {
      * players:[{name:xxx,chips:xxx,finishPosition:xxx,gamePosition:xxx,sittingOut:false},...],cards:[Xx,Xx...]}
      */
     @RequestMapping(value = "/gamestatus")
-    public @ResponseBody Map<String, ?> getGameStatus(@RequestParam long gameId) {
+    public @ResponseBody Map<String, ?> getGameStatus(@RequestParam UUID gameId) {
         TableStructure tableStructure = tableStructureService.getTableStructureById(gameId);
         GameStatus gs = tableStructure.getGameStatus();
         Collection<Player> players = tableStructure.getPlayers();
@@ -130,22 +135,19 @@ public class TableController {
      * @return Map representing a JSON string with a single field for "success" which is either true or false.
      * example: {"success":true}
      */
-    @RequestMapping("/startgame")
+    @RequestMapping("/startPrivateGame")
     @CacheEvict(value = "game", allEntries = true)
-    public @ResponseBody Map<String, Boolean> startGame(@RequestParam long gameId) {
+    public @ResponseBody ResponseEntity.BodyBuilder startGame(@RequestParam UUID gameId, @RequestParam UUID playerId) {
         //TODO:startPrivateGame / startPublicGame
         TableStructure tableStructure = tableStructureService.getTableStructureById(gameId);
-        if (tableStructure.getGameStatus().equals(GameStatus.NOT_STARTED)) {
-            try {
-                tableStructureService.startGame(tableStructure);
-                HandEntity hand = handService.startNewHand(tableStructure);
-                tasksController.sendHandId(hand.getId());
-                return Collections.singletonMap("success", true);
-            } catch (Exception e) {
-                //Failure of some sort starting the game. Probably IllegalStateException
-            }
+        if (tableStructure.getGameStatus().equals(GameStatus.NOT_STARTED) && tableStructure.getPrivateGameCreator().getId().equals(playerId)) {
+            tableStructureService.startGame(tableStructure);
+            HandEntity hand = handService.startNewHand(tableStructure);
+            hand.getPlayers().forEach(playerHand ->
+                    tableTasksController.sendPlayerHandId(playerHand.getPlayer().getId(), playerHand.getId()));
+            return ResponseEntity.ok();
         }
-        return Collections.singletonMap("success", false);
+        return ResponseEntity.badRequest();
     }
 
     /**

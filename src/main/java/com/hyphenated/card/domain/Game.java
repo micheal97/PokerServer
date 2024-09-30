@@ -47,7 +47,7 @@ public class Game implements Serializable {
 
     @Column(name = "game_id")
     @Id
-    @GeneratedValue(strategy = GenerationType.TABLE)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     public UUID getId() {
         return id;
     }
@@ -84,13 +84,13 @@ public class Game implements Serializable {
         return started;
     }
 
-    @OneToOne(fetch = FetchType.EAGER)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "current_hand_id")
     public HandEntity getCurrentHand() {
         return currentHand;
     }
 
-    @OneToOne(fetch = FetchType.EAGER, cascade = {CascadeType.ALL})
+    @OneToOne(fetch = FetchType.LAZY, cascade = {CascadeType.ALL})
     @JoinColumn(name = "game_structure_id")
     public GameStructure getGameStructure() {
         return gameStructure;

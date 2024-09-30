@@ -27,6 +27,8 @@ import com.hyphenated.card.domain.Player;
 import com.hyphenated.card.domain.PlayerHand;
 import com.hyphenated.card.domain.PlayerStatus;
 
+import java.util.UUID;
+
 /**
  * Service class to handle actions the player involved in the hand can take.
  *
@@ -40,7 +42,7 @@ public interface PlayerActionService {
      * @param playerId unique id for the player
      * @return Player object
      */
-    Player getPlayerById(String playerId);
+    Player getPlayerById(UUID playerId);
 
     /**
      * The player folds out of the hand

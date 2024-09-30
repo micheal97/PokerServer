@@ -50,47 +50,51 @@ public class HandEntity implements Serializable {
     private int totalBetAmount;
     private int lastBetAmount;
 
-    public PlayerHand getPlayerHandById(long playerHandId) {
+    public PlayerHand getPlayerHandById(UUID playerHandId) {
         return players.stream().filter(playerHand -> playerHand.getId() == playerHandId).findFirst().get();
     }
 
+    public PlayerHand getPlayerHandByPlayerId(UUID playerId) {
+        return players.stream().filter(playerHand -> playerHand.getPlayer().getId() == playerId).findFirst().get();
+    }
+
     @Id
-    @GeneratedValue(strategy = GenerationType.TABLE)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "hand_id")
     public UUID getId() {
         return id;
     }
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "game_id")
     public Game getGame() {
         return game;
     }
 
-    @OneToOne(fetch = FetchType.EAGER)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "table_structure_id")
     public TableStructure getTableStructure() {
         return tableStructure;
     }
 
-    @OneToOne(fetch = FetchType.EAGER, cascade = {CascadeType.ALL})
+    @OneToOne(fetch = FetchType.LAZY, cascade = {CascadeType.ALL})
     @JoinColumn(name = "board_id")
     public BoardEntity getBoard() {
         return board;
     }
 
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "handEntity", cascade = {CascadeType.ALL}, orphanRemoval = true)
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "handEntity", cascade = {CascadeType.ALL}, orphanRemoval = true)
     public Set<PlayerHand> getPlayers() {
         return players;
     }
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "player_to_act_id")
     public Player getCurrentToAct() {
         return currentToAct;
     }
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "last_bet_or_raise_id")
     public Player getLastBetOrRaise() {
         return lastBetOrRaise;

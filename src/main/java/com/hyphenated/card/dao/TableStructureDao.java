@@ -27,4 +27,5 @@ import com.hyphenated.card.domain.TableStructure;
 
 public interface TableStructureDao extends BaseDao<TableStructure> {
 
+    void updateTables(String blindLevel);
 }

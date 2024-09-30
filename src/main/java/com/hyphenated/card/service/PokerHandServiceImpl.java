@@ -24,7 +24,7 @@ THE SOFTWARE.
 package com.hyphenated.card.service;
 
 import com.hyphenated.card.Deck;
-import com.hyphenated.card.controller.TasksController;
+import com.hyphenated.card.controller.TableTasksController;
 import com.hyphenated.card.dao.HandDao;
 import com.hyphenated.card.dao.PlayerDao;
 import com.hyphenated.card.dao.TableStructureDao;
@@ -53,7 +53,7 @@ public class PokerHandServiceImpl implements PokerHandService {
     private PlayerActionService playerActionService;
 
     @Autowired
-    private TasksController tasksController;
+    private TableTasksController tableTasksController;
 
     @Override
     @Transactional
@@ -66,7 +66,7 @@ public class PokerHandServiceImpl implements PokerHandService {
                 case CHECK -> playerActionService.check(playerHand);
                 case BET -> playerActionService.bet(playerHand, betAmount);
             }) {
-                tasksController.playersTurn(playerHand.getPlayer().getName());
+                tableTasksController.playersTurn(playerHand.getPlayer().getName());
             }
         }
     }
