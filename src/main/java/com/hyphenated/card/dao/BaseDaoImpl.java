@@ -77,12 +77,6 @@ public class BaseDaoImpl<T> implements BaseDao<T> {
 
     @Override
     public T save(T objToSave) {
-        getSession().merge(objToSave);
-        return objToSave;
-    }
-
-    @Override
-    public T merge(T objToMerge) {
-        return (T) getSession().merge(objToMerge);
+        return getSession().merge(objToSave);
     }
 }

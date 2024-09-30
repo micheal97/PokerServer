@@ -1,9 +1,6 @@
 package com.hyphenated.card.controller.dto;
 
-import lombok.Value;
 
-@Value
-public class PlayerBet {
-    String playerName;
-    int betAmount;
+public record PlayerBet(String playerName, int betAmount) {
+
 }

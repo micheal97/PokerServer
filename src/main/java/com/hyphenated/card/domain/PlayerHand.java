@@ -26,30 +26,33 @@ package com.hyphenated.card.domain;
 import com.hyphenated.card.Card;
 import com.hyphenated.card.holder.Hand;
 import jakarta.persistence.*;
+import lombok.Setter;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
+import java.util.UUID;
 
+@Setter
 @Entity
 @Table(name = "player_hand")
 public class PlayerHand implements Comparable<PlayerHand>, Serializable {
 
-    private long id;
+    private UUID id;
     private Player player;
     private HandEntity handEntity;
     private Card card1;
     private Card card2;
     private int betAmount;
     private int roundBetAmount;
+    private PlayerHandRoundAction roundAction;
+    private int callBetAmount;
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.TABLE)
     @Column(name = "player_hand_id")
-    public long getId() {
+    public UUID getId() {
         return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
     }
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -58,18 +61,10 @@ public class PlayerHand implements Comparable<PlayerHand>, Serializable {
         return player;
     }
 
-    public void setPlayer(Player player) {
-        this.player = player;
-    }
-
     @ManyToOne
     @JoinColumn(name = "hand_id")
     public HandEntity getHandEntity() {
         return handEntity;
-    }
-
-    public void setHandEntity(HandEntity hand) {
-        this.handEntity = hand;
     }
 
     @Column(name = "card1")
@@ -78,46 +73,43 @@ public class PlayerHand implements Comparable<PlayerHand>, Serializable {
         return card1;
     }
 
-    public void setCard1(Card card1) {
-        this.card1 = card1;
-    }
-
     @Column(name = "card2")
     @Enumerated(EnumType.STRING)
     protected Card getCard2() {
         return card2;
     }
 
-    public void setCard2(Card card2) {
-        this.card2 = card2;
-    }
-
-    @Column(name = "bet_amount")
     /**
      * Represents the amount of chips the player has contributed to the pot
      * for this entire hand
+     *
      * @return
      */
+    @Column(name = "bet_amount")
     public int getBetAmount() {
         return betAmount;
     }
 
-    public void setBetAmount(int betAmount) {
-        this.betAmount = betAmount;
+    @Column(name = "call_bet_amount")
+    public int getCallBetAmount() {
+        return callBetAmount;
     }
 
-    @Column(name = "round_bet_amount")
     /**
      * Represents the amount of chips the player has contributed to the pot for only this
      * current betting round
+     *
      * @return
      */
+    @Column(name = "round_bet_amount")
     public int getRoundBetAmount() {
         return roundBetAmount;
     }
 
-    public void setRoundBetAmount(int roundBetAmount) {
-        this.roundBetAmount = roundBetAmount;
+    @Nullable
+    @Column(name = "round_action")
+    public PlayerHandRoundAction getRoundAction() {
+        return roundAction;
     }
 
     /**

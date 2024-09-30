@@ -23,10 +23,7 @@ THE SOFTWARE.
 */
 package com.hyphenated.card.service;
 
-import com.hyphenated.card.domain.BoardEntity;
-import com.hyphenated.card.domain.HandEntity;
-import com.hyphenated.card.domain.Player;
-import com.hyphenated.card.domain.TableStructure;
+import com.hyphenated.card.domain.*;
 
 /**
  * Service to handle operations related to a poker hand.  Tracks the board state and players.
@@ -34,6 +31,8 @@ import com.hyphenated.card.domain.TableStructure;
  * @author jacobhyphenated
  */
 public interface PokerHandService {
+
+    void handlePlayerHandRoundAction(PlayerHand playerHand, int betAmount);
 
     /**
      * Start a new hand on the given game

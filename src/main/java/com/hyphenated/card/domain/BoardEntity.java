@@ -29,12 +29,13 @@ import jakarta.persistence.*;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "board")
 public class BoardEntity implements Serializable {
 
-    private long id;
+    private UUID id;
     private Card flop1;
     private Card flop2;
     private Card flop3;
@@ -67,11 +68,11 @@ public class BoardEntity implements Serializable {
     @Column(name = "board_id")
     @Id
     @GeneratedValue(strategy = GenerationType.TABLE)
-    public long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

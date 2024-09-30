@@ -5,12 +5,13 @@ import lombok.Setter;
 
 import java.io.Serializable;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Table(name = "table_structure")
 @Setter
 public class TableStructure implements Serializable {
-    private long id;
+    private UUID id;
     private BlindLevel blindLevel;
     private int maxPlayers;
     private Player playerInBTN;
@@ -22,7 +23,7 @@ public class TableStructure implements Serializable {
     @Column(name = "table_structure_id")
     @Id
     @GeneratedValue(strategy = GenerationType.TABLE)
-    public long getId() {
+    public UUID getId() {
         return id;
     }
 
@@ -60,9 +61,10 @@ public class TableStructure implements Serializable {
     public HandEntity getCurrentHand() {
         return currentHand;
     }
-    @Column(name="game_status")
-    public GameStatus getGameStatus(){
-        return gameStatus
+
+    @Column(name = "game_status")
+    public GameStatus getGameStatus() {
+        return gameStatus;
     }
 
 }

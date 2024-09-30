@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 @Component
 public class TasksController {
 
@@ -35,7 +37,11 @@ public class TasksController {
         template.convertAndSend("/playerSitin", name);
     }
 
-    public void sendHandId(long id) {
-        template.convertAndSend("/handId", id);
+    public void sendPlayerHandId(UUID playerId, UUID playerHandId) {
+        template.convertAndSendToUser(playerId.toString(), "/handId", playerHandId);
+    }
+
+    public void playersTurn(String name) {
+        template.convertAndSend("/playersTurn", name);
     }
 }

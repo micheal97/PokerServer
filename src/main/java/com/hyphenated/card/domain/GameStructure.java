@@ -24,16 +24,19 @@ THE SOFTWARE.
 package com.hyphenated.card.domain;
 
 import jakarta.persistence.*;
+import lombok.Setter;
 
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
+@Setter
 @Entity
 @Table(name = "game_structure")
 public class GameStructure implements Serializable {
 
-    private long id;
+    private UUID id;
     private BlindLevel currentBlindLevel;
     private int blindLength;
     private Date currentBlindEndTime;
@@ -44,12 +47,8 @@ public class GameStructure implements Serializable {
     @Column(name = "game_structure_id")
     @Id
     @GeneratedValue(strategy = GenerationType.TABLE)
-    public long getId() {
+    public UUID getId() {
         return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
     }
 
     @Column(name = "current_blind_level")
@@ -58,17 +57,9 @@ public class GameStructure implements Serializable {
         return currentBlindLevel;
     }
 
-    public void setCurrentBlindLevel(BlindLevel currentBlindLevel) {
-        this.currentBlindLevel = currentBlindLevel;
-    }
-
     @Column(name = "blind_length")
     public int getBlindLength() {
         return blindLength;
-    }
-
-    public void setBlindLength(int blindLength) {
-        this.blindLength = blindLength;
     }
 
     @Column(name = "current_blind_ends")
@@ -77,27 +68,15 @@ public class GameStructure implements Serializable {
         return currentBlindEndTime;
     }
 
-    public void setCurrentBlindEndTime(Date currentBlindEndTime) {
-        this.currentBlindEndTime = currentBlindEndTime;
-    }
-
     @Column(name = "starting_chips")
     public int getStartingChips() {
         return startingChips;
-    }
-
-    public void setStartingChips(int startingChips) {
-        this.startingChips = startingChips;
     }
 
     @Column(name = "pause_start_time")
     @Temporal(TemporalType.TIMESTAMP)
     public Date getPauseStartTime() {
         return pauseStartTime;
-    }
-
-    public void setPauseStartTime(Date pauseStartTime) {
-        this.pauseStartTime = pauseStartTime;
     }
 
     @ElementCollection(targetClass = BlindLevel.class)
@@ -108,7 +87,4 @@ public class GameStructure implements Serializable {
         return blindLevels;
     }
 
-    public void setBlindLevels(List<BlindLevel> blindLevels) {
-        this.blindLevels = blindLevels;
-    }
 }

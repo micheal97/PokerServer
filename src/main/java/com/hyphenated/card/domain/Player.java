@@ -26,16 +26,16 @@ package com.hyphenated.card.domain;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Setter;
-import org.hibernate.annotations.GenericGenerator;
 
 import java.io.Serializable;
+import java.util.UUID;
 
 @Setter
 @Entity
 @Table(name = "player")
 public class Player implements Comparable<Player>, Serializable {
 
-    private String id;
+    private UUID id;
     private Game game;
     private TableStructure tableStructure;
     private String name;
@@ -49,9 +49,7 @@ public class Player implements Comparable<Player>, Serializable {
     @JsonIgnore
     @Column(name = "player_id")
     @Id
-    @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid2")
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 

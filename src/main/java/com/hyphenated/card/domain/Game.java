@@ -24,20 +24,23 @@ THE SOFTWARE.
 package com.hyphenated.card.domain;
 
 import jakarta.persistence.*;
+import lombok.Setter;
 
 import java.io.Serializable;
 import java.util.Set;
+import java.util.UUID;
 
+@Setter
 @Entity
 @Table(name = "game")
 public class Game implements Serializable {
 
-    private long id;
+    private UUID id;
     private int playersRemaining;
     private Player playerInBTN;
     private GameType gameType;
     private String name;
-    private boolean isStarted;
+    private boolean started;
     private Set<Player> players;
     private HandEntity currentHand;
     private GameStructure gameStructure;
@@ -45,21 +48,13 @@ public class Game implements Serializable {
     @Column(name = "game_id")
     @Id
     @GeneratedValue(strategy = GenerationType.TABLE)
-    public long getId() {
+    public UUID getId() {
         return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
     }
 
     @Column(name = "players_left")
     public int getPlayersRemaining() {
         return playersRemaining;
-    }
-
-    public void setPlayersRemaining(int playersRemaining) {
-        this.playersRemaining = playersRemaining;
     }
 
     @OneToOne
@@ -68,18 +63,10 @@ public class Game implements Serializable {
         return playerInBTN;
     }
 
-    public void setPlayerInBTN(Player playerInBTN) {
-        this.playerInBTN = playerInBTN;
-    }
-
     @Column(name = "game_type")
     @Enumerated(EnumType.STRING)
     public GameType getGameType() {
         return gameType;
-    }
-
-    public void setGameType(GameType gameType) {
-        this.gameType = gameType;
     }
 
     @OneToMany(mappedBy = "game", fetch = FetchType.LAZY)
@@ -87,26 +74,14 @@ public class Game implements Serializable {
         return players;
     }
 
-    public void setPlayers(Set<Player> players) {
-        this.players = players;
-    }
-
     @Column(name = "name")
     public String getName() {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
     @Column(name = "is_started")
     public boolean isStarted() {
-        return isStarted;
-    }
-
-    public void setStarted(boolean isStarted) {
-        this.isStarted = isStarted;
+        return started;
     }
 
     @OneToOne(fetch = FetchType.EAGER)
@@ -115,17 +90,10 @@ public class Game implements Serializable {
         return currentHand;
     }
 
-    public void setCurrentHand(HandEntity currentHand) {
-        this.currentHand = currentHand;
-    }
-
     @OneToOne(fetch = FetchType.EAGER, cascade = {CascadeType.ALL})
     @JoinColumn(name = "game_structure_id")
     public GameStructure getGameStructure() {
         return gameStructure;
     }
 
-    public void setGameStructure(GameStructure gameStructure) {
-        this.gameStructure = gameStructure;
-    }
 }

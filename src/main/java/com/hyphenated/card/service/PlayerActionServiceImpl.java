@@ -27,7 +27,6 @@ import com.hyphenated.card.dao.HandDao;
 import com.hyphenated.card.dao.PlayerDao;
 import com.hyphenated.card.domain.*;
 import com.hyphenated.card.util.PlayerUtil;
-import com.hyphenated.card.view.GameAction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,12 +47,18 @@ public class PlayerActionServiceImpl implements PlayerActionService {
         return playerDao.findById(playerId);
     }
 
+
     @Override
     @Transactional
-    @GameAction
-    public boolean fold(Player player, HandEntity hand) {
-        //Cannot fold out of turn
+    public boolean fold(PlayerHand playerHand) {
+        HandEntity hand = playerHand.getHandEntity();
+        Player player = playerHand.getPlayer();
+        //fold out of turn
         if (!player.equals(hand.getCurrentToAct())) {
+            hand.getPlayers().remove(playerHand);
+            playerHand.setRoundAction(PlayerHandRoundAction.FOLD);
+            hand.getPlayers().add(playerHand);
+            handDao.save(hand);
             return false;
         }
 
@@ -62,53 +67,45 @@ public class PlayerActionServiceImpl implements PlayerActionService {
             return false;
         }
         hand.setCurrentToAct(next);
-
         handDao.save(hand);
         return true;
     }
 
     @Override
     @Transactional
-    @GameAction
-    public boolean check(Player player, HandEntity hand) {
-        hand = handDao.merge(hand);
-
-        //Cannot check out of turn
-        if (!player.equals(hand.getCurrentToAct())) {
-            return false;
-        }
-
+    public boolean check(PlayerHand playerHand) {
+        HandEntity hand = playerHand.getHandEntity();
+        Player player = playerHand.getPlayer();
         //Checking is not currently an option
-        if (getPlayerStatus(player) != PlayerStatus.ACTION_TO_CHECK) {
+        if (!getPlayerStatus(player).equals(PlayerStatus.ACTION_TO_CHECK)) {
             return false;
         }
+        //check out of turn
+        if (!player.equals(hand.getCurrentToAct())) {
+            hand.getPlayers().remove(playerHand);
+            playerHand.setRoundAction(PlayerHandRoundAction.CHECK);
+            hand.getPlayers().add(playerHand);
+            handDao.save(hand);
+            return false;
+        }
+
 
         Player next = PlayerUtil.getNextPlayerToAct(hand, player);
         hand.setCurrentToAct(next);
-        handDao.merge(hand);
+        handDao.save(hand);
         return true;
     }
 
     @Override
     @Transactional
-    @GameAction
-    public boolean bet(Player player, HandEntity hand, int betAmount) {
-        if (!player.equals(hand.getCurrentToAct())) {
-            return false;
-        }
+    public boolean bet(PlayerHand playerHand, int betAmount) {
+        HandEntity hand = playerHand.getHandEntity();
+        Player player = playerHand.getPlayer();
 
         //Bet must meet the minimum of twice the previous bet.  Call bet amount and raise exactly that amount or more
         //Alternatively, if there is no previous bet, the first bet must be at least the big blind
         if (betAmount < hand.getLastBetAmount() || betAmount < hand.getBlindLevel().getBigBlind()) {
             return false;
-        }
-
-        PlayerHand playerHand = null;
-        for (PlayerHand ph : hand.getPlayers()) {
-            if (ph.getPlayer().equals(player)) {
-                playerHand = ph;
-                break;
-            }
         }
 
         int toCall = hand.getTotalBetAmount() - playerHand.getRoundBetAmount();
@@ -117,7 +114,15 @@ public class PlayerActionServiceImpl implements PlayerActionService {
             total = player.getChips();
             betAmount = total - toCall;
         }
-
+        //bet out of turn
+        if (!player.equals(hand.getCurrentToAct())) {
+            hand.getPlayers().remove(playerHand);
+            playerHand.setRoundAction(PlayerHandRoundAction.BET);
+            playerHand.setBetAmount(betAmount);
+            hand.getPlayers().add(playerHand);
+            handDao.save(hand);
+            return false;
+        }
         playerHand.setRoundBetAmount(playerHand.getRoundBetAmount() + total);
         playerHand.setBetAmount(playerHand.getBetAmount() + total);
         player.setChips(player.getChips() - total);
@@ -127,26 +132,23 @@ public class PlayerActionServiceImpl implements PlayerActionService {
         hand.setLastBetOrRaise(player);
         Player next = PlayerUtil.getNextPlayerToAct(hand, player);
         hand.setCurrentToAct(next);
-        handDao.merge(hand);
-        playerDao.merge(player);
+        handDao.save(hand);
+        playerDao.save(player);
         return true;
     }
 
     @Override
     @Transactional
-    @GameAction
-    public boolean call(Player player, HandEntity hand) {
-        hand = handDao.merge(hand);
-        //Cannot call out of turn
+    public boolean callAny(PlayerHand playerHand) {
+        HandEntity hand = playerHand.getHandEntity();
+        Player player = playerHand.getPlayer();
+        //call out of turn
         if (!player.equals(hand.getCurrentToAct())) {
+            hand.getPlayers().remove(playerHand);
+            playerHand.setRoundAction(PlayerHandRoundAction.CALL_ANY);
+            hand.getPlayers().add(playerHand);
+            handDao.save(hand);
             return false;
-        }
-        PlayerHand playerHand = null;
-        for (PlayerHand ph : hand.getPlayers()) {
-            if (ph.getPlayer().equals(player)) {
-                playerHand = ph;
-                break;
-            }
         }
 
         int toCall = hand.getTotalBetAmount() - playerHand.getRoundBetAmount();
@@ -162,14 +164,50 @@ public class PlayerActionServiceImpl implements PlayerActionService {
 
         Player next = PlayerUtil.getNextPlayerToAct(hand, player);
         hand.setCurrentToAct(next);
-        handDao.merge(hand);
-        playerDao.merge(player);
+        handDao.save(hand);
+        playerDao.save(player);
         return true;
     }
 
     @Override
     @Transactional
-    @GameAction
+    public boolean callCurrent(PlayerHand playerHand, int roundBetAmount) {
+        HandEntity hand = playerHand.getHandEntity();
+        Player player = playerHand.getPlayer();
+        //call out of turn
+        if (!player.equals(hand.getCurrentToAct())) {
+            hand.getPlayers().remove(playerHand);
+            playerHand.setRoundAction(PlayerHandRoundAction.CALL_CURRENT);
+            playerHand.setCallBetAmount(roundBetAmount);
+            hand.getPlayers().add(playerHand);
+            handDao.save(hand);
+            return false;
+        }
+
+        if (roundBetAmount != playerHand.getCallBetAmount()) {
+            return false;
+        }
+
+        int toCall = hand.getTotalBetAmount() - playerHand.getRoundBetAmount();
+        toCall = Math.min(toCall, player.getChips());
+        if (toCall <= 0) {
+            return false;
+        }
+
+        playerHand.setRoundBetAmount(playerHand.getRoundBetAmount() + toCall);
+        playerHand.setBetAmount(playerHand.getBetAmount() + toCall);
+        player.setChips(player.getChips() - toCall);
+        hand.setPot(hand.getPot() + toCall);
+
+        Player next = PlayerUtil.getNextPlayerToAct(hand, player);
+        hand.setCurrentToAct(next);
+        handDao.save(hand);
+        playerDao.save(player);
+        return true;
+    }
+
+    @Override
+    @Transactional
     public void sitIn(Player player) {
         player.setSittingOut(false);
         playerDao.save(player);
@@ -178,7 +216,7 @@ public class PlayerActionServiceImpl implements PlayerActionService {
     @Override
     @Transactional(readOnly = true)
     public PlayerStatus getPlayerStatus(Player player) {
-        player = playerDao.merge(player);
+        player = playerDao.save(player);
         if (player == null) {
             return PlayerStatus.ELIMINATED;
         }
@@ -188,7 +226,7 @@ public class PlayerActionServiceImpl implements PlayerActionService {
         }
 
         TableStructure tableStructure = player.getTableStructure();
-        if (!tableStructure.isStarted()) {
+        if (!tableStructure.getGameStatus().equals(GameStatus.NOT_STARTED)) {
             return PlayerStatus.NOT_STARTED;
         }
 

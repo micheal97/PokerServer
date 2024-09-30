@@ -68,7 +68,7 @@ public class TableStructureServiceImpl implements TableStructureService {
         if (tableStructure.getPlayers().size() > 10) {
             throw new IllegalStateException("Too Many Players");
         }
-        if (tableStructure.getGameStatus() != GameStatus.NOT_STARTED) {
+        if (!tableStructure.getGameStatus().equals(GameStatus.NOT_STARTED)) {
             throw new IllegalStateException("Game already started");
         }
 
@@ -90,7 +90,7 @@ public class TableStructureServiceImpl implements TableStructureService {
         tableStructure.setPlayerInBTN(players.get(0));
 
         //Save and return the updated game
-        return tableStructureDao.merge(tableStructure);
+        return tableStructureDao.save(tableStructure);
     }
 
     @Override

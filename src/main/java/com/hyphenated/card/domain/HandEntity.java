@@ -30,13 +30,14 @@ import lombok.Setter;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 @Setter
 @Entity
 @Table(name = "hand")
 public class HandEntity implements Serializable {
 
-    private long id;
+    private UUID id;
     private Game game;
     private TableStructure tableStructure;
     private BoardEntity board;
@@ -49,10 +50,14 @@ public class HandEntity implements Serializable {
     private int totalBetAmount;
     private int lastBetAmount;
 
+    public PlayerHand getPlayerHandById(long playerHandId) {
+        return players.stream().filter(playerHand -> playerHand.getId() == playerHandId).findFirst().get();
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.TABLE)
     @Column(name = "hand_id")
-    public long getId() {
+    public UUID getId() {
         return id;
     }
 
@@ -135,11 +140,5 @@ public class HandEntity implements Serializable {
             return false;
         }
         return ((HandEntity) o).getId() == this.getId();
-    }
-
-    @Transient
-    @Override
-    public int hashCode() {
-        return (int) this.getId();
     }
 }

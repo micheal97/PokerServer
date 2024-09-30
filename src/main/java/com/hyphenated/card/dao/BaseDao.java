@@ -28,53 +28,45 @@ import java.util.List;
 
 /**
  * Define a generic base data access object for simple CRUD methods
- * @author jacobhyphenated
  *
  * @param <T> Type of the Entity mapped to the database
+ * @author jacobhyphenated
  */
 public interface BaseDao<T> {
-	/**
-	 * Get the Class of the entity.
-	 * 
-	 * @return the class
-	 */
-	public Class<T> getEntityClass();
+    /**
+     * Get the Class of the entity.
+     *
+     * @return the class
+     */
+    public Class<T> getEntityClass();
 
-	/**
-	 * Find an entity by its primary key
-	 * 
-	 * @param id
-	 *            the primary key
-	 * @return the entity
-	 */
-	public T findById(Serializable id);
+    /**
+     * Find an entity by its primary key
+     *
+     * @param id the primary key
+     * @return the entity
+     */
+    public T findById(Serializable id);
 
-	/**
-	 * Load all entities.
-	 * 
-	 * @return the list of entities
-	 */
-	public List<T> findAll();
-	
-	/**
-	 * Save or update an entity to the persistent storage
-	 * @param objToSave Object (attached or detached) to be persisted
-	 * @return object with updated ID if applicable
-	 */
-	public T save(T objToSave);
-	
-	/**
-	 * Merge a transient object with an existing persistent context object. Used for updating
-	 * Existing objects that have left the persistence context
-	 * @param objToMerge
-	 * @return object with persistent context attached
-	 */
-	public T merge(T objToMerge);
-	
-	/**
-	 * Remove a persistent object from the database
-	 * 
-	 * @param objToRemove Attached object to remove
-	 */
-	public void remove(T objToRemove);
+    /**
+     * Load all entities.
+     *
+     * @return the list of entities
+     */
+    public List<T> findAll();
+
+    /**
+     * Save or update an entity to the persistent storage
+     *
+     * @param objToSave Object (attached or detached) to be persisted
+     * @return object with updated ID if applicable
+     */
+    public T save(T objToSave);
+
+    /**
+     * Remove a persistent object from the database
+     *
+     * @param objToRemove Attached object to remove
+     */
+    public void remove(T objToRemove);
 }

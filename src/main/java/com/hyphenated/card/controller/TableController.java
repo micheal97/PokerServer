@@ -28,6 +28,7 @@ import com.hyphenated.card.service.PokerHandService;
 import com.hyphenated.card.service.TableStructureService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -82,9 +83,9 @@ public class TableController {
      * by Spring to the JSON object.
      */
     @RequestMapping(value = "/create")
-    public @ResponseBody Map<String, Long> createGame(@RequestParam String gameName,
-                                                      @RequestParam int maxPlayers,
-                                                      @RequestParam BlindLevel blindLevel) {
+    public @ResponseBody ResponseEntity<UUID> createGame(@RequestParam String gameName,
+                                                         @RequestParam int maxPlayers,
+                                                         @RequestParam BlindLevel blindLevel) {
         TableStructure tableStructure = new TableStructure();
         tableStructure.setGameStatus(GameStatus.NOT_STARTED);
         tableStructure.setName(gameName);
@@ -92,7 +93,7 @@ public class TableController {
         tableStructure.setBlindLevel(blindLevel);
         tableStructure = tableStructureService.saveTableStructure(tableStructure);
 
-        return Collections.singletonMap("gameId", tableStructure.getId());
+        return ResponseEntity.ok(tableStructure.getId());
     }
 
     /**
@@ -132,8 +133,9 @@ public class TableController {
     @RequestMapping("/startgame")
     @CacheEvict(value = "game", allEntries = true)
     public @ResponseBody Map<String, Boolean> startGame(@RequestParam long gameId) {
+        //TODO:startPrivateGame / startPublicGame
         TableStructure tableStructure = tableStructureService.getTableStructureById(gameId);
-        if (tableStructure.getGameStatus() == GameStatus.NOT_STARTED) {
+        if (tableStructure.getGameStatus().equals(GameStatus.NOT_STARTED)) {
             try {
                 tableStructureService.startGame(tableStructure);
                 HandEntity hand = handService.startNewHand(tableStructure);
