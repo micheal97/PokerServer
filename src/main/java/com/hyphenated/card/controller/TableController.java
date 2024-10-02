@@ -94,7 +94,6 @@ public class TableController {
                                                          @RequestParam BlindLevel blindLevel,
                                                          @RequestParam UUID playerId) {
         TableStructure tableStructure = new TableStructure();
-        tableStructure.setGameStatus(GameStatus.NOT_STARTED);
         tableStructure.setName(gameName);
         tableStructure.setMaxPlayers(maxPlayers);
         tableStructure.setBlindLevel(blindLevel);
@@ -226,20 +225,6 @@ public class TableController {
         return Collections.singletonMap("success", true);
     }
 
-    /**
-     * Puts the current player to act in a sit-out state. Action will move to the next player.
-     * This action requires the handId parameter, so it should only be exposed to the Game Controller.
-     *
-     * @param handId Current hand where the current player to act will be sat out.
-     * @return {"success":true} if the player was sat out.  Error otherwise.
-     */
-    @RequestMapping("/sitoutcurrent")
-    @CacheEvict(value = "game", allEntries = true)
-    public @ResponseBody Map<String, Boolean> sitOutCurrentPlayer(@RequestParam long handId) {
-        HandEntity hand = handService.getHandById(handId);
-        boolean result = handService.sitOutCurrentPlayer(hand);
-        return Collections.singletonMap("success", result);
-    }
 
     /**
      * Sometimes it is nice to know that everything is working

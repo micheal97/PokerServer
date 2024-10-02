@@ -50,7 +50,7 @@ public class PlayerServiceManagerImpl implements PlayerServiceManager {
 
     @Override
     @Cacheable("game")
-    public PlayerStatusObject buildPlayerStatus(long tableStructureId, String playerId) {
+    public PlayerStatusObject buildPlayerStatus(long tableStructureId, UUID playerId) {
         TableStructure tableStructure = tableStructureService.getTableStructureById(tableStructureId);
         Player player = playerActionService.getPlayerById(playerId);
         PlayerStatusObject results = new PlayerStatusObject();

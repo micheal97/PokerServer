@@ -36,11 +36,11 @@ public interface TableStructureService {
 
     TableStructure saveTableStructure(TableStructure tableStructure);
 
-    TableStructure startGame(TableStructure tableStructure);
+    void startGame(TableStructure tableStructure);
 
-    Player addNewPlayerToTableStructure(TableStructure tableStructure, Player player, int startingTableChips);
+    void addNewPlayerToTableStructure(TableStructure tableStructure, Player player, int startingTableChips);
 
-    void removePlayerFromTableStructure(TableStructure tableStructure, Player player);
+    void removePlayerFromTableStructure(Player player);
 
     List<TableStructureDTO> findAll();
 

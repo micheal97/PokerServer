@@ -66,15 +66,14 @@ public class PlayerActionServiceImpl implements PlayerActionService {
             handDao.save(hand);
             return null;
         }
-
         Player next = PlayerUtil.getNextPlayerToAct(hand, player);
-        if (!PlayerUtil.removePlayerFromHand(player, hand)) {
-            return null;
-        }
+        hand.removePlayer(playerHand);
         hand.setCurrentToAct(next);
         handDao.save(hand);
         if (next == null) {
-            next = pokerHandService.handleNextGameStatus(hand.getTableStructure()).getCurrentToAct();
+            HandEntity nextHand = pokerHandService.handleNextGameStatus(hand.getTableStructure());
+            next = nextHand.getCurrentToAct();
+            return nextHand.findPlayerHandByPlayerId(next.getId()).get();
         }
         return hand.findPlayerHandByPlayerId(next.getId()).get();
         //TODO: Überall wie hier

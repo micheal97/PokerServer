@@ -21,8 +21,7 @@ public class TableStructure implements Serializable {
     @Setter(value = AccessLevel.NONE)
     private Set<Player> players;
     private HandEntity currentHand;
-    @Setter(value = AccessLevel.NONE)
-    private GameStatus gameStatus;
+    private GameStatus gameStatus = GameStatus.NOT_STARTED;
     private Player privateGameCreator;
 
     public TableStructureDTO getTableStructureDTO() {
@@ -86,6 +85,14 @@ public class TableStructure implements Serializable {
 
     public void setNextGameStatus() {
         this.gameStatus = gameStatus.next();
+    }
+
+    public void setGameStatusEndHand() {
+        this.gameStatus = GameStatus.END_HAND;
+    }
+
+    public void setGameStatusNotStarted() {
+        this.gameStatus = GameStatus.NOT_STARTED;
     }
 
     @Column(name = "private_game_creator")

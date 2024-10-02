@@ -24,7 +24,6 @@ THE SOFTWARE.
 package com.hyphenated.card.dao;
 
 import com.hyphenated.card.domain.BlindLevel;
-import com.hyphenated.card.domain.GameStatus;
 import com.hyphenated.card.domain.TableStructure;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -59,7 +58,6 @@ public class TableStructureDaoImpl extends BaseDaoImpl<TableStructure> implement
             Long numberOfBlindLevels = session.createQuery(cq).getSingleResult();
             TableStructure tableStructure = new TableStructure();
             tableStructure.setName(blindLevel + numberOfBlindLevels + 1);
-            tableStructure.setGameStatus(GameStatus.SEATING);
             tableStructure.setBlindLevel(BlindLevel.valueOf(blindLevel));
             tableStructure.setMaxPlayers(8);
             session.merge(tableStructure);

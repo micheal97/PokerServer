@@ -49,7 +49,11 @@ public class PokerHandServiceImpl implements PokerHandService {
     private PlayerDao playerDao;
 
     public HandEntity handleNextGameStatus(TableStructure tableStructure) {
-        tableStructure.setNextGameStatus();
+        if (tableStructure.getCurrentHand().getPlayers().size() < 2) {
+            tableStructure.setGameStatusEndHand();
+        } else {
+            tableStructure.setNextGameStatus();
+        }
         tableStructureDao.save(tableStructure);
         return switch (tableStructure.getGameStatus()) {
             case PREFLOP -> startNewHand(tableStructure);
@@ -72,7 +76,7 @@ public class PokerHandServiceImpl implements PokerHandService {
         HandEntity hand = new HandEntity();
         hand.setTableStructure(tableStructure);
         Deck d = new Deck(true);
-        Set<PlayerHand> participatingPlayers = new HashSet<PlayerHand>();
+        Set<PlayerHand> participatingPlayers = new HashSet<>();
         for (Player p : tableStructure.getPlayers()) {
             if (p.getChips() > 0) {
                 PlayerHand ph = new PlayerHand();
@@ -143,8 +147,7 @@ public class PokerHandServiceImpl implements PokerHandService {
         phs.sort(new PlayerHandBetAmountComparator());
         for (PlayerHand ph : phs) {
             if (ph.getPlayer().getTableChips() <= 0) {
-                tableStructure.getPlayers().remove(ph.getPlayer());
-                tableStructure.setPlayers(tableStructure.getPlayers());
+                tableStructure.removePlayer(ph.getPlayer());
                 tableStructureDao.save(tableStructure);
             }
         }

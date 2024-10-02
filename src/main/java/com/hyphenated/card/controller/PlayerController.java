@@ -204,20 +204,25 @@ public class PlayerController {
     @CacheEvict(value = "game", allEntries = true)//TODO Cache entfernen?
     public @ResponseBody ResponseEntity.BodyBuilder sitIn(@RequestParam UUID playerId, @RequestParam UUID tableStructureId, int startingChips) {
         Player player = playerService.findPlayerById(playerId);
-        tableStructureService.addNewPlayerToTableStructure(tableStructureService.getTableStructureById(tableStructureId), player, startingChips);
+        TableStructure tableStructure = tableStructureService.getTableStructureById(tableStructureId);
+        tableStructureService.addNewPlayerToTableStructure(tableStructure, player, startingChips);
         tableTasksController.playerSitin(player.getName());
+        if (tableStructure.getPlayers().size() == 2) {
+            tableStructureService.startGame(tableStructure);
+        }
         return ResponseEntity.ok();
     }
 
     @RequestMapping("/sitout")
     @CacheEvict(value = "game", allEntries = true)
-    public @ResponseBody ResponseEntity.BodyBuilder sitOut(@RequestParam UUID playerId, @RequestParam UUID tableStructureId) {
+    public @ResponseBody ResponseEntity.BodyBuilder sitOut(@RequestParam UUID playerId) {
         Player player = playerService.findPlayerById(playerId);
-        TableStructure tableStructure = tableStructureService.getTableStructureById(tableStructureId);
-        tableStructureService.removePlayerFromTableStructure(tableStructure, player);
-        tableStructure.getCurrentHand().findPlayerHandByPlayerId(playerId).ifPresent(playerHand ->
-                scheduledPlayerActionService.handlePlayerRoundAction(PlayerHandRoundAction.FOLD, playerHand, 0));
-        ;
+        tableStructureService.removePlayerFromTableStructure(player);
+        player.getTableStructure().getCurrentHand()
+                .findPlayerHandByPlayerId(playerId)
+                .ifPresent(playerHand ->
+                        scheduledPlayerActionService.handlePlayerRoundAction(
+                                PlayerHandRoundAction.FOLD, playerHand, 0));
         tableTasksController.playerLeft(player.getName());
         return ResponseEntity.ok();
     }

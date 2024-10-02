@@ -35,7 +35,6 @@ import com.fasterxml.jackson.annotation.JsonFormat.Shape;
 @JsonFormat(shape = Shape.STRING)
 public enum GameStatus {
     NOT_STARTED,
-    SEATING,
     PREFLOP,
     FLOP,
     TURN,

@@ -30,6 +30,7 @@ import com.hyphenated.card.domain.GameStatus;
 import com.hyphenated.card.domain.Player;
 import com.hyphenated.card.domain.TableStructure;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.concurrent.ScheduledExecutorTask;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -61,41 +62,41 @@ public class TableStructureServiceImpl implements TableStructureService {
 
     @Override
     @Transactional
-    public TableStructure startGame(TableStructure tableStructure) {
-        if (tableStructure.getPlayers().size() < 2) {
-            throw new IllegalStateException("Not Enough Players");
-        }
-        if (tableStructure.getPlayers().size() > 10) {
-            throw new IllegalStateException("Too Many Players");
-        }
-        if (!tableStructure.getGameStatus().equals(GameStatus.NOT_STARTED)) {
-            throw new IllegalStateException("Game already started");
-        }
+    public void startGame(TableStructure tableStructure) {
+        new ScheduledExecutorTask(() -> {
 
-        //Set started flag
-        tableStructure.setGameStatus(GameStatus.SEATING);
+            if (tableStructure.getPlayers().size() < 2) {
+                throw new IllegalStateException("Not Enough Players");
+            }
+            if (tableStructure.getPlayers().size() > 10 || tableStructure.getPlayers().size() > tableStructure.getMaxPlayers()) {
+                throw new IllegalStateException("Too Many Players");
+            }
+            if (!tableStructure.getGameStatus().equals(GameStatus.NOT_STARTED)) {
+                throw new IllegalStateException("Game already started");
+            }
 
-        //Get all players associated with the game.
-        //Assign random position.  Save the player.
-        List<Player> players = new ArrayList<>(tableStructure.getPlayers());
-        Collections.shuffle(players);
-        for (int i = 0; i < players.size(); i++) {
-            Player p = players.get(i);
-            p.setGamePosition(i + 1);
-            players.forEach(player -> playerDao.save(player));
-        }
+            //Get all players associated with the game.
+            //Assign random position.  Save the player.
+            List<Player> players = new ArrayList<>(tableStructure.getPlayers());
+            Collections.shuffle(players);
+            for (int i = 0; i < players.size(); i++) {
+                Player p = players.get(i);
+                p.setGamePosition(i + 1);
+                players.forEach(player -> playerDao.save(player));
+            }
 
-        //Set Button and Big Blind.  Button is position 1 (index 0)
-        Collections.sort(players);
-        tableStructure.setPlayerInBTN(players.get(0));
+            //Set Button and Big Blind.  Button is position 1 (index 0)
+            Collections.sort(players);
+            tableStructure.setPlayerInBTN(players.get(0));
 
-        //Save and return the updated game
-        return tableStructureDao.save(tableStructure);
+            //Save and return the updated game
+            tableStructureDao.save(tableStructure);
+        }, 4000);
     }
 
     @Override
     @Transactional
-    public Player addNewPlayerToTableStructure(TableStructure tableStructure, Player player, int startingTableChips) {
+    public void addNewPlayerToTableStructure(TableStructure tableStructure, Player player, int startingTableChips) {
         if (tableStructure.getMaxPlayers() >= tableStructure.getPlayers().size()) {
             throw new IllegalStateException("No new players may join");
         }
@@ -112,12 +113,12 @@ public class TableStructureServiceImpl implements TableStructureService {
         player = playerDao.save(player);
         tableStructure.addPlayer(player);
         tableStructureDao.save(tableStructure);
-        return player;
     }
 
     @Override
     @Transactional
-    public void removePlayerFromTableStructure(TableStructure tableStructure, Player player) {
+    public void removePlayerFromTableStructure(Player player) {
+        TableStructure tableStructure = player.getTableStructure();
         tableStructure.removePlayer(player);
         tableStructureDao.save(tableStructure);
     }

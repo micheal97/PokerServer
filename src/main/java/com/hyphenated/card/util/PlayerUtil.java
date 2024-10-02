@@ -93,7 +93,6 @@ public class PlayerUtil {
 
         //Skip all in players and sitting out players
         boolean lookingForNextPlayer = true;
-        List<Player> playersToRemove = new ArrayList<>();
         while (lookingForNextPlayer) {
             next = PlayerUtil.getNextPlayerInGameOrderPH(players, next);
             //Escape condition
@@ -101,56 +100,14 @@ public class PlayerUtil {
                 next = null;
                 break;
             }
-            //If the player is sitting out, it will not be next to act
-            if (next.isSittingOut()) {
-
-                //Player is sitting out and needs to call, automatic fold
-                PlayerHand playerHand = null;
-                for (PlayerHand ph : hand.getPlayers()) {
-                    if (ph.getPlayer().equals(next)) {
-                        playerHand = ph;
-                        break;
-                    }
-                }
-                if (playerHand != null && hand.getTotalBetAmount() > playerHand.getRoundBetAmount()) {
-                    playersToRemove.add(next);
-                }
-            }
             //If the player is not sitting out and still has chips, then this player is next to act
             else if (next.getChips() > 0) {
                 lookingForNextPlayer = false;
             }
         }
-        //Remove sitting out players
-        for (Player p : playersToRemove) {
-            removePlayerFromHand(p, hand);
-        }
         return next;
     }
 
-    /**
-     * Remove a player from a hand.
-     *
-     * @param player player to be removed
-     * @param hand   hand to remove the player from
-     * @return true if player removed, false otherwise
-     */
-    public static boolean removePlayerFromHand(Player player, HandEntity hand) {
-        PlayerHand playerHand = null;
-        for (PlayerHand ph : hand.getPlayers()) {
-            if (ph.getPlayer().equals(player)) {
-                playerHand = ph;
-                break;
-            }
-        }
-        //Player is not in the hand.  Sanity check case.
-        if (playerHand == null) {
-            return false;
-        }
-
-        Set<PlayerHand> players = hand.getPlayers();
-        return players.remove(playerHand);
-    }
 
     /**
      * Determine the winner(s) of a hand.  Limit the players considered to be the winner to the list

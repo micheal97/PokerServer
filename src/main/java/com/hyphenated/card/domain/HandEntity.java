@@ -25,7 +25,6 @@ package com.hyphenated.card.domain;
 
 import com.hyphenated.card.Card;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
 import lombok.Setter;
 
 import java.io.Serializable;
@@ -42,7 +41,6 @@ public class HandEntity implements Serializable {
     private UUID id;
     private TableStructure tableStructure;
     private BoardEntity board;
-    @Setter(value = AccessLevel.NONE)
     private Set<PlayerHand> players;
     private Player currentToAct;
     private Player lastBetOrRaise;
@@ -58,6 +56,15 @@ public class HandEntity implements Serializable {
 
     public Optional<PlayerHand> findPlayerHandByPlayerId(UUID playerId) {
         return players.stream().filter(playerHand -> playerHand.getPlayer().getId() == playerId).findAny();
+    }
+
+    public void removePlayer(PlayerHand playerHand) {
+        players.remove(playerHand);
+    }
+
+    public Set<PlayerHand> addPlayer(PlayerHand playerHand) {
+        players.add(playerHand);
+        return players;
     }
 
     @Id
