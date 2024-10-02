@@ -96,7 +96,7 @@ public class TableStructureServiceImpl implements TableStructureService {
     @Override
     @Transactional
     public Player addNewPlayerToTableStructure(TableStructure tableStructure, Player player, int startingTableChips) {
-        if (tableStructure.getMaxPlayers() == tableStructure.getPlayers().size()) {
+        if (tableStructure.getMaxPlayers() >= tableStructure.getPlayers().size()) {
             throw new IllegalStateException("No new players may join");
         }
         if (tableStructure.getPlayers().size() >= 10) {
@@ -110,9 +110,16 @@ public class TableStructureServiceImpl implements TableStructureService {
         }
         player.setTableStructure(tableStructure);
         player = playerDao.save(player);
-        tableStructure.setPlayers(tableStructure.getPlayers());
+        tableStructure.addPlayer(player);
         tableStructureDao.save(tableStructure);
         return player;
+    }
+
+    @Override
+    @Transactional
+    public void removePlayerFromTableStructure(TableStructure tableStructure, Player player) {
+        tableStructure.removePlayer(player);
+        tableStructureDao.save(tableStructure);
     }
 
 
@@ -123,9 +130,7 @@ public class TableStructureServiceImpl implements TableStructureService {
 
     @Override
     public void updateTables(List<String> blindLevels) {
-        blindLevels.forEach(blindLevel -> {
-            tableStructureDao.updateTables(blindLevel);
-        });
+        blindLevels.forEach(blindLevel -> tableStructureDao.updateTables(blindLevel));
     }
 
 

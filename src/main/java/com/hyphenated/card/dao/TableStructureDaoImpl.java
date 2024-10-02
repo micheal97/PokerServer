@@ -71,7 +71,9 @@ public class TableStructureDaoImpl extends BaseDaoImpl<TableStructure> implement
         cq.where(cb.count(root.get("players")).equalTo(0));
         TypedQuery<TableStructure> query = session.createQuery(cq);
         List<TableStructure> tableStructures = query.getResultList();
-        tableStructures.remove(0);
+        if (!tableStructures.isEmpty()) {
+            tableStructures.remove(0);
+        }
         tableStructures.forEach(session::remove);
     }
 }

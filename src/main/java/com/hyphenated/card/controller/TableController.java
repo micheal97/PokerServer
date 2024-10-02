@@ -26,6 +26,7 @@ package com.hyphenated.card.controller;
 import com.hyphenated.card.domain.*;
 import com.hyphenated.card.service.PlayerServiceManager;
 import com.hyphenated.card.service.PokerHandService;
+import com.hyphenated.card.service.ScheduledPlayerActionService;
 import com.hyphenated.card.service.TableStructureService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
@@ -47,10 +48,12 @@ import java.util.*;
  */
 @Controller
 public class TableController {
+    //TODO:DeleteClass
 
     @Autowired
     private TableStructureService tableStructureService;
-
+    @Autowired
+    private ScheduledPlayerActionService scheduledPlayerActionService;
     @Autowired
     private PokerHandService handService;
     @Autowired
@@ -135,7 +138,7 @@ public class TableController {
      * @return Map representing a JSON string with a single field for "success" which is either true or false.
      * example: {"success":true}
      */
-    @RequestMapping("/startPrivateGame")
+    @RequestMapping("/startprivategame")
     @CacheEvict(value = "game", allEntries = true)
     public @ResponseBody ResponseEntity.BodyBuilder startGame(@RequestParam UUID gameId, @RequestParam UUID playerId) {
         //TODO:startPrivateGame / startPublicGame

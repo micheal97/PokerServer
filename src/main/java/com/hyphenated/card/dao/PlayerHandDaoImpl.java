@@ -23,11 +23,9 @@ THE SOFTWARE.
 */
 package com.hyphenated.card.dao;
 
+import com.hyphenated.card.domain.PlayerHand;
 import org.springframework.stereotype.Repository;
 
-import com.hyphenated.card.domain.Game;
-
 @Repository
-public class GameDaoImpl extends BaseDaoImpl<Game> implements GameDao {
-
+public class PlayerHandDaoImpl extends BaseDaoImpl<PlayerHand> implements PlayerHandDao {
 }

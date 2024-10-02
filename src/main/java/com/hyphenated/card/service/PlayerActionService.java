@@ -26,6 +26,7 @@ package com.hyphenated.card.service;
 import com.hyphenated.card.domain.Player;
 import com.hyphenated.card.domain.PlayerHand;
 import com.hyphenated.card.domain.PlayerStatus;
+import com.hyphenated.card.domain.TableStructure;
 
 import java.util.UUID;
 
@@ -50,7 +51,7 @@ public interface PlayerActionService {
      * @return true if the player folds, false if the fold is not permitted
      * (the player is out of position, the player is not in the hand).
      */
-    boolean fold(PlayerHand playerHand);
+    PlayerHand fold(PlayerHand playerHand);
 
     /**
      * The Player checks back their action
@@ -58,7 +59,7 @@ public interface PlayerActionService {
      * @return true if the player checks. False if a check is not permitted
      * (The player is out of turn, there is a bet and a check is not allowed).
      */
-    boolean check(PlayerHand playerHand);
+    PlayerHand check(PlayerHand playerHand);
 
     /**
      * The Player places a bet
@@ -71,7 +72,7 @@ public interface PlayerActionService {
      * @return true if the bet is placed.  False if the bet is not permitted
      * (The bet is too small, the player is out of turn).
      */
-    boolean bet(PlayerHand playerHand, int betAmount);
+    PlayerHand bet(PlayerHand playerHand, int betAmount);
 
     /**
      * Call the bet
@@ -79,9 +80,9 @@ public interface PlayerActionService {
      * @return true if the bet is successfully called. False if a call is not permitted
      * (there is not bet, it is not the players turn, etc.)
      */
-    boolean callAny(PlayerHand playerHand);
+    PlayerHand callAny(PlayerHand playerHand);
 
-    boolean callCurrent(PlayerHand playerHand, int roundBetAmount);
+    PlayerHand callCurrent(PlayerHand playerHand, int roundBetAmount);
 
     /**
      * Get the status in the game or hand of the player
@@ -96,5 +97,5 @@ public interface PlayerActionService {
      *
      * @param player {@link Player} who is back in the game
      */
-    void sitIn(Player player);
+    void sitIn(Player player, TableStructure tableStructure, int startingChips);
 }

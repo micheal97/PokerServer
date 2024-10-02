@@ -41,6 +41,10 @@ public class PlayerActionServiceImpl implements PlayerActionService {
     private PlayerDao playerDao;
     @Autowired
     private HandDao handDao;
+    @Autowired
+    private PokerHandService pokerHandService;
+    @Autowired
+    private TableStructureService tableStructureService;
 
     @Override
     @Transactional
@@ -51,7 +55,7 @@ public class PlayerActionServiceImpl implements PlayerActionService {
 
     @Override
     @Transactional
-    public boolean fold(PlayerHand playerHand) {
+    public PlayerHand fold(PlayerHand playerHand) {
         HandEntity hand = playerHand.getHandEntity();
         Player player = playerHand.getPlayer();
         //fold out of turn
@@ -60,16 +64,20 @@ public class PlayerActionServiceImpl implements PlayerActionService {
             playerHand.setRoundAction(PlayerHandRoundAction.FOLD);
             hand.getPlayers().add(playerHand);
             handDao.save(hand);
-            return false;
+            return null;
         }
 
         Player next = PlayerUtil.getNextPlayerToAct(hand, player);
         if (!PlayerUtil.removePlayerFromHand(player, hand)) {
-            return false;
+            return null;
         }
         hand.setCurrentToAct(next);
         handDao.save(hand);
-        return true;
+        if (next == null) {
+            next = pokerHandService.handleNextGameStatus(hand.getTableStructure()).getCurrentToAct();
+        }
+        return hand.findPlayerHandByPlayerId(next.getId()).get();
+        //TODO: Überall wie hier
     }
 
     @Override
@@ -89,8 +97,6 @@ public class PlayerActionServiceImpl implements PlayerActionService {
             handDao.save(hand);
             return false;
         }
-
-
         Player next = PlayerUtil.getNextPlayerToAct(hand, player);
         hand.setCurrentToAct(next);
         handDao.save(hand);
@@ -175,28 +181,26 @@ public class PlayerActionServiceImpl implements PlayerActionService {
     public boolean callCurrent(PlayerHand playerHand, int roundBetAmount) {
         HandEntity hand = playerHand.getHandEntity();
         Player player = playerHand.getPlayer();
-        //call out of turn
-        if (!player.equals(hand.getCurrentToAct())) {
-            hand.getPlayers().remove(playerHand);
-            playerHand.setRoundAction(PlayerHandRoundAction.CALL_CURRENT);
-            playerHand.setCallBetAmount(roundBetAmount);
-            hand.getPlayers().add(playerHand);
-            handDao.save(hand);
+
+        if (roundBetAmount != playerHand.getBetAmount()) {
             return false;
         }
-
-        if (roundBetAmount != playerHand.getCallBetAmount()) {
-            return false;
-        }
-
         int toCall = hand.getTotalBetAmount() - playerHand.getRoundBetAmount();
         toCall = Math.min(toCall, player.getChips());
         if (toCall <= 0) {
             return false;
         }
-
         playerHand.setRoundBetAmount(playerHand.getRoundBetAmount() + toCall);
         playerHand.setBetAmount(playerHand.getBetAmount() + toCall);
+
+        //call out of turn
+        if (!player.equals(hand.getCurrentToAct())) {
+            hand.getPlayers().remove(playerHand);
+            playerHand.setRoundAction(PlayerHandRoundAction.CALL_CURRENT);
+            hand.getPlayers().add(playerHand);
+            handDao.save(hand);
+            return null;
+        }
         player.setChips(player.getChips() - toCall);
         hand.setPot(hand.getPot() + toCall);
 
@@ -209,9 +213,8 @@ public class PlayerActionServiceImpl implements PlayerActionService {
 
     @Override
     @Transactional
-    public void sitIn(Player player) {
-        player.setSittingOut(false);
-        playerDao.save(player);
+    public void sitIn(Player player, TableStructure tableStructure, int startingChips) {
+        tableStructureService.addNewPlayerToTableStructure(tableStructure, player, startingChips);
     }
 
     @Override

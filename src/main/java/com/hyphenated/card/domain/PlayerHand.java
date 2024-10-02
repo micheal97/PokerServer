@@ -26,11 +26,13 @@ package com.hyphenated.card.domain;
 import com.hyphenated.card.Card;
 import com.hyphenated.card.holder.Hand;
 import jakarta.persistence.*;
+import lombok.Getter;
 import lombok.Setter;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.UUID;
+import java.util.concurrent.ScheduledExecutorService;
 
 @Setter
 @Entity
@@ -45,7 +47,8 @@ public class PlayerHand implements Comparable<PlayerHand>, Serializable {
     private int betAmount;
     private int roundBetAmount;
     private PlayerHandRoundAction roundAction;
-    private int callBetAmount;
+    @Getter
+    private ScheduledExecutorService scheduledExecutorService;
 
 
     @Id
@@ -88,11 +91,6 @@ public class PlayerHand implements Comparable<PlayerHand>, Serializable {
     @Column(name = "bet_amount")
     public int getBetAmount() {
         return betAmount;
-    }
-
-    @Column(name = "call_bet_amount")
-    public int getCallBetAmount() {
-        return callBetAmount;
     }
 
     /**

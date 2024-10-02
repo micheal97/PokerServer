@@ -40,6 +40,8 @@ public interface TableStructureService {
 
     Player addNewPlayerToTableStructure(TableStructure tableStructure, Player player, int startingTableChips);
 
+    void removePlayerFromTableStructure(TableStructure tableStructure, Player player);
+
     List<TableStructureDTO> findAll();
 
     void updateTables(List<String> blindLevel);

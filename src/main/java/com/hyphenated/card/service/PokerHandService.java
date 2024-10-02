@@ -23,7 +23,10 @@ THE SOFTWARE.
 */
 package com.hyphenated.card.service;
 
-import com.hyphenated.card.domain.*;
+import com.hyphenated.card.domain.BoardEntity;
+import com.hyphenated.card.domain.HandEntity;
+import com.hyphenated.card.domain.Player;
+import com.hyphenated.card.domain.TableStructure;
 
 /**
  * Service to handle operations related to a poker hand.  Tracks the board state and players.
@@ -32,7 +35,7 @@ import com.hyphenated.card.domain.*;
  */
 public interface PokerHandService {
 
-    void handlePlayerHandRoundAction(PlayerHand playerHand, int betAmount);
+    HandEntity handleNextGameStatus(TableStructure tableStructure);
 
     /**
      * Start a new hand on the given game
@@ -40,7 +43,7 @@ public interface PokerHandService {
      * @param tableStructure {@link TableStructure} to start the hand with
      * @return {@link HandEntity} for the hand
      */
-    public HandEntity startNewHand(TableStructure tableStructure);
+    HandEntity startNewHand(TableStructure tableStructure);
 
     /**
      * End the hand. Update dependencies on Players, position, dealer, big blind, etc.
@@ -50,7 +53,7 @@ public interface PokerHandService {
      *
      * @param hand Hand to be finished.
      */
-    public Player endHand(HandEntity hand);
+    Player endHand(HandEntity hand);
 
     /**
      * Get the hand from the persistence context based on the unique id
@@ -58,7 +61,7 @@ public interface PokerHandService {
      * @param id unique id for the hand
      * @return {@link HandEntity}
      */
-    public HandEntity getHandById(long id);
+    HandEntity getHandById(long id);
 
     /**
      * Save the hand to the persistence context
@@ -66,7 +69,7 @@ public interface PokerHandService {
      * @param hand Detached {@link HandEntity}
      * @return HandEntity with attached persistence context
      */
-    public HandEntity saveHand(HandEntity hand);
+    HandEntity saveHand(HandEntity hand);
 
     /**
      * Handle the flop for the hand
@@ -75,7 +78,7 @@ public interface PokerHandService {
      * @return updated hand with {@link BoardEntity} containing the flop
      * @throws IllegalStateException if the hand is not in a state to expect the flop.
      */
-    public HandEntity flop(HandEntity hand) throws IllegalStateException;
+    HandEntity flop(HandEntity hand) throws IllegalStateException;
 
     /**
      * Handle the turn for the hand
@@ -85,7 +88,7 @@ public interface PokerHandService {
      * @throws IllegalStateException if the hand is not in a state to expect a turn card.
      *                               This may be because there is already a turn card, or there is no flop yet.
      */
-    public HandEntity turn(HandEntity hand) throws IllegalStateException;
+    HandEntity turn(HandEntity hand) throws IllegalStateException;
 
     /**
      * Handle the river card for the hand
@@ -94,15 +97,7 @@ public interface PokerHandService {
      * @return updated hand with {@link BoardEntity} containing the river card
      * @throws IllegalStateException if the hand is not in a state to expect a river card.
      */
-    public HandEntity river(HandEntity hand) throws IllegalStateException;
-
-    /**
-     * Has the current player to act for the hand sit out, then moves the action to the next player.
-     *
-     * @param hand Current Hand
-     * @return true if the player was sat out, false otherwise
-     */
-    public boolean sitOutCurrentPlayer(HandEntity hand);
+    HandEntity river(HandEntity hand) throws IllegalStateException;
 
     /**
      * Gets the player who is the Small Blind for this hand.
@@ -110,7 +105,7 @@ public interface PokerHandService {
      * @param hand {@link HandEntity}
      * @return {@link Player} who is the Small Blind
      */
-    public Player getPlayerInSB(HandEntity hand);
+    Player getPlayerInSB(HandEntity hand);
 
     /**
      * Gets the player who is the Big Blind for this hand
@@ -118,6 +113,6 @@ public interface PokerHandService {
      * @param hand {@link HandEntity}
      * @return {@link Player} who is the Big Blind
      */
-    public Player getPlayerInBB(HandEntity hand);
+    Player getPlayerInBB(HandEntity hand);
 
 }

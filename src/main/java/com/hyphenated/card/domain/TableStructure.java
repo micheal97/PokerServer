@@ -2,6 +2,7 @@ package com.hyphenated.card.domain;
 
 import com.hyphenated.card.controller.dto.TableStructureDTO;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Setter;
 
 import java.io.Serializable;
@@ -17,13 +18,23 @@ public class TableStructure implements Serializable {
     private int maxPlayers;
     private Player playerInBTN;
     private String name;
+    @Setter(value = AccessLevel.NONE)
     private Set<Player> players;
     private HandEntity currentHand;
+    @Setter(value = AccessLevel.NONE)
     private GameStatus gameStatus;
     private Player privateGameCreator;
 
     public TableStructureDTO getTableStructureDTO() {
         return new TableStructureDTO(id, blindLevel, maxPlayers, name, players.size(), gameStatus, privateGameCreator);
+    }
+
+    public void addPlayer(Player player) {
+        players.add(player);
+    }
+
+    public void removePlayer(Player player) {
+        players.remove(player);
     }
 
     @Column(name = "table_structure_id")
@@ -71,6 +82,10 @@ public class TableStructure implements Serializable {
     @Column(name = "game_status")
     public GameStatus getGameStatus() {
         return gameStatus;
+    }
+
+    public void setNextGameStatus() {
+        this.gameStatus = gameStatus.next();
     }
 
     @Column(name = "private_game_creator")

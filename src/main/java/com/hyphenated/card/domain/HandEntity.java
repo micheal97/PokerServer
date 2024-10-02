@@ -25,10 +25,12 @@ package com.hyphenated.card.domain;
 
 import com.hyphenated.card.Card;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Setter;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -38,9 +40,9 @@ import java.util.UUID;
 public class HandEntity implements Serializable {
 
     private UUID id;
-    private Game game;
     private TableStructure tableStructure;
     private BoardEntity board;
+    @Setter(value = AccessLevel.NONE)
     private Set<PlayerHand> players;
     private Player currentToAct;
     private Player lastBetOrRaise;
@@ -50,12 +52,12 @@ public class HandEntity implements Serializable {
     private int totalBetAmount;
     private int lastBetAmount;
 
-    public PlayerHand getPlayerHandById(UUID playerHandId) {
-        return players.stream().filter(playerHand -> playerHand.getId() == playerHandId).findFirst().get();
+    public Optional<PlayerHand> findPlayerHandById(UUID playerHandId) {
+        return players.stream().filter(playerHand -> playerHand.getId() == playerHandId).findAny();
     }
 
-    public PlayerHand getPlayerHandByPlayerId(UUID playerId) {
-        return players.stream().filter(playerHand -> playerHand.getPlayer().getId() == playerId).findFirst().get();
+    public Optional<PlayerHand> findPlayerHandByPlayerId(UUID playerId) {
+        return players.stream().filter(playerHand -> playerHand.getPlayer().getId() == playerId).findAny();
     }
 
     @Id
@@ -63,12 +65,6 @@ public class HandEntity implements Serializable {
     @Column(name = "hand_id")
     public UUID getId() {
         return id;
-    }
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "game_id")
-    public Game getGame() {
-        return game;
     }
 
     @OneToOne(fetch = FetchType.LAZY)

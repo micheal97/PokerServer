@@ -14,34 +14,38 @@ public class TableTasksController {
     private SimpMessagingTemplate template;
 
     public void playerJoined(String name) {
-        template.convertAndSend("/playerJoined", name);
+        template.convertAndSend("/playerjoined", name);
+    }
+
+    public void playerLeft(String name) {
+        template.convertAndSend("/playerleft", name);
     }
 
     public void playerFolded(String name) {
-        template.convertAndSend("/playerFolded", name);
+        template.convertAndSend("/playerfolded", name);
     }
 
     public void playerCalled(String name) {
-        template.convertAndSend("/playerCalled", name);
+        template.convertAndSend("/playercalled", name);
     }
 
     public void playerChecked(String name) {
-        template.convertAndSend("/playerChecked", name);
+        template.convertAndSend("/playerchecked", name);
     }
 
     public void playerBet(PlayerBet playerBet) {
-        template.convertAndSend("/playerBet", playerBet);
+        template.convertAndSend("/playerbet", playerBet);
     }
 
     public void playerSitin(String name) {
-        template.convertAndSend("/playerSitin", name);
+        template.convertAndSend("/playersitin", name);
     }
 
     public void sendPlayerHandId(UUID playerId, UUID playerHandId) {
-        template.convertAndSendToUser(playerId.toString(), "/handId", playerHandId);
+        template.convertAndSendToUser(playerId.toString(), "/handid", playerHandId);
     }
 
     public void playersTurn(String name) {
-        template.convertAndSend("/playersTurn", name);
+        template.convertAndSend("/playersturn", name);
     }
 }
