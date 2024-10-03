@@ -23,7 +23,6 @@ THE SOFTWARE.
 */
 package com.hyphenated.card.service;
 
-import com.hyphenated.card.controller.dto.TableStructureDTO;
 import com.hyphenated.card.domain.Player;
 import com.hyphenated.card.domain.TableStructure;
 
@@ -42,7 +41,7 @@ public interface TableStructureService {
 
     void removePlayerFromTableStructure(Player player);
 
-    List<TableStructureDTO> findAll();
+    List<TableStructure> findAll();
 
     void updateTables(List<String> blindLevel);
 }

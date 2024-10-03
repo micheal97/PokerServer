@@ -23,7 +23,6 @@ THE SOFTWARE.
 */
 package com.hyphenated.card.service;
 
-import com.hyphenated.card.controller.dto.TableStructureDTO;
 import com.hyphenated.card.dao.PlayerDao;
 import com.hyphenated.card.dao.TableStructureDao;
 import com.hyphenated.card.domain.GameStatus;
@@ -125,8 +124,8 @@ public class TableStructureServiceImpl implements TableStructureService {
 
 
     @Override
-    public List<TableStructureDTO> findAll() {
-        return tableStructureDao.findAll().stream().map(TableStructure::getTableStructureDTO).toList();
+    public List<TableStructure> findAll() {
+        return tableStructureDao.findAll();
     }
 
     @Override

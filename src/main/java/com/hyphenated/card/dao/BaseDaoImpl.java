@@ -66,7 +66,7 @@ public class BaseDaoImpl<T> implements BaseDao<T> {
         CriteriaQuery<T> query = builder.createQuery(persistentClass);
         Root<T> root = query.from(persistentClass);
         query.select(root);
-        return session.createQuery(query).getResultList();
+        return session.createQuery(query).getResultList().stream().toList();
     }
 
     @Override

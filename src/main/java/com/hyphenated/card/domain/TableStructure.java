@@ -3,25 +3,41 @@ package com.hyphenated.card.domain;
 import com.hyphenated.card.controller.dto.TableStructureDTO;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.Setter;
 
 import java.io.Serializable;
 import java.util.Set;
 import java.util.UUID;
 
+@Getter
 @Entity
 @Table(name = "table_structure")
 @Setter
 public class TableStructure implements Serializable {
+    @Column(name = "table_structure_id")
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
+    @Column(name = "blind_level")
+    @Enumerated(EnumType.STRING)
     private BlindLevel blindLevel;
+    @Column(name = "maxPlayers")
     private int maxPlayers;
+    @OneToOne
+    @JoinColumn(name = "btn_player_id")
     private Player playerInBTN;
+    @Column(name = "name")
     private String name;
     @Setter(value = AccessLevel.NONE)
+    @OneToMany(mappedBy = "table_structure", fetch = FetchType.LAZY)
     private Set<Player> players;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "current_hand_id")
     private HandEntity currentHand;
+    @Column(name = "game_status")
     private GameStatus gameStatus = GameStatus.NOT_STARTED;
+    @Column(name = "private_game_creator")
     private Player privateGameCreator;
 
     public TableStructureDTO getTableStructureDTO() {
@@ -36,52 +52,6 @@ public class TableStructure implements Serializable {
         players.remove(player);
     }
 
-    @Column(name = "table_structure_id")
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    public UUID getId() {
-        return id;
-    }
-
-    @Column(name = "blind_level")
-    @Enumerated(EnumType.STRING)
-    public BlindLevel getBlindLevel() {
-        return blindLevel;
-    }
-
-    @Column(name = "maxPlayers")
-    public int getMaxPlayers() {
-        return maxPlayers;
-    }
-
-
-    @OneToOne
-    @JoinColumn(name = "btn_player_id")
-    public Player getPlayerInBTN() {
-        return playerInBTN;
-    }
-
-
-    @OneToOne(mappedBy = "table_structure", fetch = FetchType.LAZY)
-    public Set<Player> getPlayers() {
-        return players;
-    }
-
-    @Column(name = "name")
-    public String getName() {
-        return name;
-    }
-
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "current_hand_id")
-    public HandEntity getCurrentHand() {
-        return currentHand;
-    }
-
-    @Column(name = "game_status")
-    public GameStatus getGameStatus() {
-        return gameStatus;
-    }
 
     public void setNextGameStatus() {
         this.gameStatus = gameStatus.next();
@@ -93,11 +63,6 @@ public class TableStructure implements Serializable {
 
     public void setGameStatusNotStarted() {
         this.gameStatus = GameStatus.NOT_STARTED;
-    }
-
-    @Column(name = "private_game_creator")
-    public Player getPrivateGameCreator() {
-        return privateGameCreator;
     }
 
 }

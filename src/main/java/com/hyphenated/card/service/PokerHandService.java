@@ -28,6 +28,8 @@ import com.hyphenated.card.domain.HandEntity;
 import com.hyphenated.card.domain.Player;
 import com.hyphenated.card.domain.TableStructure;
 
+import javax.annotation.Nullable;
+
 /**
  * Service to handle operations related to a poker hand.  Tracks the board state and players.
  *
@@ -35,6 +37,7 @@ import com.hyphenated.card.domain.TableStructure;
  */
 public interface PokerHandService {
 
+    @Nullable
     HandEntity handleNextGameStatus(TableStructure tableStructure);
 
     /**

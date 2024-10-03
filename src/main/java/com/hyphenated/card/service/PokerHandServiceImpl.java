@@ -55,15 +55,21 @@ public class PokerHandServiceImpl implements PokerHandService {
             tableStructure.setNextGameStatus();
         }
         tableStructureDao.save(tableStructure);
+        HandEntity currentHand = tableStructure.getCurrentHand();
         return switch (tableStructure.getGameStatus()) {
             case PREFLOP -> startNewHand(tableStructure);
-            case FLOP -> flop(tableStructure.getCurrentHand());
-            case TURN -> turn(tableStructure.getCurrentHand());
-            case RIVER -> river(tableStructure.getCurrentHand());
+            case FLOP -> flop(currentHand);
+            case TURN -> turn(currentHand);
+            case RIVER -> river(currentHand);
             case END_HAND -> {
-                endHand(tableStructure.getCurrentHand());
-                tableStructure.setNextGameStatus();
-                tableStructureDao.save(tableStructure);
+                if (endHand(currentHand) == null) {
+                    tableStructure.setGameStatusNotStarted();
+                    tableStructureDao.save(tableStructure);
+                    yield null;
+                } else {
+                    tableStructure.setNextGameStatus();
+                    tableStructureDao.save(tableStructure);
+                }
                 yield startNewHand(tableStructure);
             }
             default -> throw new IllegalStateException("Unexpected value: " + tableStructure.getGameStatus());
@@ -258,16 +264,6 @@ public class PokerHandServiceImpl implements PokerHandService {
         hand.setCards(d.exportDeck());
         resetRoundValues(hand);
         return handDao.save(hand);
-    }
-
-    @Override
-    @Transactional
-    public boolean sitOutPlayer(Player player) {
-        TableStructure tableStructure = player.getTableStructure();
-
-        tableStructure.removePlayer(player);
-        tableStructureDao.save(tableStructure);
-        return true;
     }
 
     @Override

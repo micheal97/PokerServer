@@ -25,6 +25,8 @@ package com.hyphenated.card.domain;
 
 import com.hyphenated.card.Card;
 import jakarta.persistence.*;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.Setter;
 
 import java.io.Serializable;
@@ -33,21 +35,51 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+@Getter
 @Setter
 @Entity
+@EqualsAndHashCode
 @Table(name = "hand")
 public class HandEntity implements Serializable {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "hand_id")
     private UUID id;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "table_structure_id")
     private TableStructure tableStructure;
+    @OneToOne(fetch = FetchType.LAZY, cascade = {CascadeType.ALL})
+    @JoinColumn(name = "board_id")
     private BoardEntity board;
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "handEntity", cascade = {CascadeType.ALL}, orphanRemoval = true)
     private Set<PlayerHand> players;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "player_to_act_id")
     private Player currentToAct;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "last_bet_or_raise_id")
     private Player lastBetOrRaise;
+    @Column(name = "blind_level")
+    @Enumerated(EnumType.STRING)
     private BlindLevel blindLevel;
+    @ElementCollection(targetClass = Card.class)
+    @JoinTable(name = "hand_deck", joinColumns = @JoinColumn(name = "hand_id"))
+    @Column(name = "card", nullable = false)
+    @Enumerated(EnumType.STRING)
     private List<Card> cards;
+    @Column(name = "pot")
     private int pot;
+    @Column(name = "total_bet_amount")
     private int totalBetAmount;
+    /**
+     * -- GETTER --
+     * In No Limit poker, the minimum bet size is twice the previous bet.  Use this field to determine
+     * what that amount would be.
+     *
+     * @return The last bet/raise amount
+     */
+    @Column(name = "bet_amount")
     private int lastBetAmount;
 
     public Optional<PlayerHand> findPlayerHandById(UUID playerHandId) {
@@ -65,87 +97,5 @@ public class HandEntity implements Serializable {
     public Set<PlayerHand> addPlayer(PlayerHand playerHand) {
         players.add(playerHand);
         return players;
-    }
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "hand_id")
-    public UUID getId() {
-        return id;
-    }
-
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "table_structure_id")
-    public TableStructure getTableStructure() {
-        return tableStructure;
-    }
-
-    @OneToOne(fetch = FetchType.LAZY, cascade = {CascadeType.ALL})
-    @JoinColumn(name = "board_id")
-    public BoardEntity getBoard() {
-        return board;
-    }
-
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "handEntity", cascade = {CascadeType.ALL}, orphanRemoval = true)
-    public Set<PlayerHand> getPlayers() {
-        return players;
-    }
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "player_to_act_id")
-    public Player getCurrentToAct() {
-        return currentToAct;
-    }
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "last_bet_or_raise_id")
-    public Player getLastBetOrRaise() {
-        return lastBetOrRaise;
-    }
-
-
-    @Column(name = "blind_level")
-    @Enumerated(EnumType.STRING)
-    public BlindLevel getBlindLevel() {
-        return blindLevel;
-    }
-
-    @ElementCollection(targetClass = Card.class)
-    @JoinTable(name = "hand_deck", joinColumns = @JoinColumn(name = "hand_id"))
-    @Column(name = "card", nullable = false)
-    @Enumerated(EnumType.STRING)
-    public List<Card> getCards() {
-        return cards;
-    }
-
-    @Column(name = "pot")
-    public int getPot() {
-        return pot;
-    }
-
-    @Column(name = "total_bet_amount")
-    public int getTotalBetAmount() {
-        return totalBetAmount;
-    }
-
-
-    /**
-     * In No Limit poker, the minimum bet size is twice the previous bet.  Use this field to determine
-     * what that amount would be.
-     *
-     * @return The last bet/raise amount
-     */
-    @Column(name = "bet_amount")
-    public int getLastBetAmount() {
-        return lastBetAmount;
-    }
-
-    @Transient
-    @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof HandEntity)) {
-            return false;
-        }
-        return ((HandEntity) o).getId() == this.getId();
     }
 }

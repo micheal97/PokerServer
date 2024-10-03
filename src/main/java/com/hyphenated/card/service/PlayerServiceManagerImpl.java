@@ -24,10 +24,8 @@ THE SOFTWARE.
 package com.hyphenated.card.service;
 
 import com.hyphenated.card.dao.PlayerDao;
-import com.hyphenated.card.domain.*;
-import com.hyphenated.card.view.PlayerStatusObject;
+import com.hyphenated.card.domain.Player;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,50 +46,6 @@ public class PlayerServiceManagerImpl implements PlayerServiceManager {
     @Autowired
     private PlayerDao playerDao;
 
-    @Override
-    @Cacheable("game")
-    public PlayerStatusObject buildPlayerStatus(long tableStructureId, UUID playerId) {
-        TableStructure tableStructure = tableStructureService.getTableStructureById(tableStructureId);
-        Player player = playerActionService.getPlayerById(playerId);
-        PlayerStatusObject results = new PlayerStatusObject();
-        //Get the player status.
-        //In the special case of preflop, player is not current to act, see if the player is SB or BB
-        PlayerStatus playerStatus = playerActionService.getPlayerStatus(player);
-        if (playerStatus == PlayerStatus.WAITING && tableStructure.getGameStatus() == GameStatus.PREFLOP) {
-            if (player.equals(handService.getPlayerInSB(tableStructure.getCurrentHand()))) {
-                playerStatus = PlayerStatus.POST_SB;
-            } else if (player.equals(handService.getPlayerInBB(tableStructure.getCurrentHand()))) {
-                playerStatus = PlayerStatus.POST_BB;
-            }
-        }
-        results.setStatus(playerStatus);
-
-        results.setChips(player.getChips());
-        results.setSmallBlind(tableStructure.getBlindLevel().getSmallBlind());
-        results.setBigBlind(tableStructure.getBlindLevel().getBigBlind());
-        if (tableStructure.getCurrentHand() != null) {
-            HandEntity hand = tableStructure.getCurrentHand();
-            PlayerHand playerHand = null;
-            for (PlayerHand ph : hand.getPlayers()) {
-                if (ph.getPlayer().equals(player)) {
-                    playerHand = ph;
-                    break;
-                }
-            }
-            if (playerHand != null) {
-                results.setCard1(playerHand.getHand().getCard(0));
-                results.setCard2(playerHand.getHand().getCard(1));
-                results.setAmountBetRound(playerHand.getRoundBetAmount());
-
-                int toCall = hand.getTotalBetAmount() - playerHand.getRoundBetAmount();
-                toCall = Math.min(toCall, player.getChips());
-                if (toCall > 0) {
-                    results.setAmountToCall(toCall);
-                }
-            }
-        }
-        return results;
-    }
 
     @Override
     @Transactional

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -73,17 +74,21 @@ public class ScheduledPlayerActionServiceImpl implements ScheduledPlayerActionSe
             case CHECK -> playerActionService.check(playerHand);
             case BET -> playerActionService.bet(playerHand, betAmount);
         };
-        if (nextPlayerHand != null) {
+        if (nextPlayerHand == null) {
+            tableTasksController.gameStopped(playerHand.getPlayer().getTableStructure().getId());
+        } else {
             String playerName = playerHand.getPlayer().getName();
+            UUID tableStructureId = nextPlayerHand.getHandEntity().getTableStructure().getId();
             switch (action) {
-                case FOLD -> tableTasksController.playerFolded(playerName);
-                case CALL_ANY, CALL_CURRENT -> tableTasksController.playerCalled(playerName);
-                case CHECK -> tableTasksController.playerChecked(playerName);
-                case BET -> tableTasksController.playerBet(new PlayerBet(playerName, playerHand.getRoundBetAmount()));
+                case FOLD -> tableTasksController.playerFolded(playerName, tableStructureId);
+                case CALL_ANY, CALL_CURRENT -> tableTasksController.playerCalled(playerName, tableStructureId);
+                case CHECK -> tableTasksController.playerChecked(playerName, tableStructureId);
+                case BET ->
+                        tableTasksController.playerBet(new PlayerBet(playerName, playerHand.getRoundBetAmount()), tableStructureId);
             }
             playerHand.getScheduledExecutorService().shutdownNow();
             nextPlayerHand.setScheduledExecutorService(scheduleDefaultAction(nextPlayerHand));
-            tableTasksController.playersTurn(playerHand.getPlayer().getName());
+            tableTasksController.playersTurn(playerHand.getPlayer().getName(), tableStructureId);
             if (nextPlayerHand.getRoundAction() != null) {
                 handlePlayerRoundAction(nextPlayerHand.getRoundAction(), nextPlayerHand, nextPlayerHand.getBetAmount());
             }

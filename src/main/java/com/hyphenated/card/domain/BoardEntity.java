@@ -25,21 +25,38 @@ package com.hyphenated.card.domain;
 
 import com.hyphenated.card.Card;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "board")
 public class BoardEntity implements Serializable {
 
+    @Column(name = "board_id")
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
+    @Column(name = "flop1")
+    @Enumerated(EnumType.STRING)
     private Card flop1;
+    @Column(name = "flop2")
+    @Enumerated(EnumType.STRING)
     private Card flop2;
+    @Column(name = "flop3")
+    @Enumerated(EnumType.STRING)
     private Card flop3;
+    @Column(name = "turn")
+    @Enumerated(EnumType.STRING)
     private Card turn;
+    @Column(name = "river")
+    @Enumerated(EnumType.STRING)
     private Card river;
 
     /**
@@ -65,64 +82,4 @@ public class BoardEntity implements Serializable {
         return cards;
     }
 
-    @Column(name = "board_id")
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    @Column(name = "flop1")
-    @Enumerated(EnumType.STRING)
-    public Card getFlop1() {
-        return flop1;
-    }
-
-    public void setFlop1(Card flop1) {
-        this.flop1 = flop1;
-    }
-
-    @Column(name = "flop2")
-    @Enumerated(EnumType.STRING)
-    public Card getFlop2() {
-        return flop2;
-    }
-
-    public void setFlop2(Card flop2) {
-        this.flop2 = flop2;
-    }
-
-    @Column(name = "flop3")
-    @Enumerated(EnumType.STRING)
-    public Card getFlop3() {
-        return flop3;
-    }
-
-    public void setFlop3(Card flop3) {
-        this.flop3 = flop3;
-    }
-
-    @Column(name = "turn")
-    @Enumerated(EnumType.STRING)
-    public Card getTurn() {
-        return turn;
-    }
-
-    public void setTurn(Card turn) {
-        this.turn = turn;
-    }
-
-    @Column(name = "river")
-    @Enumerated(EnumType.STRING)
-    public Card getRiver() {
-        return river;
-    }
-
-    public void setRiver(Card river) {
-        this.river = river;
-    }
 }

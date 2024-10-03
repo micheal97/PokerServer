@@ -24,7 +24,6 @@ THE SOFTWARE.
 package com.hyphenated.card.service;
 
 import com.hyphenated.card.domain.Player;
-import com.hyphenated.card.view.PlayerStatusObject;
 
 import java.util.UUID;
 
@@ -35,19 +34,6 @@ import java.util.UUID;
  * @author jacobhyphenated
  */
 public interface PlayerServiceManager {
-
-    /**
-     * Builds the {@link PlayerStatusObject} corresponding to the PlayerStatus API call
-     * for the given state of the game.
-     * <br /><br />
-     * This result is cached. Any time a player action is taken, or the game state
-     * is changed, the cache should be invalidated.
-     *
-     * @param gameId   game the player is in
-     * @param playerId id of the player
-     * @return Player Status Object
-     */
-    PlayerStatusObject buildPlayerStatus(long gameId, String playerId);
 
     /**
      * Persist any changes to a {@link Player} domain object.  Or create a new one.

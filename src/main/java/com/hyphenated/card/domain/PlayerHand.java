@@ -26,89 +26,56 @@ package com.hyphenated.card.domain;
 import com.hyphenated.card.Card;
 import com.hyphenated.card.holder.Hand;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 
+@Getter
 @Setter
 @Entity
 @Table(name = "player_hand")
 public class PlayerHand implements Comparable<PlayerHand>, Serializable {
 
-    private UUID id;
-    private Player player;
-    private HandEntity handEntity;
-    private Card card1;
-    private Card card2;
-    private int betAmount;
-    private int roundBetAmount;
-    private PlayerHandRoundAction roundAction;
-    @Getter
-    private ScheduledExecutorService scheduledExecutorService;
-
-
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "player_hand_id")
-    public UUID getId() {
-        return id;
-    }
-
+    private UUID id;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "player_id")
-    public Player getPlayer() {
-        return player;
-    }
-
+    private Player player;
     @ManyToOne
     @JoinColumn(name = "hand_id")
-    public HandEntity getHandEntity() {
-        return handEntity;
-    }
-
+    private HandEntity handEntity;
     @Column(name = "card1")
     @Enumerated(EnumType.STRING)
-    protected Card getCard1() {
-        return card1;
-    }
-
+    @Getter(value = AccessLevel.NONE)
+    private Card card1;
     @Column(name = "card2")
     @Enumerated(EnumType.STRING)
-    protected Card getCard2() {
-        return card2;
-    }
-
+    @Getter(value = AccessLevel.NONE)
+    private Card card2;
     /**
+     * -- GETTER --
      * Represents the amount of chips the player has contributed to the pot
      * for this entire hand
-     *
-     * @return
      */
     @Column(name = "bet_amount")
-    public int getBetAmount() {
-        return betAmount;
-    }
-
+    private int betAmount;
     /**
+     * -- GETTER --
      * Represents the amount of chips the player has contributed to the pot for only this
      * current betting round
-     *
-     * @return
      */
     @Column(name = "round_bet_amount")
-    public int getRoundBetAmount() {
-        return roundBetAmount;
-    }
-
-    @Nullable
+    private int roundBetAmount;
     @Column(name = "round_action")
-    public PlayerHandRoundAction getRoundAction() {
-        return roundAction;
-    }
+    private PlayerHandRoundAction roundAction;
+    private ScheduledExecutorService scheduledExecutorService;
+
 
     /**
      * Get the hole cards for the player
@@ -128,4 +95,5 @@ public class PlayerHand implements Comparable<PlayerHand>, Serializable {
     public int compareTo(PlayerHand o) {
         return this.getPlayer().compareTo(o.getPlayer());
     }
+
 }

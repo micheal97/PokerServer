@@ -26,98 +26,47 @@ package com.hyphenated.card.domain;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.hyphenated.card.controller.dto.PlayerDTO;
 import jakarta.persistence.*;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.Setter;
 
 import java.io.Serializable;
 import java.util.UUID;
 
+@Getter
 @Setter
 @Entity
 @Table(name = "player")
+@EqualsAndHashCode
 public class Player implements Comparable<Player>, Serializable {
-
+    //TODO:Serializable in DTO
+    @JsonIgnore
+    @Column(name = "player_id")
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
+    @JsonIgnore
+    @JoinColumn(name = "table_structure_id")
     private TableStructure tableStructure;
+    @Column(name = "name")
     private String name;
+    @Column(name = "password")
     private String password;
+    @Column(name = "chips")
     private int chips;
+    @Column(name = "table_chips")
     private int tableChips;
+    @Column(name = "game_position")
     private int gamePosition;
+    @Column(name = "finished_place")
     private int finishPosition;
+    @Column(name = "sitting_out")
     private boolean sittingOut;
 
     public PlayerDTO getPlayerDTO() {
         return new PlayerDTO(id, name, chips, tableChips, gamePosition, sittingOut);
     }
 
-    @JsonIgnore
-    @Column(name = "player_id")
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    public UUID getId() {
-        return id;
-    }
-
-    @JsonIgnore
-    @JoinColumn(name = "table_structure_id")
-    public TableStructure getTableStructure() {
-        return tableStructure;
-    }
-
-    @Column(name = "name")
-    public String getName() {
-        return name;
-    }
-
-    @Column(name = "password")
-    public String getPassword() {
-        return password;
-    }
-
-    @Column(name = "chips")
-    public int getChips() {
-        return chips;
-    }
-
-    @Column(name = "chips")
-    public int getTableChips() {
-        return tableChips;
-    }
-
-
-    @Column(name = "game_position")
-    public int getGamePosition() {
-        return gamePosition;
-    }
-
-    @Column(name = "finished_place")
-    public int getFinishPosition() {
-        return finishPosition;
-    }
-
-    @Column(name = "sitting_out")
-    public boolean isSittingOut() {
-        return sittingOut;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof Player p)) {
-            return false;
-        }
-        if (this.getId() == null) {
-            return this.getName().equals(p.getName());
-        }
-        return this.getId().equals(p.getId());
-    }
-
-    @Override
-    public int hashCode() {
-        if (id == null) {
-            return name.hashCode();
-        }
-        return id.hashCode();
-    }
 
     @Override
     @Transient

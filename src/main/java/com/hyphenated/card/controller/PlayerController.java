@@ -25,11 +25,13 @@ package com.hyphenated.card.controller;
 
 import com.hyphenated.card.controller.dto.PlayerDTO;
 import com.hyphenated.card.controller.dto.TableStructureDTO;
-import com.hyphenated.card.domain.*;
+import com.hyphenated.card.domain.Player;
+import com.hyphenated.card.domain.PlayerHand;
+import com.hyphenated.card.domain.PlayerHandRoundAction;
+import com.hyphenated.card.domain.TableStructure;
 import com.hyphenated.card.service.PlayerServiceManager;
 import com.hyphenated.card.service.ScheduledPlayerActionService;
 import com.hyphenated.card.service.TableStructureService;
-import com.hyphenated.card.view.PlayerStatusObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.ResponseEntity;
@@ -64,7 +66,7 @@ public class PlayerController {
 
     @RequestMapping("/games")
     public @ResponseBody ResponseEntity<List<TableStructureDTO>> getGames() {
-        return ResponseEntity.ok(tableStructureService.findAll());
+        return ResponseEntity.ok(tableStructureService.findAll().stream().map(TableStructure::getTableStructureDTO).toList());
     }
 
     @RequestMapping("/register")
@@ -90,23 +92,11 @@ public class PlayerController {
         TableStructure tableStructure = tableStructureService.getTableStructureById(gameId);
         Player player = playerService.findPlayerById(playerId);
         tableStructureService.addNewPlayerToTableStructure(tableStructure, player, startingTableChips);
-        tableTasksController.playerJoined(player.getName());
+        tableTasksController.playerJoined(player.getName(), gameId);
+        if (tableStructure.getPlayers().size() == 2 && tableStructure.getPrivateGameCreator() == null) {
+            tableStructureService.startGame(tableStructure);
+        }
         return ResponseEntity.ok();
-    }
-
-    /**
-     * Player status in the current game and hand.
-     *
-     * @param gameId   unique ID of the game the player is playing in
-     * @param playerId unique ID of the player
-     * @return a Map represented as a JSON String with values for status ({@link PlayerStatus}),
-     * chips left, current hole cards, amount bet this betting round, and amount to call if there is
-     * a bet this round. Example: {"status":"ACTION_TO_CALL","chips":1000,"card1":"Xx","card2":"Xx",
-     * "amountBetRound":xx,"amountToCall":100}
-     */
-    @RequestMapping("/status")
-    public @ResponseBody PlayerStatusObject getPlayerStatus(@RequestParam long gameId, @RequestParam String playerId) {
-        return playerService.buildPlayerStatus(gameId, playerId);
     }
 
     /**
@@ -200,30 +190,19 @@ public class PlayerController {
      * @param playerId Player being sat back in
      * @return {"success":true} when the player is sat back in the game
      */
-    @RequestMapping("/sitin")
-    @CacheEvict(value = "game", allEntries = true)//TODO Cache entfernen?
-    public @ResponseBody ResponseEntity.BodyBuilder sitIn(@RequestParam UUID playerId, @RequestParam UUID tableStructureId, int startingChips) {
-        Player player = playerService.findPlayerById(playerId);
-        TableStructure tableStructure = tableStructureService.getTableStructureById(tableStructureId);
-        tableStructureService.addNewPlayerToTableStructure(tableStructure, player, startingChips);
-        tableTasksController.playerSitin(player.getName());
-        if (tableStructure.getPlayers().size() == 2) {
-            tableStructureService.startGame(tableStructure);
-        }
-        return ResponseEntity.ok();
-    }
 
-    @RequestMapping("/sitout")
+    @RequestMapping("/leave")
     @CacheEvict(value = "game", allEntries = true)
-    public @ResponseBody ResponseEntity.BodyBuilder sitOut(@RequestParam UUID playerId) {
+    public @ResponseBody ResponseEntity.BodyBuilder leave(@RequestParam UUID playerId) {
         Player player = playerService.findPlayerById(playerId);
         tableStructureService.removePlayerFromTableStructure(player);
-        player.getTableStructure().getCurrentHand()
+        TableStructure tableStructure = player.getTableStructure();
+        tableStructure.getCurrentHand()
                 .findPlayerHandByPlayerId(playerId)
                 .ifPresent(playerHand ->
                         scheduledPlayerActionService.handlePlayerRoundAction(
                                 PlayerHandRoundAction.FOLD, playerHand, 0));
-        tableTasksController.playerLeft(player.getName());
+        tableTasksController.playerLeft(player.getName(), tableStructure.getId());
         return ResponseEntity.ok();
     }
 
