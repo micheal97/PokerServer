@@ -24,7 +24,7 @@ THE SOFTWARE.
 package com.hyphenated.card.dao;
 
 import com.hyphenated.card.domain.BlindLevel;
-import com.hyphenated.card.domain.TableStructure;
+import com.hyphenated.card.domain.Game;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -35,14 +35,14 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public class TableStructureDaoImpl extends BaseDaoImpl<TableStructure> implements TableStructureDao {
+public class GameDaoImpl extends BaseDaoImpl<Game> implements GameDao {
 
     @Override
     public void updateTables(String blindLevel) {
         Session session = getSession();
         CriteriaBuilder cb = session.getCriteriaBuilder();
         CriteriaQuery<Long> cq1 = cb.createQuery(Long.class);
-        Root<TableStructure> root1 = cq1.from(TableStructure.class);
+        Root<Game> root1 = cq1.from(Game.class);
         cq1.select(cb.count(root1));
         cq1.where(root1.get("blindLevel").equalTo(blindLevel));
         cq1.where(cb.count(root1.get("players")).equalTo(0));
@@ -52,27 +52,27 @@ public class TableStructureDaoImpl extends BaseDaoImpl<TableStructure> implement
         }
         if (numberOfEmptyBlindLevels == 0L) {
             CriteriaQuery<Long> cq = cb.createQuery(Long.class);
-            Root<TableStructure> root = cq.from(TableStructure.class);
+            Root<Game> root = cq.from(Game.class);
             cq1.select(cb.count(root1));
             cq.where(root.get("blindLevel").equalTo(blindLevel));
             Long numberOfBlindLevels = session.createQuery(cq).getSingleResult();
-            TableStructure tableStructure = new TableStructure();
-            tableStructure.setName(blindLevel + numberOfBlindLevels + 1);
-            tableStructure.setBlindLevel(BlindLevel.valueOf(blindLevel));
-            tableStructure.setMaxPlayers(8);
-            session.merge(tableStructure);
+            Game game = new Game();
+            game.setName(blindLevel + numberOfBlindLevels + 1);
+            game.setBlindLevel(BlindLevel.valueOf(blindLevel));
+            game.setMaxPlayers(8);
+            session.merge(game);
             return;
         }
-        CriteriaQuery<TableStructure> cq = cb.createQuery(TableStructure.class);
-        Root<TableStructure> root = cq.from(TableStructure.class);
+        CriteriaQuery<Game> cq = cb.createQuery(Game.class);
+        Root<Game> root = cq.from(Game.class);
         cq.where(root.get("blindLevel").equalTo(blindLevel));
         cq.where(cb.count(root.get("players")).equalTo(0));
-        TypedQuery<TableStructure> query = session.createQuery(cq);
-        List<TableStructure> tableStructures = query.getResultList();
-        if (!tableStructures.isEmpty()) {
-            tableStructures.remove(0);
+        TypedQuery<Game> query = session.createQuery(cq);
+        List<Game> games = query.getResultList();
+        if (!games.isEmpty()) {
+            games.remove(0);
         }
-        tableStructures.forEach(session::remove);
+        games.forEach(session::remove);
     }
 }
 

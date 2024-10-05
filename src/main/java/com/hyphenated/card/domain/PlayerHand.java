@@ -25,36 +25,25 @@ package com.hyphenated.card.domain;
 
 import com.hyphenated.card.Card;
 import com.hyphenated.card.holder.Hand;
-import jakarta.persistence.*;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Transient;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.io.Serializable;
-import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 
 @Getter
 @Setter
-@Entity
-@Table(name = "player_hand")
-public class PlayerHand implements Comparable<PlayerHand>, Serializable {
+@Embeddable
+public class PlayerHand implements Serializable {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "player_hand_id")
-    private UUID id;
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "player_id")
-    private Player player;
-    @ManyToOne
-    @JoinColumn(name = "hand_id")
-    private HandEntity handEntity;
-    @Column(name = "card1")
     @Enumerated(EnumType.STRING)
     @Getter(value = AccessLevel.NONE)
     private Card card1;
-    @Column(name = "card2")
     @Enumerated(EnumType.STRING)
     @Getter(value = AccessLevel.NONE)
     private Card card2;
@@ -63,16 +52,13 @@ public class PlayerHand implements Comparable<PlayerHand>, Serializable {
      * Represents the amount of chips the player has contributed to the pot
      * for this entire hand
      */
-    @Column(name = "bet_amount")
     private int betAmount;
     /**
      * -- GETTER --
      * Represents the amount of chips the player has contributed to the pot for only this
      * current betting round
      */
-    @Column(name = "round_bet_amount")
     private int roundBetAmount;
-    @Column(name = "round_action")
     private PlayerHandRoundAction roundAction;
     private ScheduledExecutorService scheduledExecutorService;
 
@@ -89,11 +75,4 @@ public class PlayerHand implements Comparable<PlayerHand>, Serializable {
         }
         return new Hand(card1, card2);
     }
-
-    @Transient
-    @Override
-    public int compareTo(PlayerHand o) {
-        return this.getPlayer().compareTo(o.getPlayer());
-    }
-
 }

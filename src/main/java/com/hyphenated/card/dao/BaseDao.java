@@ -25,6 +25,7 @@ package com.hyphenated.card.dao;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Define a generic base data access object for simple CRUD methods
@@ -38,7 +39,7 @@ public interface BaseDao<T> {
      *
      * @return the class
      */
-    public Class<T> getEntityClass();
+    Class<T> getEntityClass();
 
     /**
      * Find an entity by its primary key
@@ -46,14 +47,14 @@ public interface BaseDao<T> {
      * @param id the primary key
      * @return the entity
      */
-    public T findById(Serializable id);
+    Optional<T> findById(Serializable id);
 
     /**
      * Load all entities.
      *
      * @return the list of entities
      */
-    public List<T> findAll();
+    List<T> findAll();
 
     /**
      * Save or update an entity to the persistent storage
@@ -61,12 +62,12 @@ public interface BaseDao<T> {
      * @param objToSave Object (attached or detached) to be persisted
      * @return object with updated ID if applicable
      */
-    public T save(T objToSave);
+    T save(T objToSave);
 
     /**
      * Remove a persistent object from the database
      *
      * @param objToRemove Attached object to remove
      */
-    public void remove(T objToRemove);
+    void remove(T objToRemove);
 }

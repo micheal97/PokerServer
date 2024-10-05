@@ -24,10 +24,10 @@ THE SOFTWARE.
 package com.hyphenated.card.controller;
 
 import com.hyphenated.card.domain.*;
+import com.hyphenated.card.service.GameService;
 import com.hyphenated.card.service.PlayerServiceManager;
 import com.hyphenated.card.service.PokerHandService;
 import com.hyphenated.card.service.ScheduledPlayerActionService;
-import com.hyphenated.card.service.TableStructureService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.ResponseEntity;
@@ -51,7 +51,7 @@ public class TableController {
     //TODO:DeleteClass
 
     @Autowired
-    private TableStructureService tableStructureService;
+    private GameService GameService;
     @Autowired
     private ScheduledPlayerActionService scheduledPlayerActionService;
     @Autowired
@@ -93,14 +93,14 @@ public class TableController {
                                                          @RequestParam int maxPlayers,
                                                          @RequestParam BlindLevel blindLevel,
                                                          @RequestParam UUID playerId) {
-        TableStructure tableStructure = new TableStructure();
-        tableStructure.setName(gameName);
-        tableStructure.setMaxPlayers(maxPlayers);
-        tableStructure.setBlindLevel(blindLevel);
-        tableStructure.setPrivateGameCreator(playerServiceManager.findPlayerById(playerId));
-        tableStructure = tableStructureService.saveTableStructure(tableStructure);
+        Game game = new Game();
+        game.setName(gameName);
+        game.setMaxPlayers(maxPlayers);
+        game.setBlindLevel(blindLevel);
+        game.setPrivateGameCreator(playerServiceManager.findPlayerById(playerId));
+        game = GameService.saveGame(game);
 
-        return ResponseEntity.ok(tableStructure.getId());
+        return ResponseEntity.ok(game.getId());
     }
 
     /**
@@ -116,16 +116,16 @@ public class TableController {
      */
     @RequestMapping(value = "/gamestatus")
     public @ResponseBody Map<String, ?> getGameStatus(@RequestParam UUID gameId) {
-        TableStructure tableStructure = tableStructureService.getTableStructureById(gameId);
-        GameStatus gs = tableStructure.getGameStatus();
-        Collection<Player> players = tableStructure.getPlayers();
+        Game game = GameService.getGameById(gameId);
+        GameStatus gs = game.getGameStatus();
+        Collection<Player> players = game.getPlayers();
 
         Map<String, Object> results = new HashMap<>();
         results.put("gameStatus", gs);
         results.put("players", players);
-        if (tableStructure.getCurrentHand() != null) {
-            results.put("pot", tableStructure.getCurrentHand().getPot());
-            results.put("cards", tableStructure.getCurrentHand().getBoard().getBoardCards());
+        if (game.getCurrentHand() != null) {
+            results.put("pot", game.getCurrentHand().getPot());
+            results.put("cards", game.getCurrentHand().getBoard().getBoardCards());
         }
         return results;
     }
@@ -141,12 +141,10 @@ public class TableController {
     @CacheEvict(value = "game", allEntries = true)
     public @ResponseBody ResponseEntity.BodyBuilder startGame(@RequestParam UUID gameId, @RequestParam UUID playerId) {
         //TODO:startPrivateGame / startPublicGame
-        TableStructure tableStructure = tableStructureService.getTableStructureById(gameId);
-        if (tableStructure.getGameStatus().equals(GameStatus.NOT_STARTED) && tableStructure.getPrivateGameCreator().getId().equals(playerId)) {
-            tableStructureService.startGame(tableStructure);
-            HandEntity hand = handService.startNewHand(tableStructure);
-            hand.getPlayers().forEach(playerHand ->
-                    tableTasksController.sendPlayerHandId(playerHand.getPlayer().getId(), playerHand.getId()));
+        Game game = GameService.getGameById(gameId);
+        if (game.getGameStatus().equals(GameStatus.NOT_STARTED) && game.getPrivateGameCreator().getId().equals(playerId)) {
+            GameService.startGame(game);
+            handService.startNewHand(game);
             return ResponseEntity.ok();
         }
         return ResponseEntity.badRequest();

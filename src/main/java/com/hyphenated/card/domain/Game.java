@@ -1,6 +1,6 @@
 package com.hyphenated.card.domain;
 
-import com.hyphenated.card.controller.dto.TableStructureDTO;
+import com.hyphenated.card.controller.dto.GameDTO;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -12,36 +12,31 @@ import java.util.UUID;
 
 @Getter
 @Entity
-@Table(name = "table_structure")
 @Setter
-public class TableStructure implements Serializable {
-    @Column(name = "table_structure_id")
+public class Game implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
-    @Column(name = "blind_level")
     @Enumerated(EnumType.STRING)
     private BlindLevel blindLevel;
-    @Column(name = "maxPlayers")
     private int maxPlayers;
-    @OneToOne
-    @JoinColumn(name = "btn_player_id")
-    private Player playerInBTN;
-    @Column(name = "name")
     private String name;
     @Setter(value = AccessLevel.NONE)
     @OneToMany(mappedBy = "table_structure", fetch = FetchType.LAZY)
+    @JoinColumn
     private Set<Player> players;
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "current_hand_id")
+    @Embedded
     private HandEntity currentHand;
-    @Column(name = "game_status")
     private GameStatus gameStatus = GameStatus.NOT_STARTED;
-    @Column(name = "private_game_creator")
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn
     private Player privateGameCreator;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn
+    private Player playerInBTN;
 
-    public TableStructureDTO getTableStructureDTO() {
-        return new TableStructureDTO(id, blindLevel, maxPlayers, name, players.size(), gameStatus, privateGameCreator);
+    public GameDTO getGameDTO() {
+        return new GameDTO(id, blindLevel, maxPlayers, name, players.size(), gameStatus, privateGameCreator);
     }
 
     public void addPlayer(Player player) {

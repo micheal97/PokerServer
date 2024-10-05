@@ -2,8 +2,8 @@ package com.hyphenated.card.controller;
 
 import com.google.common.collect.ImmutableMap;
 import com.hyphenated.card.domain.BlindLevel;
-import com.hyphenated.card.domain.TableStructure;
-import com.hyphenated.card.service.TableStructureService;
+import com.hyphenated.card.domain.Game;
+import com.hyphenated.card.service.GameService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
@@ -22,18 +22,18 @@ public class TasksController {
     @Autowired
     private SimpMessagingTemplate template;
     @Autowired
-    TableStructureService tableStructureService;
+    GameService GameService;
     @Autowired
     TableTasksController tableTasksController;
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
     {
         scheduler.scheduleAtFixedRate(() -> {
-            tableStructureService.updateTables(Arrays.stream(BlindLevel.values()).map(Enum::name).toList());
-            List<TableStructure> tableStructures = tableStructureService.findAll();
-            template.convertAndSend("/tables", tableStructures.stream().map(TableStructure::getTableStructureDTO).toList());
-            ImmutableMap<UUID, TableStructure> tableStructureMap = ImmutableMap.copyOf(tableStructures.stream().collect(Collectors.toConcurrentMap(TableStructure::getId, Function.identity())));
-            tableTasksController.setTableStructures(tableStructureMap);
+            GameService.updateTables(Arrays.stream(BlindLevel.values()).map(Enum::name).toList());
+            List<Game> games = GameService.findAll();
+            template.convertAndSend("/tables", games.stream().map(Game::getGameDTO).toList());
+            ImmutableMap<UUID, Game> GameMap = ImmutableMap.copyOf(games.stream().collect(Collectors.toConcurrentMap(Game::getId, Function.identity())));
+            tableTasksController.setGames(GameMap);
         }, 0, 5, TimeUnit.SECONDS);
     }
 }

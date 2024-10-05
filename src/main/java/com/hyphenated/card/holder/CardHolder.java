@@ -43,25 +43,6 @@ public class CardHolder implements Serializable {
     }
 
     /**
-     * Returns a card at particular index.
-     *
-     * @param index index of the array of cards in this CardHolder
-     * @return a card at position index
-     */
-    public Card getCard(int index) {
-        return cards[index];
-    }
-
-    /**
-     * Returns the number of the cards stored in the container.
-     *
-     * @return the number of cards
-     */
-    public int getCardNumber() {
-        return cards.length;
-    }
-
-    /**
      * Creates a card iterator for the cards stored in the container.
      *
      * @return unmodifiable card iterator

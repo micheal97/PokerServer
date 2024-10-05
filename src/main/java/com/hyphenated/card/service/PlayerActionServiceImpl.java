@@ -31,9 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Nullable;
 import java.util.Map;
-import java.util.UUID;
 
 @Service
 public class PlayerActionServiceImpl implements PlayerActionService {
@@ -45,26 +43,7 @@ public class PlayerActionServiceImpl implements PlayerActionService {
     @Autowired
     private PokerHandService pokerHandService;
     @Autowired
-    private TableStructureService tableStructureService;
-
-    @Nullable
-    private PlayerHand getNextPlayerHand(Player next, HandEntity hand) {
-        if (next == null) {
-            HandEntity nextHand = pokerHandService.handleNextGameStatus(hand.getTableStructure());
-            if (nextHand == null) {
-                return null;
-            }
-            next = nextHand.getCurrentToAct();
-            return nextHand.findPlayerHandByPlayerId(next.getId()).get();
-        }
-        return hand.findPlayerHandByPlayerId(next.getId()).get();
-    }
-
-    @Override
-    @Transactional
-    public Player getPlayerById(UUID playerId) {
-        return playerDao.findById(playerId);
-    }
+    private GameService GameService;
 
 
     @Override
@@ -222,8 +201,8 @@ public class PlayerActionServiceImpl implements PlayerActionService {
 
     @Override
     @Transactional
-    public void sitIn(Player player, TableStructure tableStructure, int startingChips) {
-        tableStructureService.addNewPlayerToTableStructure(tableStructure, player, startingChips);
+    public void sitIn(Player player, Game game, int startingChips) {
+        GameService.addNewPlayerToGame(game, player, startingChips);
     }
 
     @Override
@@ -238,12 +217,12 @@ public class PlayerActionServiceImpl implements PlayerActionService {
             return PlayerStatus.SIT_OUT_GAME;
         }
 
-        TableStructure tableStructure = player.getTableStructure();
-        if (!tableStructure.getGameStatus().equals(GameStatus.NOT_STARTED)) {
+        Game game = player.getGame();
+        if (!game.getGameStatus().equals(GameStatus.NOT_STARTED)) {
             return PlayerStatus.NOT_STARTED;
         }
 
-        HandEntity hand = tableStructure.getCurrentHand();
+        HandEntity hand = game.getCurrentHand();
         if (hand == null) {
             return PlayerStatus.SEATING;
         }

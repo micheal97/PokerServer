@@ -23,60 +23,57 @@ THE SOFTWARE.
 */
 package com.hyphenated.card.service;
 
+import com.hyphenated.card.dao.GameDao;
 import com.hyphenated.card.dao.PlayerDao;
-import com.hyphenated.card.dao.TableStructureDao;
+import com.hyphenated.card.domain.Game;
 import com.hyphenated.card.domain.GameStatus;
 import com.hyphenated.card.domain.Player;
-import com.hyphenated.card.domain.TableStructure;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ScheduledExecutorTask;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Service
-public class TableStructureServiceImpl implements TableStructureService {
+public class GameServiceImpl implements GameService {
 
     @Autowired
-    private TableStructureDao tableStructureDao;
+    private GameDao GameDao;
 
     @Autowired
     private PlayerDao playerDao;
 
     @Override
     @Transactional(readOnly = true)//TODO:readonly everywhere
-    public TableStructure getTableStructureById(UUID id) {
-        return tableStructureDao.findById(id);
+    public Optional<Game> findGameById(UUID id) {
+        return GameDao.findById(id);
     }
 
     @Override
     @Transactional
-    public TableStructure saveTableStructure(TableStructure tableStructure) {
-        return tableStructureDao.save(tableStructure);
+    public Game saveGame(Game game) {
+        return GameDao.save(game);
     }
 
     @Override
     @Transactional
-    public void startGame(TableStructure tableStructure) {
+    public void startGame(Game game) {
         new ScheduledExecutorTask(() -> {
 
-            if (tableStructure.getPlayers().size() < 2) {
+            if (game.getPlayers().size() < 2) {
                 throw new IllegalStateException("Not Enough Players");
             }
-            if (tableStructure.getPlayers().size() > 10 || tableStructure.getPlayers().size() > tableStructure.getMaxPlayers()) {
+            if (game.getPlayers().size() > 10 || game.getPlayers().size() > game.getMaxPlayers()) {
                 throw new IllegalStateException("Too Many Players");
             }
-            if (!tableStructure.getGameStatus().equals(GameStatus.NOT_STARTED)) {
+            if (!game.getGameStatus().equals(GameStatus.NOT_STARTED)) {
                 throw new IllegalStateException("Game already started");
             }
 
             //Get all players associated with the game.
             //Assign random position.  Save the player.
-            List<Player> players = new ArrayList<>(tableStructure.getPlayers());
+            List<Player> players = new ArrayList<>(game.getPlayers());
             Collections.shuffle(players);
             for (int i = 0; i < players.size(); i++) {
                 Player p = players.get(i);
@@ -86,51 +83,51 @@ public class TableStructureServiceImpl implements TableStructureService {
 
             //Set Button and Big Blind.  Button is position 1 (index 0)
             Collections.sort(players);
-            tableStructure.setPlayerInBTN(players.get(0));
+            game.setPlayerInBTN(players.get(0));
 
             //Save and return the updated game
-            tableStructureDao.save(tableStructure);
+            GameDao.save(game);
         }, 4000);
     }
 
     @Override
     @Transactional
-    public void addNewPlayerToTableStructure(TableStructure tableStructure, Player player, int startingTableChips) {
-        if (tableStructure.getMaxPlayers() >= tableStructure.getPlayers().size()) {
+    public void addNewPlayerToGame(Game game, Player player, int startingTableChips) {
+        if (game.getMaxPlayers() >= game.getPlayers().size()) {
             throw new IllegalStateException("No new players may join");
         }
-        if (tableStructure.getPlayers().size() >= 10) {
+        if (game.getPlayers().size() >= 10) {
             throw new IllegalStateException("Cannot have more than 10 players in one game");
         }
-        if (startingTableChips > player.getChips() || tableStructure.getBlindLevel().getBigBlind() > player.getChips()) {
+        if (startingTableChips > player.getChips() || game.getBlindLevel().getBigBlind() > player.getChips()) {
             throw new IllegalStateException("Not enough Chips");
         }
-        if (tableStructure.getBlindLevel().getBigBlind() * 50 < player.getChips()) {
+        if (game.getBlindLevel().getBigBlind() * 50 < player.getChips()) {
             throw new IllegalStateException("Too many Chips");
         }
-        player.setTableStructure(tableStructure);
+        player.setGame(game);
         player = playerDao.save(player);
-        tableStructure.addPlayer(player);
-        tableStructureDao.save(tableStructure);
+        game.addPlayer(player);
+        GameDao.save(game);
     }
 
     @Override
     @Transactional
-    public void removePlayerFromTableStructure(Player player) {
-        TableStructure tableStructure = player.getTableStructure();
-        tableStructure.removePlayer(player);
-        tableStructureDao.save(tableStructure);
+    public void removePlayerFromGame(Player player) {
+        Game game = player.getGame();
+        game.removePlayer(player);
+        GameDao.save(game);
     }
 
 
     @Override
-    public List<TableStructure> findAll() {
-        return tableStructureDao.findAll();
+    public List<Game> findAll() {
+        return GameDao.findAll();
     }
 
     @Override
     public void updateTables(List<String> blindLevels) {
-        blindLevels.forEach(blindLevel -> tableStructureDao.updateTables(blindLevel));
+        blindLevels.forEach(blindLevel -> GameDao.updateTables(blindLevel));
     }
 
 

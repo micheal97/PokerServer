@@ -2,6 +2,8 @@ package com.hyphenated.card.service;
 
 import com.hyphenated.card.controller.TableTasksController;
 import com.hyphenated.card.controller.dto.PlayerBet;
+import com.hyphenated.card.domain.Game;
+import com.hyphenated.card.domain.Player;
 import com.hyphenated.card.domain.PlayerHand;
 import com.hyphenated.card.domain.PlayerHandRoundAction;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,41 +58,46 @@ public class ScheduledPlayerActionServiceImpl implements ScheduledPlayerActionSe
     }
 
     @Override
-    public ScheduledExecutorService scheduleDefaultAction(PlayerHand playerHand) {
+    public ScheduledExecutorService scheduleDefaultAction(Player player) {
         ScheduledExecutorService executor = getIdleScheduler().getScheduledExecutor();
         executor.schedule(() ->
-                        handlePlayerRoundAction(PlayerHandRoundAction.FOLD, playerHand, 0),
+                        handlePlayerRoundAction(PlayerHandRoundAction.FOLD, player, 0),
                 8,
                 TimeUnit.SECONDS);
         return executor;
     }
 
     @Override
-    public void handlePlayerRoundAction(PlayerHandRoundAction action, PlayerHand playerHand, int betAmount) {
-        PlayerHand nextPlayerHand = switch (action) {
-            case FOLD -> playerActionService.fold(playerHand);
-            case CALL_ANY -> playerActionService.callAny(playerHand);
-            case CALL_CURRENT -> playerActionService.callCurrent(playerHand, betAmount);
-            case CHECK -> playerActionService.check(playerHand);
-            case BET -> playerActionService.bet(playerHand, betAmount);
+    public void handlePlayerRoundAction(PlayerHandRoundAction action, Player player, int betAmount) {
+        Player nextPlayer = switch (action) {
+            case FOLD -> playerActionService.fold(player);
+            case CALL_ANY -> playerActionService.callAny(player);
+            case CALL_CURRENT -> playerActionService.callCurrent(player, betAmount);
+            case CHECK -> playerActionService.check(player);
+            case BET -> playerActionService.bet(player, betAmount);
         };
-        if (nextPlayerHand == null) {
-            tableTasksController.gameStopped(playerHand.getPlayer().getTableStructure().getId());
+        if (nextPlayer == null) {
+            tableTasksController.gameStopped(player.getGame().getId());
         } else {
-            String playerName = playerHand.getPlayer().getName();
-            UUID tableStructureId = nextPlayerHand.getHandEntity().getTableStructure().getId();
+            String playerName = player.getName();
+            Game game = nextPlayer.getGame();
+            UUID gameId = game.getId();
+            PlayerHand playerHand = player.getPlayerHand();
+            PlayerHand nextPlayerHand = nextPlayer.getPlayerHand();
             switch (action) {
-                case FOLD -> tableTasksController.playerFolded(playerName, tableStructureId);
-                case CALL_ANY, CALL_CURRENT -> tableTasksController.playerCalled(playerName, tableStructureId);
-                case CHECK -> tableTasksController.playerChecked(playerName, tableStructureId);
-                case BET ->
-                        tableTasksController.playerBet(new PlayerBet(playerName, playerHand.getRoundBetAmount()), tableStructureId);
+                case FOLD -> tableTasksController.playerFolded(playerName, gameId);
+                case CALL_ANY, CALL_CURRENT -> tableTasksController.playerCalled(playerName, gameId);
+                case CHECK -> tableTasksController.playerChecked(playerName, gameId);
+                case BET -> tableTasksController.playerBet(new PlayerBet(
+                                playerName,
+                                playerHand.getRoundBetAmount()),
+                        gameId);
             }
             playerHand.getScheduledExecutorService().shutdownNow();
-            nextPlayerHand.setScheduledExecutorService(scheduleDefaultAction(nextPlayerHand));
-            tableTasksController.playersTurn(playerHand.getPlayer().getName(), tableStructureId);
+            nextPlayerHand.setScheduledExecutorService(scheduleDefaultAction(nextPlayer));
+            tableTasksController.playersTurn(player.getName(), gameId);
             if (nextPlayerHand.getRoundAction() != null) {
-                handlePlayerRoundAction(nextPlayerHand.getRoundAction(), nextPlayerHand, nextPlayerHand.getBetAmount());
+                handlePlayerRoundAction(nextPlayerHand.getRoundAction(), nextPlayer, nextPlayerHand.getBetAmount());
             }
         }
     }

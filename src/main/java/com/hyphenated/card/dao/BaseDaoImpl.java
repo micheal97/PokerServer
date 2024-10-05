@@ -34,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.util.List;
+import java.util.Optional;
 
 public class BaseDaoImpl<T> implements BaseDao<T> {
     @Autowired
@@ -50,8 +51,8 @@ public class BaseDaoImpl<T> implements BaseDao<T> {
         return sessionFactory.getCurrentSession();
     }
 
-    public T findById(Serializable id) {
-        return (T) getSession().get(persistentClass, id);
+    public Optional<T> findById(Serializable id) {
+        return Optional.ofNullable(getSession().find(persistentClass, id));
     }
 
     @Override

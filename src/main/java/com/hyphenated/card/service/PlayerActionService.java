@@ -23,12 +23,9 @@ THE SOFTWARE.
 */
 package com.hyphenated.card.service;
 
+import com.hyphenated.card.domain.Game;
 import com.hyphenated.card.domain.Player;
-import com.hyphenated.card.domain.PlayerHand;
 import com.hyphenated.card.domain.PlayerStatus;
-import com.hyphenated.card.domain.TableStructure;
-
-import java.util.UUID;
 
 /**
  * Service class to handle actions the player involved in the hand can take.
@@ -37,13 +34,6 @@ import java.util.UUID;
  */
 public interface PlayerActionService {
 
-    /**
-     * Get the {@link Player} domain object based on the unique id for that player
-     *
-     * @param playerId unique id for the player
-     * @return Player object
-     */
-    Player getPlayerById(UUID playerId);
 
     /**
      * The player folds out of the hand
@@ -51,7 +41,7 @@ public interface PlayerActionService {
      * @return true if the player folds, false if the fold is not permitted
      * (the player is out of position, the player is not in the hand).
      */
-    PlayerHand fold(PlayerHand playerHand);
+    Player fold(Player player);
 
     /**
      * The Player checks back their action
@@ -59,7 +49,7 @@ public interface PlayerActionService {
      * @return true if the player checks. False if a check is not permitted
      * (The player is out of turn, there is a bet and a check is not allowed).
      */
-    PlayerHand check(PlayerHand playerHand);
+    Player check(Player player);
 
     /**
      * The Player places a bet
@@ -72,7 +62,7 @@ public interface PlayerActionService {
      * @return true if the bet is placed.  False if the bet is not permitted
      * (The bet is too small, the player is out of turn).
      */
-    PlayerHand bet(PlayerHand playerHand, int betAmount);
+    Player bet(Player player, int betAmount);
 
     /**
      * Call the bet
@@ -80,9 +70,9 @@ public interface PlayerActionService {
      * @return true if the bet is successfully called. False if a call is not permitted
      * (there is not bet, it is not the players turn, etc.)
      */
-    PlayerHand callAny(PlayerHand playerHand);
+    Player callAny(Player player);
 
-    PlayerHand callCurrent(PlayerHand playerHand, int roundBetAmount);
+    Player callCurrent(Player player, int roundBetAmount);
 
     /**
      * Get the status in the game or hand of the player
@@ -97,5 +87,5 @@ public interface PlayerActionService {
      *
      * @param player {@link Player} who is back in the game
      */
-    void sitIn(Player player, TableStructure tableStructure, int startingChips);
+    void sitIn(Player player, Game game, int startingChips);
 }

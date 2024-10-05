@@ -6,7 +6,7 @@ import com.hyphenated.card.domain.Player;
 
 import java.util.UUID;
 
-public record TableStructureDTO(
+public record GameDTO(
         UUID id,
         BlindLevel blindLevel,
         int maxPlayers,

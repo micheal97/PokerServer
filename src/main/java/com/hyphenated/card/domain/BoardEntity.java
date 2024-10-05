@@ -24,38 +24,29 @@ THE SOFTWARE.
 package com.hyphenated.card.domain;
 
 import com.hyphenated.card.Card;
-import jakarta.persistence.*;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Transient;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 @Getter
 @Setter
-@Entity
-@Table(name = "board")
+@Embeddable
 public class BoardEntity implements Serializable {
-
-    @Column(name = "board_id")
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
-    @Column(name = "flop1")
     @Enumerated(EnumType.STRING)
     private Card flop1;
-    @Column(name = "flop2")
     @Enumerated(EnumType.STRING)
     private Card flop2;
-    @Column(name = "flop3")
     @Enumerated(EnumType.STRING)
     private Card flop3;
-    @Column(name = "turn")
     @Enumerated(EnumType.STRING)
     private Card turn;
-    @Column(name = "river")
     @Enumerated(EnumType.STRING)
     private Card river;
 

@@ -23,54 +23,37 @@ THE SOFTWARE.
 */
 package com.hyphenated.card.domain;
 
-import com.hyphenated.card.Card;
+import com.hyphenated.card.Deck;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.io.Serializable;
-import java.util.List;
-import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 
 @Getter
 @Setter
-@Entity
 @EqualsAndHashCode
-@Table(name = "hand")
+@Embeddable
 public class HandEntity implements Serializable {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "hand_id")
-    private UUID id;
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "table_structure_id")
-    private TableStructure tableStructure;
-    @OneToOne(fetch = FetchType.LAZY, cascade = {CascadeType.ALL})
-    @JoinColumn(name = "board_id")
+    @Embedded
     private BoardEntity board;
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "handEntity", cascade = {CascadeType.ALL}, orphanRemoval = true)
-    private Set<PlayerHand> players;
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "player_to_act_id")
+    @Embedded
+    @OneToMany
+    @Setter(value = AccessLevel.NONE)
+    private Set<Player> players;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn
     private Player currentToAct;
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "last_bet_or_raise_id")
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn
     private Player lastBetOrRaise;
-    @Column(name = "blind_level")
-    @Enumerated(EnumType.STRING)
-    private BlindLevel blindLevel;
-    @ElementCollection(targetClass = Card.class)
-    @JoinTable(name = "hand_deck", joinColumns = @JoinColumn(name = "hand_id"))
-    @Column(name = "card", nullable = false)
-    @Enumerated(EnumType.STRING)
-    private List<Card> cards;
-    @Column(name = "pot")
+    @Embedded
+    private Deck deck;
     private int pot;
-    @Column(name = "total_bet_amount")
     private int totalBetAmount;
     /**
      * -- GETTER --
@@ -79,23 +62,14 @@ public class HandEntity implements Serializable {
      *
      * @return The last bet/raise amount
      */
-    @Column(name = "bet_amount")
     private int lastBetAmount;
 
-    public Optional<PlayerHand> findPlayerHandById(UUID playerHandId) {
-        return players.stream().filter(playerHand -> playerHand.getId() == playerHandId).findAny();
+    public void removePlayer(Player player) {
+        players.remove(player);
     }
 
-    public Optional<PlayerHand> findPlayerHandByPlayerId(UUID playerId) {
-        return players.stream().filter(playerHand -> playerHand.getPlayer().getId() == playerId).findAny();
-    }
-
-    public void removePlayer(PlayerHand playerHand) {
-        players.remove(playerHand);
-    }
-
-    public Set<PlayerHand> addPlayer(PlayerHand playerHand) {
-        players.add(playerHand);
+    public Set<Player> addPlayer(Player player) {
+        players.add(player);
         return players;
     }
 }

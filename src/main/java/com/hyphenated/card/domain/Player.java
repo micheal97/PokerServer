@@ -36,32 +36,26 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
-@Table(name = "player")
 @EqualsAndHashCode
 public class Player implements Comparable<Player>, Serializable {
     //TODO:Serializable in DTO
-    @JsonIgnore
     @Column(name = "player_id")
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
     @JsonIgnore
-    @JoinColumn(name = "table_structure_id")
-    private TableStructure tableStructure;
-    @Column(name = "name")
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn
+    private Game game;
     private String name;
-    @Column(name = "password")
     private String password;
-    @Column(name = "chips")
     private int chips;
-    @Column(name = "table_chips")
     private int tableChips;
-    @Column(name = "game_position")
     private int gamePosition;
-    @Column(name = "finished_place")
     private int finishPosition;
-    @Column(name = "sitting_out")
     private boolean sittingOut;
+    @Embedded
+    private PlayerHand playerHand;
 
     public PlayerDTO getPlayerDTO() {
         return new PlayerDTO(id, name, chips, tableChips, gamePosition, sittingOut);

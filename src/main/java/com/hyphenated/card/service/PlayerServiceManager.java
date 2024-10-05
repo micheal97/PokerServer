@@ -25,6 +25,7 @@ package com.hyphenated.card.service;
 
 import com.hyphenated.card.domain.Player;
 
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -47,8 +48,8 @@ public interface PlayerServiceManager {
 
     boolean registerPlayer(Player player);
 
-    Player findPlayerByNameAndPassword(String name, String password);
+    Optional<Player> findPlayerByNameAndPassword(String name, String password);
 
-    Player findPlayerById(UUID playerId);
+    Optional<Player> findPlayerById(UUID playerId);
 
 }

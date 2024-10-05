@@ -23,15 +23,15 @@ THE SOFTWARE.
 */
 package com.hyphenated.card.controller;
 
+import com.hyphenated.card.controller.dto.GameDTO;
 import com.hyphenated.card.controller.dto.PlayerDTO;
-import com.hyphenated.card.controller.dto.TableStructureDTO;
+import com.hyphenated.card.domain.Game;
 import com.hyphenated.card.domain.Player;
 import com.hyphenated.card.domain.PlayerHand;
 import com.hyphenated.card.domain.PlayerHandRoundAction;
-import com.hyphenated.card.domain.TableStructure;
+import com.hyphenated.card.service.GameService;
 import com.hyphenated.card.service.PlayerServiceManager;
 import com.hyphenated.card.service.ScheduledPlayerActionService;
-import com.hyphenated.card.service.TableStructureService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.ResponseEntity;
@@ -57,7 +57,7 @@ public class PlayerController {
     private PlayerServiceManager playerService;
 
     @Autowired
-    private TableStructureService tableStructureService;
+    private GameService GameService;
 
     @Autowired
     private TableTasksController tableTasksController;
@@ -65,8 +65,8 @@ public class PlayerController {
     private ScheduledPlayerActionService scheduledPlayerActionService;
 
     @RequestMapping("/games")
-    public @ResponseBody ResponseEntity<List<TableStructureDTO>> getGames() {
-        return ResponseEntity.ok(tableStructureService.findAll().stream().map(TableStructure::getTableStructureDTO).toList());
+    public @ResponseBody ResponseEntity<List<GameDTO>> getGames() {
+        return ResponseEntity.ok(GameService.findAll().stream().map(Game::getGameDTO).toList());
     }
 
     @RequestMapping("/register")
@@ -89,12 +89,12 @@ public class PlayerController {
      */
     @RequestMapping("/join")
     public @ResponseBody ResponseEntity.BodyBuilder joinGame(@RequestParam UUID gameId, @RequestParam UUID playerId, @RequestParam int startingTableChips) {
-        TableStructure tableStructure = tableStructureService.getTableStructureById(gameId);
+        Game game = GameService.getGameById(gameId);
         Player player = playerService.findPlayerById(playerId);
-        tableStructureService.addNewPlayerToTableStructure(tableStructure, player, startingTableChips);
+        GameService.addNewPlayerToGame(game, player, startingTableChips);
         tableTasksController.playerJoined(player.getName(), gameId);
-        if (tableStructure.getPlayers().size() == 2 && tableStructure.getPrivateGameCreator() == null) {
-            tableStructureService.startGame(tableStructure);
+        if (game.getPlayers().size() == 2 && game.getPrivateGameCreator() == null) {
+            GameService.startGame(game);
         }
         return ResponseEntity.ok();
     }
@@ -108,10 +108,10 @@ public class PlayerController {
      * Example: {"success":true}
      */
     @RequestMapping("/fold")
-    public @ResponseBody ResponseEntity.BodyBuilder fold(@RequestParam UUID gameId, @RequestParam UUID playerHandId) {
-        TableStructure tableStructure = tableStructureService.getTableStructureById(gameId);
-        PlayerHand playerHand = tableStructure.getCurrentHand().findPlayerHandById(playerHandId).get();
-        scheduledPlayerActionService.handlePlayerRoundAction(PlayerHandRoundAction.FOLD, playerHand, 0);
+    public @ResponseBody ResponseEntity.BodyBuilder fold(@RequestParam UUID gameId, @RequestParam UUID playerId) {
+        Game game = GameService.getGameById(gameId);
+        playerService.findPlayerById(playerId);
+        scheduledPlayerActionService.handlePlayerRoundAction(PlayerHandRoundAction.FOLD, playerId, 0);
         return ResponseEntity.ok();
         //TODO: Überall wie hier
     }
@@ -128,8 +128,8 @@ public class PlayerController {
     @RequestMapping("/callany")
     @CacheEvict(value = "game", allEntries = true)
     public @ResponseBody ResponseEntity.BodyBuilder callAny(@RequestParam UUID gameId, @RequestParam UUID playerHandId) {
-        TableStructure tableStructure = tableStructureService.getTableStructureById(gameId);
-        PlayerHand playerHand = tableStructure.getCurrentHand().findPlayerHandById(playerHandId).get();
+        Game game = GameService.getGameById(gameId);
+        PlayerHand playerHand = game.getCurrentHand().findPlayerHandById(playerHandId).get();
         scheduledPlayerActionService.handlePlayerRoundAction(PlayerHandRoundAction.CALL_ANY, playerHand, 0);
         return ResponseEntity.ok();
     }
@@ -137,8 +137,8 @@ public class PlayerController {
     @RequestMapping("/callCurrent")
     @CacheEvict(value = "game", allEntries = true)
     public @ResponseBody ResponseEntity.BodyBuilder callCurrent(@RequestParam UUID gameId, @RequestParam UUID playerHandId, @RequestParam int callAmount) {
-        TableStructure tableStructure = tableStructureService.getTableStructureById(gameId);
-        PlayerHand playerHand = tableStructure.getCurrentHand().findPlayerHandById(playerHandId).get();
+        Game game = GameService.getGameById(gameId);
+        PlayerHand playerHand = game.getCurrentHand().findPlayerHandById(playerHandId).get();
         scheduledPlayerActionService.handlePlayerRoundAction(PlayerHandRoundAction.CALL_CURRENT, playerHand, callAmount);
         return ResponseEntity.ok();
     }
@@ -153,8 +153,8 @@ public class PlayerController {
      */
     @RequestMapping("/check")
     public @ResponseBody ResponseEntity.BodyBuilder check(@RequestParam UUID gameId, @RequestParam UUID playerHandId) {
-        TableStructure tableStructure = tableStructureService.getTableStructureById(gameId);
-        PlayerHand playerHand = tableStructure.getCurrentHand().findPlayerHandById(playerHandId).get();
+        Game game = GameService.getGameById(gameId);
+        PlayerHand playerHand = game.getCurrentHand().findPlayerHandById(playerHandId).get();
         scheduledPlayerActionService.handlePlayerRoundAction(PlayerHandRoundAction.CHECK, playerHand, 0);
         return ResponseEntity.ok();
     }
@@ -178,8 +178,8 @@ public class PlayerController {
     @RequestMapping("/bet")
     @CacheEvict(value = "game", allEntries = true)
     public @ResponseBody ResponseEntity.BodyBuilder bet(@RequestParam UUID gameId, @RequestParam UUID playerHandId, @RequestParam int betAmount) {
-        TableStructure tableStructure = tableStructureService.getTableStructureById(gameId);
-        PlayerHand playerHand = tableStructure.getCurrentHand().findPlayerHandById(playerHandId).get();
+        Game game = GameService.getGameById(gameId);
+        PlayerHand playerHand = game.getCurrentHand().findPlayerHandById(playerHandId).get();
         scheduledPlayerActionService.handlePlayerRoundAction(PlayerHandRoundAction.BET, playerHand, betAmount);
         return ResponseEntity.ok();
     }
@@ -195,14 +195,14 @@ public class PlayerController {
     @CacheEvict(value = "game", allEntries = true)
     public @ResponseBody ResponseEntity.BodyBuilder leave(@RequestParam UUID playerId) {
         Player player = playerService.findPlayerById(playerId);
-        tableStructureService.removePlayerFromTableStructure(player);
-        TableStructure tableStructure = player.getTableStructure();
-        tableStructure.getCurrentHand()
+        GameService.removePlayerFromGame(player);
+        Game game = player.getGame();
+        game.getCurrentHand()
                 .findPlayerHandByPlayerId(playerId)
                 .ifPresent(playerHand ->
                         scheduledPlayerActionService.handlePlayerRoundAction(
                                 PlayerHandRoundAction.FOLD, playerHand, 0));
-        tableTasksController.playerLeft(player.getName(), tableStructure.getId());
+        tableTasksController.playerLeft(player.getName(), game.getId());
         return ResponseEntity.ok();
     }
 

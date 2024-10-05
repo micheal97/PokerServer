@@ -21,11 +21,28 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package com.hyphenated.card.dao;
+package com.hyphenated.card.service;
 
-import com.hyphenated.card.domain.TableStructure;
+import com.hyphenated.card.domain.Game;
+import com.hyphenated.card.domain.Player;
 
-public interface TableStructureDao extends BaseDao<TableStructure> {
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
-    void updateTables(String blindLevel);
+public interface GameService {
+
+    Optional<Game> findGameById(UUID id);
+
+    Game saveGame(Game game);
+
+    void startGame(Game game);
+
+    void addNewPlayerToGame(Game game, Player player, int startingTableChips);
+
+    void removePlayerFromGame(Player player);
+
+    List<Game> findAll();
+
+    void updateTables(List<String> blindLevel);
 }

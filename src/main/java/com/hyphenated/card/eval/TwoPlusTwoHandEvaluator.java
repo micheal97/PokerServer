@@ -48,7 +48,7 @@ public class TwoPlusTwoHandEvaluator implements HandRankEvaluator {
     }
 
     /**
-     * The two plust two lookup table is very memory intensive.  You should only ever create
+     * The two plus two lookup table is very memory intensive.  You should only ever create
      * one instance of the class.  Use this method to keep the singleton pattern.
      *
      * @return {@link TwoPlusTwoHandEvaluator} instance

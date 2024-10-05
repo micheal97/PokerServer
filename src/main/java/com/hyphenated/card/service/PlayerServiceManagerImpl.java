@@ -35,7 +35,7 @@ import java.util.UUID;
 public class PlayerServiceManagerImpl implements PlayerServiceManager {
 
     @Autowired
-    private TableStructureService tableStructureService;
+    private GameService GameService;
 
     @Autowired
     private PlayerActionService playerActionService;

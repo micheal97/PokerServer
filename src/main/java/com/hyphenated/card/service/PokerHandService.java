@@ -24,11 +24,11 @@ THE SOFTWARE.
 package com.hyphenated.card.service;
 
 import com.hyphenated.card.domain.BoardEntity;
+import com.hyphenated.card.domain.Game;
 import com.hyphenated.card.domain.HandEntity;
 import com.hyphenated.card.domain.Player;
-import com.hyphenated.card.domain.TableStructure;
 
-import javax.annotation.Nullable;
+import java.util.Optional;
 
 /**
  * Service to handle operations related to a poker hand.  Tracks the board state and players.
@@ -37,16 +37,15 @@ import javax.annotation.Nullable;
  */
 public interface PokerHandService {
 
-    @Nullable
-    HandEntity handleNextGameStatus(TableStructure tableStructure);
+    Optional<HandEntity> handleNextGameStatus(Game game);
 
     /**
      * Start a new hand on the given game
      *
-     * @param tableStructure {@link TableStructure} to start the hand with
+     * @param game {@link Game} to start the hand with
      * @return {@link HandEntity} for the hand
      */
-    HandEntity startNewHand(TableStructure tableStructure);
+    HandEntity startNewHand(Game game);
 
     /**
      * End the hand. Update dependencies on Players, position, dealer, big blind, etc.

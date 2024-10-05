@@ -24,9 +24,9 @@ THE SOFTWARE.
 package com.hyphenated.card.service;
 
 import com.hyphenated.card.Deck;
+import com.hyphenated.card.dao.GameDao;
 import com.hyphenated.card.dao.HandDao;
 import com.hyphenated.card.dao.PlayerDao;
-import com.hyphenated.card.dao.TableStructureDao;
 import com.hyphenated.card.domain.*;
 import com.hyphenated.card.util.PlayerHandBetAmountComparator;
 import com.hyphenated.card.util.PlayerUtil;
@@ -43,47 +43,47 @@ public class PokerHandServiceImpl implements PokerHandService {
     private HandDao handDao;
 
     @Autowired
-    private TableStructureDao tableStructureDao;
+    private GameDao GameDao;
 
     @Autowired
     private PlayerDao playerDao;
 
-    public HandEntity handleNextGameStatus(TableStructure tableStructure) {
-        if (tableStructure.getCurrentHand().getPlayers().size() < 2) {
-            tableStructure.setGameStatusEndHand();
+    public Optional<HandEntity> handleNextGameStatus(Game game) {
+        if (game.getCurrentHand().getPlayers().size() < 2) {
+            game.setGameStatusEndHand();
         } else {
-            tableStructure.setNextGameStatus();
+            game.setNextGameStatus();
         }
-        tableStructureDao.save(tableStructure);
-        HandEntity currentHand = tableStructure.getCurrentHand();
-        return switch (tableStructure.getGameStatus()) {
-            case PREFLOP -> startNewHand(tableStructure);
+        GameDao.save(game);
+        HandEntity currentHand = game.getCurrentHand();
+        return switch (game.getGameStatus()) {
+            case PREFLOP -> startNewHand(game);
             case FLOP -> flop(currentHand);
             case TURN -> turn(currentHand);
             case RIVER -> river(currentHand);
             case END_HAND -> {
                 if (endHand(currentHand) == null) {
-                    tableStructure.setGameStatusNotStarted();
-                    tableStructureDao.save(tableStructure);
+                    game.setGameStatusNotStarted();
+                    GameDao.save(game);
                     yield null;
                 } else {
-                    tableStructure.setNextGameStatus();
-                    tableStructureDao.save(tableStructure);
+                    game.setNextGameStatus();
+                    GameDao.save(game);
                 }
-                yield startNewHand(tableStructure);
+                yield startNewHand(game);
             }
-            default -> throw new IllegalStateException("Unexpected value: " + tableStructure.getGameStatus());
+            default -> throw new IllegalStateException("Unexpected value: " + game.getGameStatus());
         };
     }
 
     @Override
     @Transactional
-    public HandEntity startNewHand(TableStructure tableStructure) {
+    public HandEntity startNewHand(Game game) {
         HandEntity hand = new HandEntity();
-        hand.setTableStructure(tableStructure);
-        Deck d = new Deck(true);
+        hand.setGame(game);
+        Deck d = new Deck();
         Set<PlayerHand> participatingPlayers = new HashSet<>();
-        for (Player p : tableStructure.getPlayers()) {
+        for (Player p : game.getPlayers()) {
             if (p.getChips() > 0) {
                 PlayerHand ph = new PlayerHand();
                 ph.setHandEntity(hand);
@@ -128,8 +128,8 @@ public class PokerHandServiceImpl implements PokerHandService {
         hand.setCards(d.exportDeck());
         hand = handDao.save(hand);
 
-        tableStructure.setCurrentHand(hand);
-        tableStructureDao.save(tableStructure);
+        game.setCurrentHand(hand);
+        GameDao.save(game);
         return hand;
     }
 
@@ -140,7 +140,7 @@ public class PokerHandServiceImpl implements PokerHandService {
             throw new IllegalStateException("There are unresolved betting actions");
         }
 
-        TableStructure tableStructure = hand.getTableStructure();
+        Game game = hand.getGame();
 
         hand.setCurrentToAct(null);
 
@@ -153,16 +153,16 @@ public class PokerHandServiceImpl implements PokerHandService {
         phs.sort(new PlayerHandBetAmountComparator());
         for (PlayerHand ph : phs) {
             if (ph.getPlayer().getTableChips() <= 0) {
-                tableStructure.removePlayer(ph.getPlayer());
-                tableStructureDao.save(tableStructure);
+                game.removePlayer(ph.getPlayer());
+                GameDao.save(game);
             }
         }
 
         //For all players in the game, remove any who are out of chips (eliminated)
         List<Player> players = new ArrayList<>();
         Player playerInBTN = null;
-        for (Player p : tableStructure.getPlayers()) {
-            if (p.equals(tableStructure.getPlayerInBTN())) {
+        for (Player p : game.getPlayers()) {
+            if (p.equals(game.getPlayerInBTN())) {
                 //If the player on the Button has been eliminated, we still need this player
                 //in the list so that we calculate next button from its position
                 playerInBTN = p;
@@ -171,20 +171,20 @@ public class PokerHandServiceImpl implements PokerHandService {
                 players.add(p);
             }
         }
-        if (tableStructure.getPlayers().size() < 2) {
+        if (game.getPlayers().size() < 2) {
             return null;
         }
 
         //Rotate Button.  Use Simplified Moving Button algorithm (for ease of coding)
         //This means we always rotate button.  Blinds will be next two active players.  May skip blinds.
         Player nextButton = PlayerUtil.getNextPlayerInGameOrder(players, playerInBTN);
-        tableStructure.setPlayerInBTN(nextButton);
+        game.setPlayerInBTN(nextButton);
         assert playerInBTN != null;
         if (playerInBTN.getTableChips() == 0) {
             players.remove(playerInBTN);
         }
 
-        tableStructureDao.save(tableStructure);
+        GameDao.save(game);
 
         //Remove Deck from database. No need to keep that around anymore
         hand.setCards(new ArrayList<>());
@@ -268,7 +268,7 @@ public class PokerHandServiceImpl implements PokerHandService {
 
     @Override
     public Player getPlayerInSB(HandEntity hand) {
-        Player button = hand.getTableStructure().getPlayerInBTN();
+        Player button = hand.getGame().getPlayerInBTN();
         //Heads up the Button is the Small Blind
         if (hand.getPlayers().size() == 2) {
             return button;
@@ -279,7 +279,7 @@ public class PokerHandServiceImpl implements PokerHandService {
 
     @Override
     public Player getPlayerInBB(HandEntity hand) {
-        Player button = hand.getTableStructure().getPlayerInBTN();
+        Player button = hand.getGame().getPlayerInBTN();
         List<PlayerHand> players = new ArrayList<>(hand.getPlayers());
         Player leftOfButton = PlayerUtil.getNextPlayerInGameOrderPH(players, button);
         //Heads up, the player who is not the Button is the Big blind
@@ -300,7 +300,7 @@ public class PokerHandServiceImpl implements PokerHandService {
         }
         //Next player is to the left of the button.  Given that the button may have been eliminated
         //In a round of betting, we need to put the button back to determine relative position.
-        Player btn = hand.getTableStructure().getPlayerInBTN();
+        Player btn = hand.getGame().getPlayerInBTN();
         if (!playersInHand.contains(btn)) {
             playersInHand.add(btn);
         }
