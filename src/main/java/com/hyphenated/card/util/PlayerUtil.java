@@ -33,7 +33,7 @@ import com.hyphenated.card.holder.Board;
 
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Utility class with helper methods for Player interactions
@@ -51,31 +51,16 @@ public class PlayerUtil {
      * @param startPlayer Start position.  The player to the left of this player should be the next to act
      * @return {@link Player} who is next to act
      */
-    public static Player getNextPlayerInGameOrder(List<Player> players, Player startPlayer) {
+    private static Player getNextPlayerInGameOrder(SortedSet<Player> players, @Nullable Player startPlayer) {
         //Sorted list by game order
-        Collections.sort(players);
-        for (int i = 0; i < players.size(); i++) {
-            //Find the player we are starting at
-            if (players.get(i).equals(startPlayer)) {
-                //The next player is either the next in the list, or the first in the list if startPlayer is at the end
-                return (i == players.size() - 1) ? players.get(0) : players.get(i + 1);
-            }
+        if (startPlayer == null) {
+            return players.first();
         }
-        return null;
-    }
-
-    /**
-     * Get the next player to act in the hand
-     *
-     * @param playerHands List of players involved in the hand
-     * @param startPlayer Start position.  The Player to the left of this player should be the next to act
-     * @return {@link Player} who is next to act
-     */
-    public static Player getNextPlayerInGameOrderPH(List<PlayerHand> playerHands, Player startPlayer) {
-        List<Player> players = playerHands.stream()
-                .map(PlayerHand::getPlayer)
-                .collect(Collectors.toList());
-        return getNextPlayerInGameOrder(players, startPlayer);
+        AtomicInteger nextGamePosition = new AtomicInteger(startPlayer.getGamePosition() + 1);
+        if (players.size() <= nextGamePosition.get()) {
+            nextGamePosition.set(0);
+        }
+        return players.stream().filter(player -> player.getGamePosition() == nextGamePosition.get()).findAny().get();
     }
 
     /**
@@ -88,24 +73,24 @@ public class PlayerUtil {
      */
     @Nullable
     public static Player getNextPlayerToAct(HandEntity hand, Player startPlayer) {
-        List<PlayerHand> players = new ArrayList<>(hand.getPlayers());
+        SortedSet<Player> players = hand.getPlayers();
         Player next = startPlayer;
 
-        //Skip all in players and sitting out players
-        boolean lookingForNextPlayer = true;
-        while (lookingForNextPlayer) {
-            next = PlayerUtil.getNextPlayerInGameOrderPH(players, next);
-            //Escape condition
-            if (next.equals(startPlayer) && hand.getTotalBetAmount() == 0 || next.equals(hand.getLastBetOrRaise())) {
-                next = null;
-                break;
-            }
+        while (true) {
+            next = PlayerUtil.getNextPlayerInGameOrder(players, next);
             //If the player is not sitting out and still has chips, then this player is next to act
-            else if (next.getChips() > 0) {
-                lookingForNextPlayer = false;
+            if (next.getChips() > 0) {
+                continue;
             }
+            //Escape condition
+            if (next.equals(startPlayer)) {
+                return null;
+            }
+            if (next.equals(hand.getLastBetOrRaise()) || hand.getTotalBetAmount() == 0) {
+                return next;
+            }
+
         }
-        return next;
     }
 
 
@@ -114,24 +99,22 @@ public class PlayerUtil {
      * passed into the parameter.  This allows for a separation of concerns when dealing with split
      * pots and multiple side pots.
      *
-     * @param hand    {@link HandEntity} that has been concluded with a winner to be determined
-     * @param players {@link PlayerHand} set of players who are competing to win the hand.  These are the
-     *                players who will be considered when deciding the winner, not the {@link PlayerHand}s associated with the hand.
+     * @param hand {@link HandEntity} that has been concluded with a winner to be determined
      * @return List of {@link Player}s who have won the hand.  If there is a tie, all players that have
      * tied are returned in the list.
      */
-    public static List<Player> getWinnersOfHand(HandEntity hand, Set<PlayerHand> players) {
-        List<Player> winners = new ArrayList<Player>();
+    public static List<Player> getWinnersOfHand(HandEntity hand) {
+        List<Player> winners = List.of();
         Board board = new Board(hand.getBoard().getFlop1(), hand.getBoard().getFlop2(),
                 hand.getBoard().getFlop3(), hand.getBoard().getTurn(), hand.getBoard().getRiver());
         HandRank highestRank = null;
-        for (PlayerHand ph : players) {
-            HandRank rank = evaluator.evaluate(board, ph.getHand());
+        SortedSet<Player> players = hand.getPlayers();
+        for (Player player : players) {
+            HandRank rank = evaluator.evaluate(board, player.getPlayerHand().getHand());
             //First player to be checked
             if (highestRank == null) {
                 highestRank = rank;
-                winners.clear();
-                winners.add(ph.getPlayer());
+                winners = List.of(player);
                 continue;
             }
 
@@ -140,11 +123,12 @@ public class PlayerUtil {
             if (comp > 0) {
                 //New best
                 highestRank = rank;
-                winners.clear();
-                winners.add(ph.getPlayer());
+                winners = List.of(player);
             } else if (comp == 0) {
                 //Tie
-                winners.add(ph.getPlayer());
+                ArrayList<Player> winners1 = new ArrayList<>(winners);
+                winners1.add(player);
+                winners = winners1.stream().toList();
             }
         }
 
@@ -169,10 +153,10 @@ public class PlayerUtil {
             return null;
         }
 
-        Map<Player, Integer> winnersMap = new HashMap<Player, Integer>();
+        Map<Player, Integer> winnersMap = new HashMap<>();
 
         //Make deep copy of players.  We will manipulate this set in the following methods
-        Set<PlayerHand> currentPlayers = new HashSet<>(hand.getPlayers());
+        Set<Player> currentPlayers = new HashSet<>(hand.getPlayers());
 
         resolveSidePot(winnersMap, hand, 0, currentPlayers);
         resolveDeadMoney(winnersMap, hand);
@@ -181,11 +165,12 @@ public class PlayerUtil {
     }
 
     private static void applyWinningAndChips(Map<Player, Integer> winnersMap, HandEntity hand,
-                                             int minPlayerBetAmount, Set<PlayerHand> playersInvolved) {
-        List<Player> winners = PlayerUtil.getWinnersOfHand(hand, playersInvolved);
-        int potSplit = (minPlayerBetAmount * playersInvolved.size()) / winners.size();
+                                             int minPlayerBetAmount) {
+        int numOfPlayersInvolved = hand.getPlayers().size();
+        List<Player> winners = PlayerUtil.getWinnersOfHand(hand);
+        int potSplit = (minPlayerBetAmount * numOfPlayersInvolved) / winners.size();
         //Odd chips go to first player in game order
-        int remaining = (minPlayerBetAmount * playersInvolved.size()) % winners.size();
+        int remaining = (minPlayerBetAmount * numOfPlayersInvolved) % winners.size();
         for (Player player : winners) {
             Integer bigIValue = winnersMap.get(player);
             int i = (bigIValue == null) ? 0 : bigIValue;
@@ -203,18 +188,19 @@ public class PlayerUtil {
      * playersInvolved is used to determine exit conditions; tracks players involved in each pot/side pot
      */
     private static void resolveSidePot(Map<Player, Integer> winnersMap, HandEntity hand,
-                                       int allInBetRunningTotal, Set<PlayerHand> playersInvolved) {
+                                       int allInBetRunningTotal, Set<Player> playersInvolved) {
         //Determine all in player if applicable
-        PlayerHand allInPlayer = null;
-        PlayerHand potentialAllInPlayer = null;
+        Player allInPlayer = null;
+        Player potentialAllInPlayer = null;
         int minimumBetAmountPerPlayer = 0;
-        for (PlayerHand ph : playersInvolved) {
+        for (Player player : playersInvolved) {
+            PlayerHand ph = player.getPlayerHand();
             if (minimumBetAmountPerPlayer == 0) {
                 minimumBetAmountPerPlayer = ph.getBetAmount();
-                potentialAllInPlayer = ph;
+                potentialAllInPlayer = player;
             } else if (minimumBetAmountPerPlayer > ph.getBetAmount()) {
                 minimumBetAmountPerPlayer = ph.getBetAmount();
-                allInPlayer = ph;
+                allInPlayer = player;
                 potentialAllInPlayer = allInPlayer;
             } else if (minimumBetAmountPerPlayer < ph.getBetAmount()) {
                 allInPlayer = potentialAllInPlayer;
@@ -227,12 +213,12 @@ public class PlayerUtil {
 
         //exit condition.  No player is all in, or we are down to only 2 remaining players to evaluate
         if (allInPlayer == null || playersInvolved.size() == 2) {
-            applyWinningAndChips(winnersMap, hand, minimumBetAmountPerPlayer, playersInvolved);
+            applyWinningAndChips(winnersMap, hand, minimumBetAmountPerPlayer);
             return;
         }
 
         //Handle this side pot. Remove the all in player, then re-evaluate for the remaining players.
-        applyWinningAndChips(winnersMap, hand, minimumBetAmountPerPlayer, playersInvolved);
+        applyWinningAndChips(winnersMap, hand, minimumBetAmountPerPlayer);
         playersInvolved.remove(allInPlayer);
         resolveSidePot(winnersMap, hand, allInBetRunningTotal, playersInvolved);
     }

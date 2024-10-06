@@ -29,9 +29,7 @@ import jakarta.persistence.Embeddable;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Transient;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.io.Serializable;
 import java.util.concurrent.ScheduledExecutorService;
@@ -39,14 +37,16 @@ import java.util.concurrent.ScheduledExecutorService;
 @Getter
 @Setter
 @Embeddable
+@NoArgsConstructor(force = true)
+@RequiredArgsConstructor
 public class PlayerHand implements Serializable {
 
     @Enumerated(EnumType.STRING)
     @Getter(value = AccessLevel.NONE)
-    private Card card1;
+    private final Card card1;
     @Enumerated(EnumType.STRING)
     @Getter(value = AccessLevel.NONE)
-    private Card card2;
+    private final Card card2;
     /**
      * -- GETTER --
      * Represents the amount of chips the player has contributed to the pot

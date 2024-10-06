@@ -57,20 +57,20 @@ public class PokerHandServiceImpl implements PokerHandService {
         GameDao.save(game);
         HandEntity currentHand = game.getCurrentHand();
         return switch (game.getGameStatus()) {
-            case PREFLOP -> startNewHand(game);
-            case FLOP -> flop(currentHand);
-            case TURN -> turn(currentHand);
-            case RIVER -> river(currentHand);
+            case PREFLOP -> Optional.of(startNewHand(game));
+            case FLOP -> Optional.of(flop(currentHand));
+            case TURN -> Optional.of(turn(currentHand));
+            case RIVER -> Optional.of(river(currentHand));
             case END_HAND -> {
                 if (endHand(currentHand) == null) {
                     game.setGameStatusNotStarted();
                     GameDao.save(game);
-                    yield null;
+                    yield Optional.empty();
                 } else {
                     game.setNextGameStatus();
                     GameDao.save(game);
                 }
-                yield startNewHand(game);
+                yield Optional.of(startNewHand(game));
             }
             default -> throw new IllegalStateException("Unexpected value: " + game.getGameStatus());
         };
@@ -79,21 +79,11 @@ public class PokerHandServiceImpl implements PokerHandService {
     @Override
     @Transactional
     public HandEntity startNewHand(Game game) {
-        HandEntity hand = new HandEntity();
-        hand.setGame(game);
-        Deck d = new Deck();
-        Set<PlayerHand> participatingPlayers = new HashSet<>();
-        for (Player p : game.getPlayers()) {
-            if (p.getChips() > 0) {
-                PlayerHand ph = new PlayerHand();
-                ph.setHandEntity(hand);
-                ph.setPlayer(p);
-                ph.setCard1(d.dealCard());
-                ph.setCard2(d.dealCard());
-                participatingPlayers.add(ph);
-            }
-        }
-        hand.setPlayers(participatingPlayers);
+        HandEntity hand = new HandEntity(game);
+        game.setCurrentHand(hand);
+        Deck deck = hand.getDeck();
+        hand.getPlayers().forEach(player -> player
+                .setPlayerHand(new PlayerHand(deck.dealCard(), deck.dealCard())));
 
         //Sort and get the next player to act (immediately after the big blind)
         Player nextToAct = PlayerUtil.getNextPlayerToAct(hand, this.getPlayerInBB(hand));

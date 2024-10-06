@@ -58,7 +58,7 @@ public class BoardEntity implements Serializable {
      */
     @Transient
     public List<Card> getBoardCards() {
-        List<Card> cards = new ArrayList<Card>();
+        List<Card> cards = new ArrayList<>();
         if (flop1 != null) {
             cards.add(flop1);
             cards.add(flop2);
@@ -70,7 +70,7 @@ public class BoardEntity implements Serializable {
         if (river != null) {
             cards.add(river);
         }
-        return cards;
+        return cards.stream().toList();
     }
 
 }

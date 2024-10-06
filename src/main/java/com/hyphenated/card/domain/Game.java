@@ -7,7 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.io.Serializable;
-import java.util.Set;
+import java.util.SortedSet;
 import java.util.UUID;
 
 @Getter
@@ -24,7 +24,7 @@ public class Game implements Serializable {
     @Setter(value = AccessLevel.NONE)
     @OneToMany(mappedBy = "table_structure", fetch = FetchType.LAZY)
     @JoinColumn
-    private Set<Player> players;
+    private SortedSet<Player> players;
     @Embedded
     private HandEntity currentHand;
     private GameStatus gameStatus = GameStatus.NOT_STARTED;

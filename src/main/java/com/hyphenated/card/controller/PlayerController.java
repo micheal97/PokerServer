@@ -41,6 +41,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -80,7 +81,9 @@ public class PlayerController {
 
     @RequestMapping("/login")
     public @ResponseBody ResponseEntity<PlayerDTO> login(@RequestParam String name, @RequestParam String password) {
-        return ResponseEntity.ok(playerService.findPlayerByNameAndPassword(name, password).getPlayerDTO());
+        Optional<Player> optionalPlayer = playerService.findPlayerByNameAndPassword(name, password);
+        return optionalPlayer.map(player -> ResponseEntity.ok(player.getPlayerDTO()))
+                .orElseGet(() -> ResponseEntity.badRequest().body(null));
     }
 
 
@@ -88,15 +91,20 @@ public class PlayerController {
      * Have a new player join a game.
      */
     @RequestMapping("/join")
-    public @ResponseBody ResponseEntity.BodyBuilder joinGame(@RequestParam UUID gameId, @RequestParam UUID playerId, @RequestParam int startingTableChips) {
-        Game game = GameService.getGameById(gameId);
-        Player player = playerService.findPlayerById(playerId);
-        GameService.addNewPlayerToGame(game, player, startingTableChips);
-        tableTasksController.playerJoined(player.getName(), gameId);
-        if (game.getPlayers().size() == 2 && game.getPrivateGameCreator() == null) {
-            GameService.startGame(game);
+    public @ResponseBody ResponseEntity<Object> joinGame(@RequestParam UUID gameId, @RequestParam UUID playerId, @RequestParam int startingTableChips) {
+        Optional<Game> optionalGame = GameService.findGameById(gameId);
+        Optional<Player> optionalPlayer = playerService.findPlayerById(playerId);
+        if (optionalGame.isPresent() && optionalPlayer.isPresent()) {
+            Game game = optionalGame.get();
+            Player player = optionalPlayer.get();
+            GameService.addNewPlayerToGame(game, player, startingTableChips);
+            tableTasksController.playerJoined(player.getName(), gameId);
+            if (game.getPlayers().size() == 2 && game.getPrivateGameCreator() == null) {
+                GameService.startGame(game);
+            }
+            return ResponseEntity.ok(null);
         }
-        return ResponseEntity.ok();
+        return ResponseEntity.badRequest().body(null);
     }
 
     /**
@@ -109,11 +117,14 @@ public class PlayerController {
      */
     @RequestMapping("/fold")
     public @ResponseBody ResponseEntity.BodyBuilder fold(@RequestParam UUID gameId, @RequestParam UUID playerId) {
-        Game game = GameService.getGameById(gameId);
-        playerService.findPlayerById(playerId);
-        scheduledPlayerActionService.handlePlayerRoundAction(PlayerHandRoundAction.FOLD, playerId, 0);
-        return ResponseEntity.ok();
-        //TODO: Überall wie hier
+        Optional<Game> optionalGame = GameService.findGameById(gameId);
+        Optional<Player> optionalPlayer = playerService.findPlayerById(playerId);
+        if (optionalGame.isPresent() && optionalPlayer.isPresent()) {
+            Game game = optionalGame.get();
+            Player player = optionalPlayer.get();
+            scheduledPlayerActionService.handlePlayerRoundAction(PlayerHandRoundAction.FOLD, player, 0, game);
+            return ResponseEntity.ok();
+        }
     }
 
     /**

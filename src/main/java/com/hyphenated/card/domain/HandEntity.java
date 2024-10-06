@@ -25,16 +25,15 @@ package com.hyphenated.card.domain;
 
 import com.hyphenated.card.Deck;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.io.Serializable;
 import java.util.Set;
+import java.util.SortedSet;
 
 @Getter
 @Setter
+@NoArgsConstructor
 @EqualsAndHashCode
 @Embeddable
 public class HandEntity implements Serializable {
@@ -44,7 +43,7 @@ public class HandEntity implements Serializable {
     @Embedded
     @OneToMany
     @Setter(value = AccessLevel.NONE)
-    private Set<Player> players;
+    private SortedSet<Player> players;
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn
     private Player currentToAct;
@@ -63,6 +62,16 @@ public class HandEntity implements Serializable {
      * @return The last bet/raise amount
      */
     private int lastBetAmount;
+
+    public HandEntity(Game game) {
+        board = new BoardEntity();
+        players = game.getPlayers();
+        currentToAct = players.first();
+        lastBetOrRaise = null;
+        deck = new Deck();
+        pot = 0;
+        totalBetAmount = 0;
+    }
 
     public void removePlayer(Player player) {
         players.remove(player);

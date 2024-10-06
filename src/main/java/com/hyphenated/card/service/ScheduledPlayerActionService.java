@@ -1,5 +1,6 @@
 package com.hyphenated.card.service;
 
+import com.hyphenated.card.domain.Game;
 import com.hyphenated.card.domain.Player;
 import com.hyphenated.card.domain.PlayerHandRoundAction;
 
@@ -9,7 +10,7 @@ public interface ScheduledPlayerActionService {
 
     ScheduledExecutorService scheduleDefaultAction(Player player);
 
-    void handlePlayerRoundAction(PlayerHandRoundAction action, Player player, int betAmount);
+    void handlePlayerRoundAction(PlayerHandRoundAction action, Player player, int betAmount, Game game);
 
 
 }

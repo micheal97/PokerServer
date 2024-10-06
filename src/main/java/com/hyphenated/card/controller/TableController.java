@@ -93,41 +93,17 @@ public class TableController {
                                                          @RequestParam int maxPlayers,
                                                          @RequestParam BlindLevel blindLevel,
                                                          @RequestParam UUID playerId) {
-        Game game = new Game();
-        game.setName(gameName);
-        game.setMaxPlayers(maxPlayers);
-        game.setBlindLevel(blindLevel);
-        game.setPrivateGameCreator(playerServiceManager.findPlayerById(playerId));
-        game = GameService.saveGame(game);
-
-        return ResponseEntity.ok(game.getId());
-    }
-
-    /**
-     * Get the status of the game.  List the status code as well as a list of all players in the game.
-     * <br /><br />
-     * The response will be a JSON Object containing the status, a list of player JSON objects, the
-     * big blind, the small blind, the pot size for the hand and the board cards (if a hand is in progress),
-     * and the number of milliseconds left for the current blind level.
-     *
-     * @param gameId unique identifier for the game
-     * @return JSON Object of the format: {gameStatus:xxx,smallBlind:xx,bigBlind:xx,blindTime:xxx,pot:xxx,
-     * players:[{name:xxx,chips:xxx,finishPosition:xxx,gamePosition:xxx,sittingOut:false},...],cards:[Xx,Xx...]}
-     */
-    @RequestMapping(value = "/gamestatus")
-    public @ResponseBody Map<String, ?> getGameStatus(@RequestParam UUID gameId) {
-        Game game = GameService.getGameById(gameId);
-        GameStatus gs = game.getGameStatus();
-        Collection<Player> players = game.getPlayers();
-
-        Map<String, Object> results = new HashMap<>();
-        results.put("gameStatus", gs);
-        results.put("players", players);
-        if (game.getCurrentHand() != null) {
-            results.put("pot", game.getCurrentHand().getPot());
-            results.put("cards", game.getCurrentHand().getBoard().getBoardCards());
+        Optional<Player> player = playerServiceManager.findPlayerById(playerId);
+        if (player.isPresent()) {
+            Game game = new Game();
+            game.setName(gameName);
+            game.setMaxPlayers(maxPlayers);
+            game.setBlindLevel(blindLevel);
+            game.setPrivateGameCreator(player.get());
+            game = GameService.saveGame(game);
+            return ResponseEntity.ok(game.getId());
         }
-        return results;
+        return ResponseEntity.badRequest().body(null);
     }
 
     /**
@@ -141,18 +117,21 @@ public class TableController {
     @CacheEvict(value = "game", allEntries = true)
     public @ResponseBody ResponseEntity.BodyBuilder startGame(@RequestParam UUID gameId, @RequestParam UUID playerId) {
         //TODO:startPrivateGame / startPublicGame
-        Game game = GameService.getGameById(gameId);
-        if (game.getGameStatus().equals(GameStatus.NOT_STARTED) && game.getPrivateGameCreator().getId().equals(playerId)) {
-            GameService.startGame(game);
-            handService.startNewHand(game);
-            return ResponseEntity.ok();
+        Optional<Game> optionalGame = GameService.findGameById(gameId);
+        if (optionalGame.isPresent()) {
+            Game game = optionalGame.get();
+            if (game.getGameStatus().equals(GameStatus.NOT_STARTED) && game.getPrivateGameCreator().getId().equals(playerId)) {
+                GameService.startGame(game);
+                handService.startNewHand(game);
+                return ResponseEntity.ok();
+            }
         }
         return ResponseEntity.badRequest();
     }
 
     /**
      * Deal the flop for the hand. This should be called when preflop actions are complete
-     * and the the players are ready to deal the flop cards
+     * and the players are ready to deal the flop cards
      *
      * @param handId unique ID for the hand where the flop is being dealt
      * @return A map represented as a JSON String for the three cards dealt on the flop.

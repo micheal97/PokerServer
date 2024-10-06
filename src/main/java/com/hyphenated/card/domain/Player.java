@@ -30,6 +30,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.UUID;
 
@@ -46,6 +47,7 @@ public class Player implements Comparable<Player>, Serializable {
     @JsonIgnore
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn
+    @Nullable
     private Game game;
     private String name;
     private String password;
