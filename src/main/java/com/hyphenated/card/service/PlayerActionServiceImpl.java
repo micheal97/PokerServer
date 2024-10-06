@@ -46,79 +46,72 @@ public class PlayerActionServiceImpl implements PlayerActionService {
     private GameService GameService;
 
 
+    private boolean playerIsNotCurrentToAct(Player player, HandEntity hand, PlayerHandRoundAction action, int betAmount) {
+        player.getPlayerHand().setRoundBetAmount(betAmount);
+        return playerIsNotCurrentToAct(player, hand, action);
+    }
+
+    private boolean playerIsNotCurrentToAct(Player player, HandEntity hand, PlayerHandRoundAction action) {
+        if (player.equals(hand.getCurrentToAct())) {
+            return false;
+        }
+        hand.removePlayer(player);
+        player.getPlayerHand().setRoundAction(action);
+        hand.addPlayer(player);
+        handDao.save(hand);
+        playerDao.save(player);
+        return true;
+    }
+
     @Override
     @Transactional
-    public PlayerHand fold(PlayerHand playerHand) {
-        HandEntity hand = playerHand.getHandEntity();
-        Player player = playerHand.getPlayer();
+    public Player fold(Player player, Game game) {
+        HandEntity hand = game.getCurrentHand();
         //fold out of turn
-        if (!player.equals(hand.getCurrentToAct())) {
-            hand.getPlayers().remove(playerHand);
-            playerHand.setRoundAction(PlayerHandRoundAction.FOLD);
-            hand.getPlayers().add(playerHand);
-            handDao.save(hand);
-            return null;
-        }
+        if (playerIsNotCurrentToAct(player, hand, PlayerHandRoundAction.FOLD)) return null;
         Player next = PlayerUtil.getNextPlayerToAct(hand, player);
-        hand.removePlayer(playerHand);
+        hand.removePlayer(player);
         hand.setCurrentToAct(next);
         handDao.save(hand);
-        return getNextPlayerHand(next, hand);
+        return next;
         //TODO: Überall wie hier
     }
 
 
     @Override
     @Transactional
-    public PlayerHand check(PlayerHand playerHand) {
-        HandEntity hand = playerHand.getHandEntity();
-        Player player = playerHand.getPlayer();
-        //Checking is not currently an option
-        if (!getPlayerStatus(player).equals(PlayerStatus.ACTION_TO_CHECK)) {
-            return null;
-        }
+    public Player check(Player player, Game game) {
+        HandEntity hand = game.getCurrentHand();
         //check out of turn
-        if (!player.equals(hand.getCurrentToAct())) {
-            hand.getPlayers().remove(playerHand);
-            playerHand.setRoundAction(PlayerHandRoundAction.CHECK);
-            hand.getPlayers().add(playerHand);
-            handDao.save(hand);
-            return null;
-        }
+        if (playerIsNotCurrentToAct(player, hand, PlayerHandRoundAction.CHECK)) return null;
         Player next = PlayerUtil.getNextPlayerToAct(hand, player);
         hand.setCurrentToAct(next);
         handDao.save(hand);
-        return getNextPlayerHand(next, hand);
+        return next;
     }
 
     @Override
     @Transactional
-    public PlayerHand bet(PlayerHand playerHand, int betAmount) {
-        HandEntity hand = playerHand.getHandEntity();
-        Player player = playerHand.getPlayer();
+    public Player bet(Player player, Game game, int betAmount) {
+        PlayerHand playerHand = player.getPlayerHand();
+        HandEntity hand = game.getCurrentHand();
 
         //Bet must meet the minimum of twice the previous bet.  Call bet amount and raise exactly that amount or more
         //Alternatively, if there is no previous bet, the first bet must be at least the big blind
-        if (betAmount < hand.getLastBetAmount() || betAmount < hand.getBlindLevel().getBigBlind()) {
+        if (betAmount < hand.getLastBetAmount() || betAmount < game.getBlindLevel().getBigBlind()) {
             return null;
         }
 
-        int toCall = hand.getTotalBetAmount() - playerHand.getRoundBetAmount();
+        int toCall = hand.getTotalBetAmount() - player.getPlayerHand().getRoundBetAmount();
         int total = betAmount + toCall;
         if (total > player.getChips()) {
             total = player.getChips();
             betAmount = total - toCall;
         }
         //bet out of turn
-        if (!player.equals(hand.getCurrentToAct())) {
-            hand.getPlayers().remove(playerHand);
-            playerHand.setRoundAction(PlayerHandRoundAction.BET);
-            playerHand.setBetAmount(betAmount);
-            hand.getPlayers().add(playerHand);
-            handDao.save(hand);
-            return null;
-        }
-        playerHand.setRoundBetAmount(playerHand.getRoundBetAmount() + total);
+        if (playerIsNotCurrentToAct(player, hand, PlayerHandRoundAction.BET, betAmount)) return null;
+
+        playerHand.setRoundBetAmount(betAmount);
         playerHand.setBetAmount(playerHand.getBetAmount() + total);
         player.setChips(player.getChips() - total);
         hand.setPot(hand.getPot() + total);
@@ -129,7 +122,7 @@ public class PlayerActionServiceImpl implements PlayerActionService {
         hand.setCurrentToAct(next);
         handDao.save(hand);
         playerDao.save(player);
-        return getNextPlayerHand(next, hand);
+        return next;
     }
 
     @Override

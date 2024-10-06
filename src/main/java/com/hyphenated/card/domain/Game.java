@@ -6,7 +6,9 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
+import java.util.Optional;
 import java.util.SortedSet;
 import java.util.UUID;
 
@@ -28,15 +30,23 @@ public class Game implements Serializable {
     @Embedded
     private HandEntity currentHand;
     private GameStatus gameStatus = GameStatus.NOT_STARTED;
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn
-    private Player privateGameCreator;
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn
-    private Player playerInBTN;
+    private boolean privateGame;
+
+    public Optional<Player> findPlayerInBTN() {
+        return players.stream().filter(Player::isPlayerInButton).findAny();
+    }
+
+    @Nullable
+    public Player findPrivateGameCreator() {
+        if (isPrivateGame()) {
+            return players.stream().filter(Player::isPrivateGameCreator).findAny().orElseThrow(() -> new IllegalArgumentException("Private Game Creator left"));
+        } else {
+            return null;
+        }
+    }
 
     public GameDTO getGameDTO() {
-        return new GameDTO(id, blindLevel, maxPlayers, name, players.size(), gameStatus, privateGameCreator);
+        return new GameDTO(id, blindLevel, maxPlayers, name, players.size(), gameStatus, findPrivateGameCreator());
     }
 
     public void addPlayer(Player player) {

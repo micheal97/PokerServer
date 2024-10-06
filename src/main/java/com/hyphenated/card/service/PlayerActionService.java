@@ -27,6 +27,8 @@ import com.hyphenated.card.domain.Game;
 import com.hyphenated.card.domain.Player;
 import com.hyphenated.card.domain.PlayerStatus;
 
+import javax.annotation.Nullable;
+
 /**
  * Service class to handle actions the player involved in the hand can take.
  *
@@ -41,6 +43,7 @@ public interface PlayerActionService {
      * @return true if the player folds, false if the fold is not permitted
      * (the player is out of position, the player is not in the hand).
      */
+    @Nullable
     Player fold(Player player);
 
     /**
@@ -49,6 +52,7 @@ public interface PlayerActionService {
      * @return true if the player checks. False if a check is not permitted
      * (The player is out of turn, there is a bet and a check is not allowed).
      */
+    @Nullable
     Player check(Player player);
 
     /**
@@ -62,6 +66,7 @@ public interface PlayerActionService {
      * @return true if the bet is placed.  False if the bet is not permitted
      * (The bet is too small, the player is out of turn).
      */
+    @Nullable
     Player bet(Player player, int betAmount);
 
     /**
@@ -70,8 +75,10 @@ public interface PlayerActionService {
      * @return true if the bet is successfully called. False if a call is not permitted
      * (there is not bet, it is not the players turn, etc.)
      */
+    @Nullable
     Player callAny(Player player);
 
+    @Nullable
     Player callCurrent(Player player, int roundBetAmount);
 
     /**
