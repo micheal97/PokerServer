@@ -30,6 +30,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.UUID;
 
@@ -51,6 +52,7 @@ public class Player implements Comparable<Player>, Serializable {
     private int finishPosition;
     private boolean sittingOut;
     @Embedded
+    @Nullable
     private PlayerHand playerHand;
     private boolean playerInButton;
     private boolean privateGameCreator;

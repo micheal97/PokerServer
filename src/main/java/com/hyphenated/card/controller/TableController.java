@@ -51,7 +51,7 @@ public class TableController {
     //TODO:DeleteClass
 
     @Autowired
-    private GameService GameService;
+    private GameService gameService;
     @Autowired
     private ScheduledPlayerActionService scheduledPlayerActionService;
     @Autowired
@@ -99,7 +99,7 @@ public class TableController {
             game.setName(gameName);
             game.setMaxPlayers(maxPlayers);
             game.setBlindLevel(blindLevel);
-            game = GameService.saveGame(game);
+            game = gameService.saveGame(game);
             player.get().setPrivateGameCreator(true);
             return ResponseEntity.ok(game.getId());
         }
@@ -116,14 +116,13 @@ public class TableController {
     @RequestMapping("/startprivategame")
     @CacheEvict(value = "game", allEntries = true)
     public @ResponseBody ResponseEntity.BodyBuilder startGame(@RequestParam UUID gameId, @RequestParam UUID playerId) {
-        //TODO:startPrivateGame / startPublicGame
-        Optional<Game> optionalGame = GameService.findGameById(gameId);
+        Optional<Game> optionalGame = gameService.findGameById(gameId);
         Optional<Player> optionalPlayer = playerServiceManager.findPlayerById(playerId);
         if (optionalGame.isPresent() && optionalPlayer.isPresent()) {
             Game game = optionalGame.get();
             Player player = optionalPlayer.get();
-            if (game.getGameStatus().equals(GameStatus.NOT_STARTED) && player.isPrivateGameCreator()) {
-                GameService.startGame(game);
+            if (game.getGameStatus().equals(GameStatus.NOT_STARTED) && player.equals(game.getPrivateGameCreator())) {
+                gameService.startGame(game);
                 handService.startNewHand(game);
                 return ResponseEntity.ok();
             }

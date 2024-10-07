@@ -25,7 +25,6 @@ package com.hyphenated.card.service;
 
 import com.hyphenated.card.Deck;
 import com.hyphenated.card.dao.GameDao;
-import com.hyphenated.card.dao.HandDao;
 import com.hyphenated.card.dao.PlayerDao;
 import com.hyphenated.card.domain.*;
 import com.hyphenated.card.util.PlayerHandBetAmountComparator;
@@ -39,11 +38,9 @@ import java.util.*;
 @Service
 public class PokerHandServiceImpl implements PokerHandService {
 
-    @Autowired
-    private HandDao handDao;
 
     @Autowired
-    private GameDao GameDao;
+    private GameDao gameDao;
 
     @Autowired
     private PlayerDao playerDao;
@@ -54,7 +51,7 @@ public class PokerHandServiceImpl implements PokerHandService {
         } else {
             game.setNextGameStatus();
         }
-        GameDao.save(game);
+        gameDao.save(game);
         HandEntity currentHand = game.getCurrentHand();
         return switch (game.getGameStatus()) {
             case PREFLOP -> Optional.of(startNewHand(game));
@@ -64,11 +61,11 @@ public class PokerHandServiceImpl implements PokerHandService {
             case END_HAND -> {
                 if (endHand(currentHand) == null) {
                     game.setGameStatusNotStarted();
-                    GameDao.save(game);
+                    gameDao.save(game);
                     yield Optional.empty();
                 } else {
                     game.setNextGameStatus();
-                    GameDao.save(game);
+                    gameDao.save(game);
                 }
                 yield Optional.of(startNewHand(game));
             }
@@ -91,113 +88,68 @@ public class PokerHandServiceImpl implements PokerHandService {
 
         //Register the Forced Small and Big Blind bets as part of the hand
         Player smallBlind = getPlayerInSB(hand);
+        int sbBet = Math.min(game.getBlindLevel().getSmallBlind(), smallBlind.getChips());
+        Optional.ofNullable(smallBlind.getPlayerHand()).ifPresent(playerHand -> {
+            playerHand.setBetAmount(sbBet);
+            playerHand.setRoundBetAmount(sbBet);
+        });
+        smallBlind.setChips(smallBlind.getChips() - sbBet);
         Player bigBlind = getPlayerInBB(hand);
-        int sbBet = 0;
-        int bbBet = 0;
-        for (PlayerHand ph : hand.getPlayers()) {
-            if (ph.getPlayer().equals(smallBlind)) {
-                sbBet = Math.min(hand.getBlindLevel().getSmallBlind(), smallBlind.getChips());
-                ph.setBetAmount(sbBet);
-                ph.setRoundBetAmount(sbBet);
-                smallBlind.setChips(smallBlind.getChips() - sbBet);
-
-            } else if (ph.getPlayer().equals(bigBlind)) {
-                bbBet = Math.min(hand.getBlindLevel().getBigBlind(), bigBlind.getChips());
-                ph.setBetAmount(bbBet);
-                ph.setRoundBetAmount(bbBet);
-                bigBlind.setChips(bigBlind.getChips() - bbBet);
-            }
-
-        }
-        hand.setTotalBetAmount(hand.getBlindLevel().getBigBlind());
-        hand.setLastBetAmount(hand.getBlindLevel().getBigBlind());
+        int bbBet = Math.min(game.getBlindLevel().getBigBlind(), bigBlind.getChips());
+        Optional.ofNullable(bigBlind.getPlayerHand()).ifPresent(playerHand -> {
+            playerHand.setBetAmount(bbBet);
+            playerHand.setRoundBetAmount(bbBet);
+        });
+        bigBlind.setChips(bigBlind.getChips() - bbBet);
+        hand.setTotalBetAmount(game.getBlindLevel().getBigBlind());
+        hand.setLastBetAmount(game.getBlindLevel().getBigBlind());
         hand.setPot(sbBet + bbBet);
 
         BoardEntity b = new BoardEntity();
         hand.setBoard(b);
-        hand.setCards(d.exportDeck());
-        hand = handDao.save(hand);
-
         game.setCurrentHand(hand);
-        GameDao.save(game);
+        playerDao.save(bigBlind);
+        playerDao.save(smallBlind);
+        gameDao.save(game);
         return hand;
     }
 
     @Override
     @Transactional
-    public Player endHand(HandEntity hand) {
+    public Player endHand(Game game) {
+        HandEntity hand = game.getCurrentHand();
         if (!isActionResolved(hand)) {
             throw new IllegalStateException("There are unresolved betting actions");
         }
 
-        Game game = hand.getGame();
-
         hand.setCurrentToAct(null);
 
         determineWinner(hand);
-
-        //If players were eliminated this hand, set their finished position
-        List<PlayerHand> phs = new ArrayList<>(hand.getPlayers());
-        //Sort the list of PlayerHands so the one with the smallest chips at risk is first.
-        //Use this to determine finish position if multiple players are eliminated on the same hand.
-        phs.sort(new PlayerHandBetAmountComparator());
-        for (PlayerHand ph : phs) {
-            if (ph.getPlayer().getTableChips() <= 0) {
-                game.removePlayer(ph.getPlayer());
-                GameDao.save(game);
-            }
-        }
-
-        //For all players in the game, remove any who are out of chips (eliminated)
-        List<Player> players = new ArrayList<>();
-        Player playerInBTN = null;
-        for (Player p : game.getPlayers()) {
-            if (p.equals(game.getPlayerInBTN())) {
-                //If the player on the Button has been eliminated, we still need this player
-                //in the list so that we calculate next button from its position
-                playerInBTN = p;
-                players.add(playerInBTN);
-            } else if (p.getTableChips() != 0) {
-                players.add(p);
-            }
-        }
+        Player playerInBTN = game.findPlayerInBTN().orElse(game.getPlayers().first());
+        game.getPlayers().stream().filter(player -> player.getTableChips() <= 0).forEach(game::removePlayer);
         if (game.getPlayers().size() < 2) {
             return null;
         }
-
+        boolean playerToRemove = game.addPlayer(playerInBTN);
+        hand.addAllPlayers(game.getPlayers());
         //Rotate Button.  Use Simplified Moving Button algorithm (for ease of coding)
         //This means we always rotate button.  Blinds will be next two active players.  May skip blinds.
-        Player nextButton = PlayerUtil.getNextPlayerInGameOrder(players, playerInBTN);
-        game.setPlayerInBTN(nextButton);
+        Player nextButton = PlayerUtil.getNextPlayerToAct(game.getCurrentHand(), playerInBTN);
+        assert nextButton != null;
+        nextButton.setPlayerInButton(true);
         assert playerInBTN != null;
-        if (playerInBTN.getTableChips() == 0) {
-            players.remove(playerInBTN);
+        if (playerToRemove) {
+            game.removePlayer(playerInBTN);
+            hand.removePlayer(playerInBTN);
         }
-
-        GameDao.save(game);
-
-        //Remove Deck from database. No need to keep that around anymore
-        hand.setCards(new ArrayList<>());
-        handDao.save(hand);
+        gameDao.save(game);
         return nextButton;
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public HandEntity getHandById(long id) {
-        return handDao.findById(id);
-    }
 
     @Override
     @Transactional
-    public HandEntity saveHand(HandEntity hand) {
-        return handDao.save(hand);
-    }
-
-
-    @Override
-    @Transactional
-    public HandEntity flop(HandEntity hand) throws IllegalStateException {
+    public HandEntity flop(HandEntity game) throws IllegalStateException {
         if (hand.getBoard().getFlop1() != null) {
             throw new IllegalStateException("Unexpected Flop.");
         }

@@ -27,7 +27,6 @@ import com.hyphenated.card.controller.dto.GameDTO;
 import com.hyphenated.card.controller.dto.PlayerDTO;
 import com.hyphenated.card.domain.Game;
 import com.hyphenated.card.domain.Player;
-import com.hyphenated.card.domain.PlayerHand;
 import com.hyphenated.card.domain.PlayerHandRoundAction;
 import com.hyphenated.card.service.GameService;
 import com.hyphenated.card.service.PlayerServiceManager;
@@ -101,7 +100,7 @@ public class PlayerController {
             player.clearStrikes();
             playerService.savePlayer(player);
             tableTasksController.playerJoined(player.getName(), gameId);
-            if (game.getPlayers().size() == 2 && game.findPrivateGameCreator().isPresent()) {
+            if (game.getPlayers().size() == 2 && game.getPrivateGameCreator() == null) {
                 gameService.startGame(game);
             }
             return ResponseEntity.ok(null);
@@ -142,19 +141,29 @@ public class PlayerController {
     @RequestMapping("/callany")
     @CacheEvict(value = "game", allEntries = true)
     public @ResponseBody ResponseEntity<Object> callAny(@RequestParam UUID gameId, @RequestParam UUID playerId) {
-        Game game = gameService.findGameById(gameId);
-        PlayerHand playerHand = game.getCurrentHand().findPlayerHandById(playerHandId).get();
-        scheduledPlayerActionService.handlePlayerRoundAction(PlayerHandRoundAction.CALL_ANY, playerHand, 0);
-        return ResponseEntity.ok();
+        Optional<Game> optionalGame = gameService.findGameById(gameId);
+        Optional<Player> optionalPlayer = playerService.findPlayerById(playerId);
+        if (optionalGame.isPresent() && optionalPlayer.isPresent()) {
+            scheduledPlayerActionService.handlePlayerRoundAction(PlayerHandRoundAction.CALL_ANY, optionalPlayer.get(), 0, optionalGame.get());
+            return ResponseEntity.ok().body(null);
+        }
+        return ResponseEntity.badRequest().body(null);
     }
 
     @RequestMapping("/callCurrent")
     @CacheEvict(value = "game", allEntries = true)
-    public @ResponseBody ResponseEntity.BodyBuilder callCurrent(@RequestParam UUID gameId, @RequestParam UUID playerHandId, @RequestParam int callAmount) {
-        Game game = gameService.getGameById(gameId);
-        PlayerHand playerHand = game.getCurrentHand().findPlayerHandById(playerHandId).get();
-        scheduledPlayerActionService.handlePlayerRoundAction(PlayerHandRoundAction.CALL_CURRENT, playerHand, callAmount);
-        return ResponseEntity.ok();
+    public @ResponseBody ResponseEntity<Object> callCurrent(@RequestParam UUID gameId, @RequestParam UUID playerId, @RequestParam int callAmount) {
+        Optional<Game> optionalGame = gameService.findGameById(gameId);
+        Optional<Player> optionalPlayer = playerService.findPlayerById(playerId);
+        if (optionalGame.isPresent() && optionalPlayer.isPresent()) {
+            scheduledPlayerActionService.handlePlayerRoundAction(
+                    PlayerHandRoundAction.CALL_CURRENT,
+                    optionalPlayer.get(),
+                    callAmount,
+                    optionalGame.get());
+            return ResponseEntity.ok().body(null);
+        }
+        return ResponseEntity.badRequest().body(null);
     }
 
     /**
@@ -166,11 +175,18 @@ public class PlayerController {
      * Example: {"success":false}
      */
     @RequestMapping("/check")
-    public @ResponseBody ResponseEntity.BodyBuilder check(@RequestParam UUID gameId, @RequestParam UUID playerHandId) {
-        Game game = gameService.getGameById(gameId);
-        PlayerHand playerHand = game.getCurrentHand().findPlayerHandById(playerHandId).get();
-        scheduledPlayerActionService.handlePlayerRoundAction(PlayerHandRoundAction.CHECK, playerHand, 0);
-        return ResponseEntity.ok();
+    public @ResponseBody ResponseEntity<Object> check(@RequestParam UUID gameId, @RequestParam UUID playerId) {
+        Optional<Game> optionalGame = gameService.findGameById(gameId);
+        Optional<Player> optionalPlayer = playerService.findPlayerById(playerId);
+        if (optionalGame.isPresent() && optionalPlayer.isPresent()) {
+            scheduledPlayerActionService.handlePlayerRoundAction(
+                    PlayerHandRoundAction.CHECK,
+                    optionalPlayer.get(),
+                    0,
+                    optionalGame.get());
+            return ResponseEntity.ok().body(null);
+        }
+        return ResponseEntity.badRequest().body(null);
     }
 
     /**
@@ -191,11 +207,18 @@ public class PlayerController {
      */
     @RequestMapping("/bet")
     @CacheEvict(value = "game", allEntries = true)
-    public @ResponseBody ResponseEntity.BodyBuilder bet(@RequestParam UUID gameId, @RequestParam UUID playerHandId, @RequestParam int betAmount) {
-        Game game = gameService.getGameById(gameId);
-        PlayerHand playerHand = game.getCurrentHand().findPlayerHandById(playerHandId).get();
-        scheduledPlayerActionService.handlePlayerRoundAction(PlayerHandRoundAction.BET, playerHand, betAmount);
-        return ResponseEntity.ok();
+    public @ResponseBody ResponseEntity<Object> bet(@RequestParam UUID gameId, @RequestParam UUID playerId, @RequestParam int betAmount) {
+        Optional<Game> optionalGame = gameService.findGameById(gameId);
+        Optional<Player> optionalPlayer = playerService.findPlayerById(playerId);
+        if (optionalGame.isPresent() && optionalPlayer.isPresent()) {
+            scheduledPlayerActionService.handlePlayerRoundAction(
+                    PlayerHandRoundAction.BET,
+                    optionalPlayer.get(),
+                    betAmount,
+                    optionalGame.get());
+            return ResponseEntity.ok().body(null);
+        }
+        return ResponseEntity.badRequest().body(null);
     }
 
     /**
@@ -207,17 +230,18 @@ public class PlayerController {
 
     @RequestMapping("/leave")
     @CacheEvict(value = "game", allEntries = true)
-    public @ResponseBody ResponseEntity.BodyBuilder leave(@RequestParam UUID playerId) {
-        Player player = playerService.findPlayerById(playerId);
-        gameService.removePlayerFromGame(player);
-        Game game = player.getGame();
-        game.getCurrentHand()
-                .findPlayerHandByPlayerId(playerId)
-                .ifPresent(playerHand ->
-                        scheduledPlayerActionService.handlePlayerRoundAction(
-                                PlayerHandRoundAction.FOLD, playerHand, 0));
-        tableTasksController.playerLeft(player.getName(), game.getId());
-        return ResponseEntity.ok();
+    public @ResponseBody ResponseEntity<Object> leave(@RequestParam UUID gameId, @RequestParam UUID playerId) {
+        Optional<Game> optionalGame = gameService.findGameById(gameId);
+        Optional<Player> optionalPlayer = playerService.findPlayerById(playerId);
+        if (optionalGame.isPresent() && optionalPlayer.isPresent()) {
+            Game game = optionalGame.get();
+            Player player = optionalPlayer.get();
+            scheduledPlayerActionService.handlePlayerRoundAction(PlayerHandRoundAction.FOLD, player, 0, game);
+            gameService.removePlayerFromGame(player);
+            tableTasksController.playerLeft(player.getName(), game.getId());
+            return ResponseEntity.ok().body(null);
+        }
+        return ResponseEntity.badRequest().body(null);
     }
 
 }

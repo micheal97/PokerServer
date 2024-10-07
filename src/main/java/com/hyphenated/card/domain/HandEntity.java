@@ -28,6 +28,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.SortedSet;
 
 @Getter
@@ -78,5 +79,9 @@ public class HandEntity implements Serializable {
 
     public void addPlayer(Player player) {
         players.add(player);
+    }
+
+    public void addAllPlayers(Collection<Player> players) {
+        this.players.addAll(players);
     }
 }

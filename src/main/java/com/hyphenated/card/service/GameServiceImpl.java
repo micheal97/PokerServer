@@ -116,14 +116,6 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
-    @Transactional
-    public void removePlayerFromGame(Player player, Game game) {
-        game.removePlayer(player);
-        gameDao.save(game);
-    }
-
-
-    @Override
     public List<Game> findAll() {
         return gameDao.findAll();
     }

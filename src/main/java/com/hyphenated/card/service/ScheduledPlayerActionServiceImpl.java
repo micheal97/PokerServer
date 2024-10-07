@@ -65,6 +65,9 @@ public class ScheduledPlayerActionServiceImpl implements ScheduledPlayerActionSe
         ScheduledExecutorService executor = getIdleScheduler().getScheduledExecutor();
         executor.schedule(() -> {
                     player.addStrike();
+                    if (player.getStrikes() > 2) {
+                        game.removePlayer(player);
+                    }
                     playerDao.save(player);
                     handlePlayerRoundAction(PlayerHandRoundAction.FOLD, player, 0, game);
                 },
