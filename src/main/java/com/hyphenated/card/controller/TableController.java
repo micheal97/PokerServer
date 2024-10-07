@@ -99,8 +99,8 @@ public class TableController {
             game.setName(gameName);
             game.setMaxPlayers(maxPlayers);
             game.setBlindLevel(blindLevel);
-            game.setPrivateGameCreator(player.get());
             game = GameService.saveGame(game);
+            player.get().setPrivateGameCreator(true);
             return ResponseEntity.ok(game.getId());
         }
         return ResponseEntity.badRequest().body(null);
@@ -118,9 +118,11 @@ public class TableController {
     public @ResponseBody ResponseEntity.BodyBuilder startGame(@RequestParam UUID gameId, @RequestParam UUID playerId) {
         //TODO:startPrivateGame / startPublicGame
         Optional<Game> optionalGame = GameService.findGameById(gameId);
-        if (optionalGame.isPresent()) {
+        Optional<Player> optionalPlayer = playerServiceManager.findPlayerById(playerId);
+        if (optionalGame.isPresent() && optionalPlayer.isPresent()) {
             Game game = optionalGame.get();
-            if (game.getGameStatus().equals(GameStatus.NOT_STARTED) && game.getPrivateGameCreator().getId().equals(playerId)) {
+            Player player = optionalPlayer.get();
+            if (game.getGameStatus().equals(GameStatus.NOT_STARTED) && player.isPrivateGameCreator()) {
                 GameService.startGame(game);
                 handService.startNewHand(game);
                 return ResponseEntity.ok();

@@ -6,7 +6,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Optional;
 import java.util.SortedSet;
@@ -36,12 +35,11 @@ public class Game implements Serializable {
         return players.stream().filter(Player::isPlayerInButton).findAny();
     }
 
-    @Nullable
-    public Player findPrivateGameCreator() {
+    public Optional<Player> findPrivateGameCreator() {
         if (isPrivateGame()) {
-            return players.stream().filter(Player::isPrivateGameCreator).findAny().orElseThrow(() -> new IllegalArgumentException("Private Game Creator left"));
+            return Optional.of(players.stream().filter(Player::isPrivateGameCreator).findAny().orElseThrow(() -> new IllegalArgumentException("Private Game Creator left")));
         } else {
-            return null;
+            return Optional.empty();
         }
     }
 

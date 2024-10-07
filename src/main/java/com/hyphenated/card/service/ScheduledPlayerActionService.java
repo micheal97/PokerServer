@@ -8,7 +8,7 @@ import java.util.concurrent.ScheduledExecutorService;
 
 public interface ScheduledPlayerActionService {
 
-    ScheduledExecutorService scheduleDefaultAction(Player player);
+    ScheduledExecutorService scheduleDefaultAction(Player player, Game game);
 
     void handlePlayerRoundAction(PlayerHandRoundAction action, Player player, int betAmount, Game game);
 

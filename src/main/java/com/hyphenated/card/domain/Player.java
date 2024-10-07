@@ -25,6 +25,7 @@ package com.hyphenated.card.domain;
 
 import com.hyphenated.card.controller.dto.PlayerDTO;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -53,11 +54,20 @@ public class Player implements Comparable<Player>, Serializable {
     private PlayerHand playerHand;
     private boolean playerInButton;
     private boolean privateGameCreator;
+    @Setter(value = AccessLevel.NONE)
+    private int strikes;
 
     public PlayerDTO getPlayerDTO() {
         return new PlayerDTO(id, name, chips, tableChips, gamePosition, sittingOut);
     }
 
+    public void addStrike() {
+        strikes++;
+    }
+
+    public void clearStrikes() {
+        strikes = 0;
+    }
 
     @Override
     @Transient

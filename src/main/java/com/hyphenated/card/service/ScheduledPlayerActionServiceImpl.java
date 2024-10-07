@@ -2,6 +2,7 @@ package com.hyphenated.card.service;
 
 import com.hyphenated.card.controller.TableTasksController;
 import com.hyphenated.card.controller.dto.PlayerBet;
+import com.hyphenated.card.dao.PlayerDao;
 import com.hyphenated.card.domain.Game;
 import com.hyphenated.card.domain.Player;
 import com.hyphenated.card.domain.PlayerHand;
@@ -26,6 +27,8 @@ public class ScheduledPlayerActionServiceImpl implements ScheduledPlayerActionSe
     private PlayerActionService playerActionService;
     @Autowired
     private TableTasksController tableTasksController;
+    @Autowired
+    private PlayerDao playerDao;
     List<ThreadPoolTaskScheduler> schedulers = new ArrayList<>();
 
     {
@@ -58,29 +61,31 @@ public class ScheduledPlayerActionServiceImpl implements ScheduledPlayerActionSe
     }
 
     @Override
-    public ScheduledExecutorService scheduleDefaultAction(Player player) {
+    public ScheduledExecutorService scheduleDefaultAction(Player player, Game game) {
         ScheduledExecutorService executor = getIdleScheduler().getScheduledExecutor();
-        executor.schedule(() ->
-                        handlePlayerRoundAction(PlayerHandRoundAction.FOLD, player, 0),
+        executor.schedule(() -> {
+                    player.addStrike();
+                    playerDao.save(player);
+                    handlePlayerRoundAction(PlayerHandRoundAction.FOLD, player, 0, game);
+                },
                 8,
                 TimeUnit.SECONDS);
         return executor;
     }
 
     @Override
-    public void handlePlayerRoundAction(PlayerHandRoundAction action, Player player, int betAmount) {
+    public void handlePlayerRoundAction(PlayerHandRoundAction action, Player player, int betAmount, Game game) {
         Player nextPlayer = switch (action) {
-            case FOLD -> playerActionService.fold(player);
-            case CALL_ANY -> playerActionService.callAny(player);
-            case CALL_CURRENT -> playerActionService.callCurrent(player, betAmount);
-            case CHECK -> playerActionService.check(player);
-            case BET -> playerActionService.bet(player, betAmount);
+            case FOLD -> playerActionService.fold(player, game);
+            case CALL_ANY -> playerActionService.callAny(player, game);
+            case CALL_CURRENT -> playerActionService.callCurrent(player, game, betAmount);
+            case CHECK -> playerActionService.check(player, game);
+            case BET -> playerActionService.bet(player, game, betAmount);
         };
         if (nextPlayer == null) {
-            tableTasksController.gameStopped(player.getGame().getId());
+            tableTasksController.gameStopped(game.getId());
         } else {
             String playerName = player.getName();
-            Game game = nextPlayer.getGame();
             UUID gameId = game.getId();
             PlayerHand playerHand = player.getPlayerHand();
             PlayerHand nextPlayerHand = nextPlayer.getPlayerHand();
@@ -94,10 +99,13 @@ public class ScheduledPlayerActionServiceImpl implements ScheduledPlayerActionSe
                         gameId);
             }
             playerHand.getScheduledExecutorService().shutdownNow();
-            nextPlayerHand.setScheduledExecutorService(scheduleDefaultAction(nextPlayer));
+            nextPlayerHand.setScheduledExecutorService(scheduleDefaultAction(nextPlayer, game));
             tableTasksController.playersTurn(player.getName(), gameId);
             if (nextPlayerHand.getRoundAction() != null) {
-                handlePlayerRoundAction(nextPlayerHand.getRoundAction(), nextPlayer, nextPlayerHand.getBetAmount());
+                if (nextPlayerHand.getRoundAction() == PlayerHandRoundAction.CALL_CURRENT) {
+                    handlePlayerRoundAction(nextPlayerHand.getRoundAction(), nextPlayer, playerHand.getBetAmount(), game);
+                }
+                handlePlayerRoundAction(nextPlayerHand.getRoundAction(), nextPlayer, 0, game);
             }
         }
     }

@@ -31,6 +31,8 @@ import jakarta.persistence.criteria.Root;
 import org.hibernate.Session;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public class PlayerDaoImpl extends BaseDaoImpl<Player> implements PlayerDao {
     public boolean existsByName(String name) {
@@ -46,7 +48,7 @@ public class PlayerDaoImpl extends BaseDaoImpl<Player> implements PlayerDao {
     }
 
     @Override
-    public Player findByNameAndPassword(String name, String password) {
+    public Optional<Player> findByNameAndPassword(String name, String password) {
         Session session = getSession();
         CriteriaBuilder cb = session.getCriteriaBuilder();
         CriteriaQuery<Player> cq = cb.createQuery(Player.class);
@@ -54,6 +56,6 @@ public class PlayerDaoImpl extends BaseDaoImpl<Player> implements PlayerDao {
         cq.select(root).where(cb.and(
                 cb.equal(root.get("name"), name),
                 cb.equal(root.get("password"), password)));
-        return session.createQuery(cq).getSingleResultOrNull();
+        return Optional.ofNullable(session.createQuery(cq).getSingleResultOrNull());
     }
 }

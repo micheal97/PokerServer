@@ -31,8 +31,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Map;
-
 @Service
 public class PlayerActionServiceImpl implements PlayerActionService {
 
@@ -108,10 +106,11 @@ public class PlayerActionServiceImpl implements PlayerActionService {
             total = player.getChips();
             betAmount = total - toCall;
         }
+        int playerHandRoundBetAmount = playerHand.getRoundBetAmount() + betAmount;
         //bet out of turn
-        if (playerIsNotCurrentToAct(player, hand, PlayerHandRoundAction.BET, betAmount)) return null;
+        if (playerIsNotCurrentToAct(player, hand, PlayerHandRoundAction.BET, playerHandRoundBetAmount)) return null;
 
-        playerHand.setRoundBetAmount(betAmount);
+        playerHand.setRoundBetAmount(playerHandRoundBetAmount);
         playerHand.setBetAmount(playerHand.getBetAmount() + total);
         player.setChips(player.getChips() - total);
         hand.setPot(hand.getPot() + total);
@@ -127,19 +126,14 @@ public class PlayerActionServiceImpl implements PlayerActionService {
 
     @Override
     @Transactional
-    public PlayerHand callAny(PlayerHand playerHand) {
-        HandEntity hand = playerHand.getHandEntity();
-        Player player = playerHand.getPlayer();
+    public Player callAny(Player player, Game game) {
+        HandEntity hand = game.getCurrentHand();
+        PlayerHand playerHand = player.getPlayerHand();
         //call out of turn
-        if (!player.equals(hand.getCurrentToAct())) {
-            hand.getPlayers().remove(playerHand);
-            playerHand.setRoundAction(PlayerHandRoundAction.CALL_ANY);
-            hand.getPlayers().add(playerHand);
-            handDao.save(hand);
-            return null;
-        }
+        if (playerIsNotCurrentToAct(player, hand, PlayerHandRoundAction.CALL_ANY)) return null;
 
-        int toCall = hand.getTotalBetAmount() - playerHand.getRoundBetAmount();
+
+        int toCall = hand.getLastBetAmount() - playerHand.getRoundBetAmount();
         toCall = Math.min(toCall, player.getChips());
         if (toCall <= 0) {
             return null;
@@ -154,14 +148,14 @@ public class PlayerActionServiceImpl implements PlayerActionService {
         hand.setCurrentToAct(next);
         handDao.save(hand);
         playerDao.save(player);
-        return getNextPlayerHand(next, hand);
+        return next;
     }
 
     @Override
     @Transactional
-    public PlayerHand callCurrent(PlayerHand playerHand, int roundBetAmount) {
-        HandEntity hand = playerHand.getHandEntity();
-        Player player = playerHand.getPlayer();
+    public Player callCurrent(Player player, Game game, int roundBetAmount) {
+        HandEntity hand = game.getCurrentHand();
+        PlayerHand playerHand = player.getPlayerHand();
 
         if (roundBetAmount != playerHand.getBetAmount()) {
             return null;
@@ -169,19 +163,14 @@ public class PlayerActionServiceImpl implements PlayerActionService {
         int toCall = hand.getTotalBetAmount() - playerHand.getRoundBetAmount();
         toCall = Math.min(toCall, player.getChips());
         if (toCall <= 0) {
-            return null;
+            if (playerIsNotCurrentToAct(player, hand, PlayerHandRoundAction.CHECK)) return null;
         }
         playerHand.setRoundBetAmount(playerHand.getRoundBetAmount() + toCall);
         playerHand.setBetAmount(playerHand.getBetAmount() + toCall);
 
         //call out of turn
-        if (!player.equals(hand.getCurrentToAct())) {
-            hand.getPlayers().remove(playerHand);
-            playerHand.setRoundAction(PlayerHandRoundAction.CALL_CURRENT);
-            hand.getPlayers().add(playerHand);
-            handDao.save(hand);
-            return null;
-        }
+        if (playerIsNotCurrentToAct(player, hand, PlayerHandRoundAction.CALL_CURRENT)) return null;
+
         player.setChips(player.getChips() - toCall);
         hand.setPot(hand.getPot() + toCall);
 
@@ -189,86 +178,6 @@ public class PlayerActionServiceImpl implements PlayerActionService {
         hand.setCurrentToAct(next);
         handDao.save(hand);
         playerDao.save(player);
-        return getNextPlayerHand(next, hand);
-    }
-
-    @Override
-    @Transactional
-    public void sitIn(Player player, Game game, int startingChips) {
-        GameService.addNewPlayerToGame(game, player, startingChips);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public PlayerStatus getPlayerStatus(Player player) {
-        player = playerDao.save(player);
-        if (player == null) {
-            return PlayerStatus.ELIMINATED;
-        }
-
-        if (player.isSittingOut()) {
-            return PlayerStatus.SIT_OUT_GAME;
-        }
-
-        Game game = player.getGame();
-        if (!game.getGameStatus().equals(GameStatus.NOT_STARTED)) {
-            return PlayerStatus.NOT_STARTED;
-        }
-
-        HandEntity hand = game.getCurrentHand();
-        if (hand == null) {
-            return PlayerStatus.SEATING;
-        }
-        PlayerHand playerHand = null;
-        for (PlayerHand ph : hand.getPlayers()) {
-            if (ph.getPlayer().equals(player)) {
-                playerHand = ph;
-                break;
-            }
-        }
-
-        if (!hand.getPlayers().contains(playerHand)) {
-            if (player.getChips() <= 0) {
-                return PlayerStatus.ELIMINATED;
-            }
-            return PlayerStatus.SIT_OUT;
-        }
-
-        if (hand.getCurrentToAct() == null) {
-            //Only one player, everyone else folded, player is the winner
-            if (hand.getPlayers().size() == 1) {
-                return PlayerStatus.WON_HAND;
-            }
-            //Get the list of players who won at least some amount of chips at showdown
-            Map<Player, Integer> winners = PlayerUtil.getAmountWonInHandForAllPlayers(hand);
-            if (winners != null && winners.containsKey(player)) {
-                //Player is contained in this collection, so the player was a winner in the hand
-                return PlayerStatus.WON_HAND;
-            } else {
-                //Hand is over but player lost at showdown.
-                return PlayerStatus.LOST_HAND;
-            }
-        }
-
-        if (player.getChips() <= 0) {
-            return PlayerStatus.ALL_IN;
-        }
-
-        if (!player.equals(hand.getCurrentToAct())) {
-            //Small and Big Blind to be determined later?
-            //Let controller handle that status
-            return PlayerStatus.WAITING;
-        }
-
-        if (hand.getTotalBetAmount() > playerHand.getRoundBetAmount()) {
-            return PlayerStatus.ACTION_TO_CALL;
-        } else if (playerHand.getRoundBetAmount() > 0) {
-            //We have placed a bet but now our action is check?  This means the round of betting is over
-            //TODO still problem when every player checks or BB.  Need additional info to solve this
-            return PlayerStatus.ACTION_TO_CHECK;
-        } else {
-            return PlayerStatus.ACTION_TO_CHECK;
-        }
-
+        return next;
     }
 }

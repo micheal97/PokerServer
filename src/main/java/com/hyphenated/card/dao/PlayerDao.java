@@ -25,8 +25,10 @@ package com.hyphenated.card.dao;
 
 import com.hyphenated.card.domain.Player;
 
+import java.util.Optional;
+
 public interface PlayerDao extends BaseDao<Player> {
     boolean existsByName(String name);
 
-    Player findByNameAndPassword(String name, String password);
+    Optional<Player> findByNameAndPassword(String name, String password);
 }

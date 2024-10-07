@@ -58,7 +58,7 @@ public class PlayerController {
     private PlayerServiceManager playerService;
 
     @Autowired
-    private GameService GameService;
+    private GameService gameService;
 
     @Autowired
     private TableTasksController tableTasksController;
@@ -67,7 +67,7 @@ public class PlayerController {
 
     @RequestMapping("/games")
     public @ResponseBody ResponseEntity<List<GameDTO>> getGames() {
-        return ResponseEntity.ok(GameService.findAll().stream().map(Game::getGameDTO).toList());
+        return ResponseEntity.ok(gameService.findAll().stream().map(Game::getGameDTO).toList());
     }
 
     @RequestMapping("/register")
@@ -92,15 +92,17 @@ public class PlayerController {
      */
     @RequestMapping("/join")
     public @ResponseBody ResponseEntity<Object> joinGame(@RequestParam UUID gameId, @RequestParam UUID playerId, @RequestParam int startingTableChips) {
-        Optional<Game> optionalGame = GameService.findGameById(gameId);
+        Optional<Game> optionalGame = gameService.findGameById(gameId);
         Optional<Player> optionalPlayer = playerService.findPlayerById(playerId);
         if (optionalGame.isPresent() && optionalPlayer.isPresent()) {
             Game game = optionalGame.get();
             Player player = optionalPlayer.get();
-            GameService.addNewPlayerToGame(game, player, startingTableChips);
+            gameService.addNewPlayerToGame(game, player, startingTableChips);
+            player.clearStrikes();
+            playerService.savePlayer(player);
             tableTasksController.playerJoined(player.getName(), gameId);
-            if (game.getPlayers().size() == 2 && game.getPrivateGameCreator() == null) {
-                GameService.startGame(game);
+            if (game.getPlayers().size() == 2 && game.findPrivateGameCreator().isPresent()) {
+                gameService.startGame(game);
             }
             return ResponseEntity.ok(null);
         }
@@ -116,15 +118,16 @@ public class PlayerController {
      * Example: {"success":true}
      */
     @RequestMapping("/fold")
-    public @ResponseBody ResponseEntity.BodyBuilder fold(@RequestParam UUID gameId, @RequestParam UUID playerId) {
-        Optional<Game> optionalGame = GameService.findGameById(gameId);
+    public @ResponseBody ResponseEntity<Object> fold(@RequestParam UUID gameId, @RequestParam UUID playerId) {
+        Optional<Game> optionalGame = gameService.findGameById(gameId);
         Optional<Player> optionalPlayer = playerService.findPlayerById(playerId);
         if (optionalGame.isPresent() && optionalPlayer.isPresent()) {
             Game game = optionalGame.get();
             Player player = optionalPlayer.get();
             scheduledPlayerActionService.handlePlayerRoundAction(PlayerHandRoundAction.FOLD, player, 0, game);
-            return ResponseEntity.ok();
+            return ResponseEntity.ok().body(null);
         }
+        return ResponseEntity.badRequest().body(null);
     }
 
     /**
@@ -138,8 +141,8 @@ public class PlayerController {
      */
     @RequestMapping("/callany")
     @CacheEvict(value = "game", allEntries = true)
-    public @ResponseBody ResponseEntity.BodyBuilder callAny(@RequestParam UUID gameId, @RequestParam UUID playerHandId) {
-        Game game = GameService.getGameById(gameId);
+    public @ResponseBody ResponseEntity<Object> callAny(@RequestParam UUID gameId, @RequestParam UUID playerId) {
+        Game game = gameService.findGameById(gameId);
         PlayerHand playerHand = game.getCurrentHand().findPlayerHandById(playerHandId).get();
         scheduledPlayerActionService.handlePlayerRoundAction(PlayerHandRoundAction.CALL_ANY, playerHand, 0);
         return ResponseEntity.ok();
@@ -148,7 +151,7 @@ public class PlayerController {
     @RequestMapping("/callCurrent")
     @CacheEvict(value = "game", allEntries = true)
     public @ResponseBody ResponseEntity.BodyBuilder callCurrent(@RequestParam UUID gameId, @RequestParam UUID playerHandId, @RequestParam int callAmount) {
-        Game game = GameService.getGameById(gameId);
+        Game game = gameService.getGameById(gameId);
         PlayerHand playerHand = game.getCurrentHand().findPlayerHandById(playerHandId).get();
         scheduledPlayerActionService.handlePlayerRoundAction(PlayerHandRoundAction.CALL_CURRENT, playerHand, callAmount);
         return ResponseEntity.ok();
@@ -164,7 +167,7 @@ public class PlayerController {
      */
     @RequestMapping("/check")
     public @ResponseBody ResponseEntity.BodyBuilder check(@RequestParam UUID gameId, @RequestParam UUID playerHandId) {
-        Game game = GameService.getGameById(gameId);
+        Game game = gameService.getGameById(gameId);
         PlayerHand playerHand = game.getCurrentHand().findPlayerHandById(playerHandId).get();
         scheduledPlayerActionService.handlePlayerRoundAction(PlayerHandRoundAction.CHECK, playerHand, 0);
         return ResponseEntity.ok();
@@ -189,7 +192,7 @@ public class PlayerController {
     @RequestMapping("/bet")
     @CacheEvict(value = "game", allEntries = true)
     public @ResponseBody ResponseEntity.BodyBuilder bet(@RequestParam UUID gameId, @RequestParam UUID playerHandId, @RequestParam int betAmount) {
-        Game game = GameService.getGameById(gameId);
+        Game game = gameService.getGameById(gameId);
         PlayerHand playerHand = game.getCurrentHand().findPlayerHandById(playerHandId).get();
         scheduledPlayerActionService.handlePlayerRoundAction(PlayerHandRoundAction.BET, playerHand, betAmount);
         return ResponseEntity.ok();
@@ -206,7 +209,7 @@ public class PlayerController {
     @CacheEvict(value = "game", allEntries = true)
     public @ResponseBody ResponseEntity.BodyBuilder leave(@RequestParam UUID playerId) {
         Player player = playerService.findPlayerById(playerId);
-        GameService.removePlayerFromGame(player);
+        gameService.removePlayerFromGame(player);
         Game game = player.getGame();
         game.getCurrentHand()
                 .findPlayerHandByPlayerId(playerId)

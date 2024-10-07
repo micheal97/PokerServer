@@ -39,21 +39,24 @@ import java.util.*;
 public class GameServiceImpl implements GameService {
 
     @Autowired
-    private GameDao GameDao;
+    private GameDao gameDao;
 
     @Autowired
     private PlayerDao playerDao;
 
+    @Autowired
+    ScheduledPlayerActionService scheduledPlayerActionService;
+
     @Override
     @Transactional(readOnly = true)//TODO:readonly everywhere
     public Optional<Game> findGameById(UUID id) {
-        return GameDao.findById(id);
+        return gameDao.findById(id);
     }
 
     @Override
     @Transactional
     public Game saveGame(Game game) {
-        return GameDao.save(game);
+        return gameDao.save(game);
     }
 
     @Override
@@ -83,10 +86,13 @@ public class GameServiceImpl implements GameService {
 
             //Set Button and Big Blind.  Button is position 1 (index 0)
             Collections.sort(players);
-            game.setPlayerInBTN(players.get(0));
+            Player player = players.get(0);
+            player.setPlayerInButton(true);
 
+            player.getPlayerHand().setScheduledExecutorService(scheduledPlayerActionService.scheduleDefaultAction(player, game));
             //Save and return the updated game
-            GameDao.save(game);
+            playerDao.save(player);
+            gameDao.save(game);
         }, 4000);
     }
 
@@ -105,29 +111,26 @@ public class GameServiceImpl implements GameService {
         if (game.getBlindLevel().getBigBlind() * 50 < player.getChips()) {
             throw new IllegalStateException("Too many Chips");
         }
-        player.setGame(game);
-        player = playerDao.save(player);
         game.addPlayer(player);
-        GameDao.save(game);
+        gameDao.save(game);
     }
 
     @Override
     @Transactional
-    public void removePlayerFromGame(Player player) {
-        Game game = player.getGame();
+    public void removePlayerFromGame(Player player, Game game) {
         game.removePlayer(player);
-        GameDao.save(game);
+        gameDao.save(game);
     }
 
 
     @Override
     public List<Game> findAll() {
-        return GameDao.findAll();
+        return gameDao.findAll();
     }
 
     @Override
     public void updateTables(List<String> blindLevels) {
-        blindLevels.forEach(blindLevel -> GameDao.updateTables(blindLevel));
+        blindLevels.forEach(blindLevel -> gameDao.updateTables(blindLevel));
     }
 
 

@@ -25,7 +25,6 @@ package com.hyphenated.card.service;
 
 import com.hyphenated.card.domain.Game;
 import com.hyphenated.card.domain.Player;
-import com.hyphenated.card.domain.PlayerStatus;
 
 import javax.annotation.Nullable;
 
@@ -44,7 +43,7 @@ public interface PlayerActionService {
      * (the player is out of position, the player is not in the hand).
      */
     @Nullable
-    Player fold(Player player);
+    Player fold(Player player, Game game);
 
     /**
      * The Player checks back their action
@@ -53,7 +52,7 @@ public interface PlayerActionService {
      * (The player is out of turn, there is a bet and a check is not allowed).
      */
     @Nullable
-    Player check(Player player);
+    Player check(Player player, Game game);
 
     /**
      * The Player places a bet
@@ -67,7 +66,7 @@ public interface PlayerActionService {
      * (The bet is too small, the player is out of turn).
      */
     @Nullable
-    Player bet(Player player, int betAmount);
+    Player bet(Player player, Game game, int betAmount);
 
     /**
      * Call the bet
@@ -76,23 +75,9 @@ public interface PlayerActionService {
      * (there is not bet, it is not the players turn, etc.)
      */
     @Nullable
-    Player callAny(Player player);
+    Player callAny(Player player, Game game);
 
     @Nullable
-    Player callCurrent(Player player, int roundBetAmount);
+    Player callCurrent(Player player, Game game, int roundBetAmount);
 
-    /**
-     * Get the status in the game or hand of the player
-     *
-     * @param player {@link Player} to check the status of
-     * @return the {@link PlayerStatus}
-     */
-    PlayerStatus getPlayerStatus(Player player);
-
-    /**
-     * If a player is sitting out of the game, sit the player back in.
-     *
-     * @param player {@link Player} who is back in the game
-     */
-    void sitIn(Player player, Game game, int startingChips);
 }

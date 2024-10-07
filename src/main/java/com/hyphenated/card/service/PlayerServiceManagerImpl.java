@@ -29,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -71,13 +72,13 @@ public class PlayerServiceManagerImpl implements PlayerServiceManager {
 
     @Override
     @Transactional
-    public Player findPlayerByNameAndPassword(String name, String password) {
+    public Optional<Player> findPlayerByNameAndPassword(String name, String password) {
         return playerDao.findByNameAndPassword(name, password);
     }
 
     @Override
     @Transactional
-    public Player findPlayerById(UUID id) {
+    public Optional<Player> findPlayerById(UUID id) {
         return playerDao.findById(id);
     }
 
