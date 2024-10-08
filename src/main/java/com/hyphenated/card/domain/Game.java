@@ -28,7 +28,8 @@ public class Game implements Serializable {
     @JoinColumn
     private SortedSet<Player> players;
     @Embedded
-    private HandEntity currentHand;
+    @Nullable
+    private HandEntity hand;
     private GameStatus gameStatus = GameStatus.NOT_STARTED;
     private boolean privateGame;
 

@@ -46,13 +46,13 @@ public class PokerHandServiceImpl implements PokerHandService {
     private PlayerDao playerDao;
 
     public Optional<HandEntity> handleNextGameStatus(Game game) {
-        if (game.getCurrentHand().getPlayers().size() < 2) {
+        if (game.getHand().getPlayers().size() < 2) {
             game.setGameStatusEndHand();
         } else {
             game.setNextGameStatus();
         }
         gameDao.save(game);
-        HandEntity currentHand = game.getCurrentHand();
+        HandEntity currentHand = game.getHand();
         return switch (game.getGameStatus()) {
             case PREFLOP -> Optional.of(startNewHand(game));
             case FLOP -> Optional.of(flop(currentHand));
@@ -77,7 +77,7 @@ public class PokerHandServiceImpl implements PokerHandService {
     @Transactional
     public HandEntity startNewHand(Game game) {
         HandEntity hand = new HandEntity(game);
-        game.setCurrentHand(hand);
+        game.setHand(hand);
         Deck deck = hand.getDeck();
         hand.getPlayers().forEach(player -> player
                 .setPlayerHand(new PlayerHand(deck.dealCard(), deck.dealCard())));
@@ -107,7 +107,7 @@ public class PokerHandServiceImpl implements PokerHandService {
 
         BoardEntity b = new BoardEntity();
         hand.setBoard(b);
-        game.setCurrentHand(hand);
+        game.setHand(hand);
         playerDao.save(bigBlind);
         playerDao.save(smallBlind);
         gameDao.save(game);
@@ -117,7 +117,7 @@ public class PokerHandServiceImpl implements PokerHandService {
     @Override
     @Transactional
     public Player endHand(Game game) {
-        HandEntity hand = game.getCurrentHand();
+        HandEntity hand = game.getHand();
         if (!isActionResolved(hand)) {
             throw new IllegalStateException("There are unresolved betting actions");
         }
@@ -134,7 +134,7 @@ public class PokerHandServiceImpl implements PokerHandService {
         hand.addAllPlayers(game.getPlayers());
         //Rotate Button.  Use Simplified Moving Button algorithm (for ease of coding)
         //This means we always rotate button.  Blinds will be next two active players.  May skip blinds.
-        Player nextButton = PlayerUtil.getNextPlayerToAct(game.getCurrentHand(), playerInBTN);
+        Player nextButton = PlayerUtil.getNextPlayerToAct(game.getHand(), playerInBTN);
         assert nextButton != null;
         nextButton.setPlayerInButton(true);
         assert playerInBTN != null;
@@ -149,7 +149,8 @@ public class PokerHandServiceImpl implements PokerHandService {
 
     @Override
     @Transactional
-    public HandEntity flop(HandEntity game) throws IllegalStateException {
+    public Game flop(Game game) throws IllegalStateException {
+        HandEntity hand = game.getHand();
         if (hand.getBoard().getFlop1() != null) {
             throw new IllegalStateException("Unexpected Flop.");
         }
@@ -157,16 +158,15 @@ public class PokerHandServiceImpl implements PokerHandService {
         if (!isActionResolved(hand)) {
             throw new IllegalStateException("There are unresolved preflop actions");
         }
-
-        Deck d = new Deck(hand.getCards());
-        d.shuffleDeck();
         BoardEntity board = hand.getBoard();
-        board.setFlop1(d.dealCard());
-        board.setFlop2(d.dealCard());
-        board.setFlop3(d.dealCard());
-        hand.setCards(d.exportDeck());
-        resetRoundValues(hand);
-        return handDao.save(hand);
+        Deck deck = hand.getDeck();
+        board.setFlop1(deck.dealCard());
+        board.setFlop2(deck.dealCard());
+        board.setFlop3(deck.dealCard());
+        hand.setDeck(deck);
+        resetRoundValues(hand);//TODO:Check PlayerUtil.next()
+        game.setHand(hand);
+        return gameDao.save(game);
     }
 
     @Override

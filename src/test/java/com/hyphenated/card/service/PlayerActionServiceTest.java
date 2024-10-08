@@ -336,7 +336,7 @@ public class PlayerActionServiceTest extends AbstractSpringTest {
         hand.setCards(d.exportDeck());
         hand = handDao.save(hand);
 
-        game.setCurrentHand(hand);
+        game.setHand(hand);
         gameDao.save(game);
         flushAndClear();
         return handDao.findById(hand.getId());
