@@ -25,10 +25,7 @@ package com.hyphenated.card.domain;
 
 import com.hyphenated.card.controller.dto.PlayerDTO;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
@@ -38,18 +35,23 @@ import java.util.UUID;
 @Setter
 @Entity
 @EqualsAndHashCode
+@NoArgsConstructor(force = true, access = AccessLevel.PROTECTED)
+@RequiredArgsConstructor
 public class Player implements Comparable<Player>, Serializable {
     //TODO:Serializable in DTO
     @Column(name = "player_id")
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
-    private String name;
-    private String password;
-    private int chips;
+    @NonNull
+    private final String name;
+    @NonNull
+    private final String password;
+    @Setter(value = AccessLevel.NONE)
+    private int chips = 1000;
+    @Setter(value = AccessLevel.NONE)
     private int tableChips;
     private int gamePosition;
-    private int finishPosition;
     private boolean sittingOut;
     @Embedded
     @Nullable
@@ -58,6 +60,22 @@ public class Player implements Comparable<Player>, Serializable {
     private boolean privateGameCreator;
     @Setter(value = AccessLevel.NONE)
     private int strikes;
+
+    public void addTableChips(int tableChips) {
+        this.tableChips += tableChips;
+    }
+
+    public void removeTableChips(int tableChips) {
+        this.tableChips -= tableChips;
+    }
+
+    public void addChips(int chips) {
+        this.chips += chips;
+    }
+
+    public void removeChips(int chips) {
+        this.chips -= chips;
+    }
 
     public PlayerDTO getPlayerDTO() {
         return new PlayerDTO(id, name, chips, tableChips, gamePosition, sittingOut);

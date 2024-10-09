@@ -2,36 +2,41 @@ package com.hyphenated.card.domain;
 
 import com.hyphenated.card.controller.dto.GameDTO;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Optional;
 import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.UUID;
 
 @Getter
 @Entity
 @Setter
+@RequiredArgsConstructor
+@NoArgsConstructor(force = true, access = AccessLevel.PROTECTED)
 public class Game implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
     @Enumerated(EnumType.STRING)
-    private BlindLevel blindLevel;
-    private int maxPlayers;
-    private String name;
+    @NonNull
+    private final BlindLevel blindLevel;
+    private final int maxPlayers;
+    @NonNull
+    private final String name;
     @Setter(value = AccessLevel.NONE)
     @OneToMany(mappedBy = "table_structure", fetch = FetchType.LAZY)
     @JoinColumn
-    private SortedSet<Player> players;
+    @NonNull
+    private SortedSet<Player> players = new TreeSet<>();
     @Embedded
-    @Nullable
-    private HandEntity hand;
+    @NonNull
+    private HandEntity hand = new HandEntity(this);
+    @NonNull
     private GameStatus gameStatus = GameStatus.NOT_STARTED;
-    private boolean privateGame;
+    private final boolean privateGame;
 
     public Optional<Player> findPlayerInBTN() {
         return players.stream().filter(Player::isPlayerInButton).findAny();

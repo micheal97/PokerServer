@@ -116,6 +116,14 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
+    public void removePlayerFromGame(Game game, Player player) {
+        player.setChips();
+        player.setTableChips(0);
+        game.removePlayer(player);
+        gameDao.save(game);
+    }
+
+    @Override
     public List<Game> findAll() {
         return gameDao.findAll();
     }

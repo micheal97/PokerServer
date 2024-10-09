@@ -86,7 +86,7 @@ public class PlayerUtil {
             if (next.equals(startPlayer)) {
                 return null;
             }
-            if (next.equals(hand.getLastBetOrRaise()) || hand.getTotalBetAmount() == 0) {
+            if (next.equals(hand.getLastBetOrRaise()) || hand.getBetAmount() == 0) {
                 return next;
             }
 

@@ -88,29 +88,24 @@ public class PlayerActionServiceImpl implements PlayerActionService {
     public Player bet(Player player, Game game, int betAmount) {
         PlayerHand playerHand = player.getPlayerHand();
         HandEntity hand = game.getHand();
-
         //Bet must meet the minimum of twice the previous bet.  Call bet amount and raise exactly that amount or more
         //Alternatively, if there is no previous bet, the first bet must be at least the big blind
         if (betAmount < hand.getLastBetAmount() || betAmount < game.getBlindLevel().getBigBlind()) {
-            return null;
+            throw new IllegalArgumentException("Bet too less");
         }
 
-        int toCall = hand.getTotalBetAmount() - player.getPlayerHand().getRoundBetAmount();
-        int total = betAmount + toCall;
-        if (total > player.getChips()) {
-            total = player.getChips();
-            betAmount = total - toCall;
-        }
+        betAmount = Math.min(hand.getBetAmount() - playerHand.getRoundBetAmount(),
+                player.getChips());
         int playerHandRoundBetAmount = playerHand.getRoundBetAmount() + betAmount;
         //bet out of turn
         if (actionNotCurrentToAct(player, game, PlayerHandRoundAction.BET, playerHandRoundBetAmount)) return null;
 
         playerHand.setRoundBetAmount(playerHandRoundBetAmount);
-        playerHand.setBetAmount(playerHand.getBetAmount() + total);
-        player.setChips(player.getChips() - total);
-        hand.setPot(hand.getPot() + total);
+        playerHand.setBetAmount(playerHand.getBetAmount() + betAmount);
+        player.removeTableChips(betAmount);
+        hand.setPot(hand.getPot() + betAmount);
         hand.setLastBetAmount(betAmount);
-        hand.setTotalBetAmount(hand.getTotalBetAmount() + betAmount);
+        hand.setBetAmount(hand.getBetAmount() + betAmount);
         hand.setLastBetOrRaise(player);
         return afterActionSaveAll(player, game, hand);
     }
@@ -124,15 +119,15 @@ public class PlayerActionServiceImpl implements PlayerActionService {
         if (actionNotCurrentToAct(player, game, PlayerHandRoundAction.CALL_ANY)) return null;
 
 
-        int toCall = hand.getLastBetAmount() - playerHand.getRoundBetAmount();
-        toCall = Math.min(toCall, player.getChips());
+        int toCall = Math.min(hand.getLastBetAmount() - playerHand.getRoundBetAmount(),
+                player.getChips());
         if (toCall <= 0) {
             return null;
         }
 
         playerHand.setRoundBetAmount(playerHand.getRoundBetAmount() + toCall);
         playerHand.setBetAmount(playerHand.getBetAmount() + toCall);
-        player.setChips(player.getChips() - toCall);
+        player.removeTableChips(toCall);
         hand.setPot(hand.getPot() + toCall);
 
         return afterActionSaveAll(player, game, hand);
@@ -147,10 +142,12 @@ public class PlayerActionServiceImpl implements PlayerActionService {
         if (roundBetAmount != playerHand.getBetAmount()) {
             return null;
         }
-        int toCall = hand.getTotalBetAmount() - playerHand.getRoundBetAmount();
-        toCall = Math.min(toCall, player.getChips());
-        if (toCall <= 0) {
+        int toCall = Math.min(hand.getBetAmount() - playerHand.getRoundBetAmount(), player.getChips());
+        if (toCall == 0) {
             if (actionNotCurrentToAct(player, game, PlayerHandRoundAction.CHECK)) return null;
+        }
+        if (toCall < 0) {
+            return null;
         }
         playerHand.setRoundBetAmount(playerHand.getRoundBetAmount() + toCall);
         playerHand.setBetAmount(playerHand.getBetAmount() + toCall);
@@ -158,7 +155,7 @@ public class PlayerActionServiceImpl implements PlayerActionService {
         //call out of turn
         if (actionNotCurrentToAct(player, game, PlayerHandRoundAction.CALL_CURRENT)) return null;
 
-        player.setChips(player.getChips() - toCall);
+        player.removeTableChips(toCall);
         hand.setPot(hand.getPot() + toCall);
 
         return afterActionSaveAll(player, game, hand);

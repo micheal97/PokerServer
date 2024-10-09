@@ -56,10 +56,7 @@ public class GameDaoImpl extends BaseDaoImpl<Game> implements GameDao {
             cq1.select(cb.count(root1));
             cq.where(root.get("blindLevel").equalTo(blindLevel));
             Long numberOfBlindLevels = session.createQuery(cq).getSingleResult();
-            Game game = new Game();
-            game.setName(blindLevel + numberOfBlindLevels + 1);
-            game.setBlindLevel(BlindLevel.valueOf(blindLevel));
-            game.setMaxPlayers(8);
+            Game game = new Game(BlindLevel.valueOf(blindLevel), 8, blindLevel + numberOfBlindLevels + 1, false);
             session.merge(game);
             return;
         }

@@ -36,7 +36,7 @@ import java.util.List;
  */
 @Embeddable
 public class Deck {
-    private List<Card> cards;
+    private List<Card> cards = Arrays.asList(Card.values());
     private int numberOfCard = 0;
 
     /**
@@ -48,10 +48,8 @@ public class Deck {
     }
 
     public void initDeck() {
-        numberOfCard = 0;
-        List<Card> cards1 = Arrays.asList(Card.values());
-        Collections.shuffle(cards1);
-        cards = cards1.stream().toList();
+        Collections.shuffle(cards);
+        cards = cards.stream().toList();
     }
 
     public void shuffleDeck() {

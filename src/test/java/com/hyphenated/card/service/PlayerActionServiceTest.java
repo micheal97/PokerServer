@@ -98,7 +98,7 @@ public class PlayerActionServiceTest extends AbstractSpringTest {
         Collections.sort(players);
         assertEquals(30, hand.getPot());
         assertEquals(20, hand.getLastBetAmount());
-        assertEquals(20, hand.getTotalBetAmount());
+        assertEquals(20, hand.getBetAmount());
         //Cannot check out of order
         assertFalse(playerActionService.check(players.get(0), hand));
         assertFalse(playerActionService.check(players.get(1), hand));
@@ -123,7 +123,7 @@ public class PlayerActionServiceTest extends AbstractSpringTest {
         //Make sure all is still well
         assertEquals(30, hand.getPot());
         assertEquals(20, hand.getLastBetAmount());
-        assertEquals(20, hand.getTotalBetAmount());
+        assertEquals(20, hand.getBetAmount());
         assertEquals(players.get(3), hand.getCurrentToAct());
 
         assertTrue(playerActionService.call(players.get(3), hand));
@@ -135,13 +135,13 @@ public class PlayerActionServiceTest extends AbstractSpringTest {
         assertFalse(playerActionService.bet(players.get(4), hand, 10));
         assertTrue(playerActionService.bet(players.get(4), hand, 20));
         assertEquals(460, players.get(4).getChips());
-        assertEquals(40, hand.getTotalBetAmount());
+        assertEquals(40, hand.getBetAmount());
         assertEquals(20, hand.getLastBetAmount());
         assertEquals(90, hand.getPot());
 
         assertTrue(playerActionService.call(players.get(0), hand));
         assertEquals(1960, players.get(0).getChips());
-        assertEquals(40, hand.getTotalBetAmount());
+        assertEquals(40, hand.getBetAmount());
         assertEquals(20, hand.getLastBetAmount());
         assertEquals(130, hand.getPot());
 
@@ -152,14 +152,14 @@ public class PlayerActionServiceTest extends AbstractSpringTest {
 
         assertTrue(playerActionService.call(players.get(2), hand));
         assertEquals(1460, players.get(2).getChips());
-        assertEquals(40, hand.getTotalBetAmount());
+        assertEquals(40, hand.getBetAmount());
         assertEquals(20, hand.getLastBetAmount());
         assertEquals(170, hand.getPot());
         assertEquals(PlayerStatus.ACTION_TO_CALL, playerActionService.getPlayerStatus(players.get(3)));
 
         assertTrue(playerActionService.call(players.get(3), hand));
         assertEquals(2160, players.get(3).getChips());
-        assertEquals(40, hand.getTotalBetAmount());
+        assertEquals(40, hand.getBetAmount());
         assertEquals(20, hand.getLastBetAmount());
         assertEquals(190, hand.getPot());
     }
@@ -176,7 +176,7 @@ public class PlayerActionServiceTest extends AbstractSpringTest {
         assertTrue(playerActionService.fold(players.get(1), hand));
         assertTrue(playerActionService.call(players.get(2), hand));
         assertTrue(playerActionService.call(players.get(3), hand));
-        assertEquals(40, hand.getTotalBetAmount());
+        assertEquals(40, hand.getBetAmount());
         assertEquals(20, hand.getLastBetAmount());
         assertEquals(190, hand.getPot());
 
@@ -186,7 +186,7 @@ public class PlayerActionServiceTest extends AbstractSpringTest {
         assertEquals(460, players.get(4).getChips());
 
         //caught up on preflop action.  Now deal the flop
-        hand.setTotalBetAmount(0);
+        hand.setBetAmount(0);
         hand.setLastBetAmount(0);
         for (PlayerHand ph : hand.getPlayers()) {
             ph.setRoundBetAmount(0);
@@ -204,7 +204,7 @@ public class PlayerActionServiceTest extends AbstractSpringTest {
 
         assertEquals(PlayerStatus.ACTION_TO_CHECK, playerActionService.getPlayerStatus(players.get(4)));
         assertTrue(playerActionService.bet(players.get(4), hand, 100));
-        assertEquals(100, hand.getTotalBetAmount());
+        assertEquals(100, hand.getBetAmount());
         assertEquals(100, hand.getLastBetAmount());
         assertEquals(290, hand.getPot());
         assertEquals(360, players.get(4).getChips());
@@ -223,13 +223,13 @@ public class PlayerActionServiceTest extends AbstractSpringTest {
 
         assertTrue(playerActionService.bet(players.get(3), hand, 400));
         assertEquals(1660, players.get(3).getChips());
-        assertEquals(500, hand.getTotalBetAmount());
+        assertEquals(500, hand.getBetAmount());
         assertEquals(400, hand.getLastBetAmount());
         assertEquals(890, hand.getPot());
 
         assertTrue(playerActionService.call(players.get(4), hand));
         assertEquals(0, players.get(4).getChips());
-        assertEquals(500, hand.getTotalBetAmount());
+        assertEquals(500, hand.getBetAmount());
         assertEquals(400, hand.getLastBetAmount());
         //890 + 360 all in
         assertEquals(1250, hand.getPot());
@@ -242,7 +242,7 @@ public class PlayerActionServiceTest extends AbstractSpringTest {
 
         assertTrue(playerActionService.call(players.get(0), hand));
         assertEquals(1460, players.get(0).getChips());
-        assertEquals(500, hand.getTotalBetAmount());
+        assertEquals(500, hand.getBetAmount());
         assertEquals(400, hand.getLastBetAmount());
         assertEquals(1650, hand.getPot());
 
@@ -261,7 +261,7 @@ public class PlayerActionServiceTest extends AbstractSpringTest {
         players.get(4).setSittingOut(true);
         assertEquals(30, hand.getPot());
         assertEquals(20, hand.getLastBetAmount());
-        assertEquals(20, hand.getTotalBetAmount());
+        assertEquals(20, hand.getBetAmount());
 
         //3 is the next player to act
         assertEquals(players.get(3), hand.getCurrentToAct());
@@ -292,7 +292,7 @@ public class PlayerActionServiceTest extends AbstractSpringTest {
         players.get(3).setSittingOut(true);
 
         //caught up on preflop action.  Now deal the flop
-        hand.setTotalBetAmount(0);
+        hand.setBetAmount(0);
         hand.setLastBetAmount(0);
         for (PlayerHand ph : hand.getPlayers()) {
             ph.setRoundBetAmount(0);
@@ -327,7 +327,7 @@ public class PlayerActionServiceTest extends AbstractSpringTest {
         hand.setCurrentToAct(start);
         hand.setPlayers(participatingPlayers);
         hand.setBlindLevel(game.getGameStructure().getCurrentBlindLevel());
-        hand.setTotalBetAmount(hand.getBlindLevel().getBigBlind());
+        hand.setBetAmount(hand.getBlindLevel().getBigBlind());
         hand.setLastBetAmount(hand.getBlindLevel().getBigBlind());
         hand.setPot(hand.getBlindLevel().getBigBlind() + hand.getBlindLevel().getSmallBlind());
 

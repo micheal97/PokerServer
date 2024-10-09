@@ -37,7 +37,7 @@ import java.util.concurrent.ScheduledExecutorService;
 @Getter
 @Setter
 @Embeddable
-@NoArgsConstructor(force = true)
+@NoArgsConstructor(force = true, access = AccessLevel.PROTECTED)
 @RequiredArgsConstructor
 public class PlayerHand implements Serializable {
 

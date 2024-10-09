@@ -101,7 +101,7 @@ public class PokerHandServiceImpl implements PokerHandService {
             playerHand.setRoundBetAmount(bbBet);
         });
         bigBlind.setChips(bigBlind.getChips() - bbBet);
-        hand.setTotalBetAmount(game.getBlindLevel().getBigBlind());
+        hand.setBetAmount(game.getBlindLevel().getBigBlind());
         hand.setLastBetAmount(game.getBlindLevel().getBigBlind());
         hand.setPot(sbBet + bbBet);
 
@@ -232,7 +232,7 @@ public class PokerHandServiceImpl implements PokerHandService {
     }
 
     private void resetRoundValues(HandEntity hand) {
-        hand.setTotalBetAmount(0);
+        hand.setBetAmount(0);
         hand.setLastBetAmount(0);
 
         List<Player> playersInHand = new ArrayList<Player>();
@@ -301,7 +301,7 @@ public class PokerHandServiceImpl implements PokerHandService {
 
     //Helper method to see if there are any outstanding actions left in a betting round
     private boolean isActionResolved(HandEntity hand) {
-        int roundBetAmount = hand.getTotalBetAmount();
+        int roundBetAmount = hand.getBetAmount();
         for (PlayerHand ph : hand.getPlayers()) {
             //All players should have paid the roundBetAmount or should be all in
             if (ph.getRoundBetAmount() != roundBetAmount && ph.getPlayer().getChips() > 0) {

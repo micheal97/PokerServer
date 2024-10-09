@@ -33,17 +33,16 @@ import java.util.SortedSet;
 
 @Getter
 @Setter
-@NoArgsConstructor
+@NoArgsConstructor(force = true, access = AccessLevel.PROTECTED)
+@RequiredArgsConstructor
 @EqualsAndHashCode
 @Embeddable
 public class HandEntity implements Serializable {
 
     @Embedded
-    private BoardEntity board;
-    @Embedded
     @OneToMany
     @Setter(value = AccessLevel.NONE)
-    private SortedSet<Player> players;
+    private final SortedSet<Player> players;
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn
     private Player currentToAct;
@@ -51,9 +50,11 @@ public class HandEntity implements Serializable {
     @JoinColumn
     private Player lastBetOrRaise;
     @Embedded
-    private Deck deck;
+    private final Deck deck = new Deck();
+    @Embedded
+    private final BoardEntity board = new BoardEntity(deck);
     private int pot;
-    private int totalBetAmount;
+    private int betAmount;
     /**
      * -- GETTER --
      * In No Limit poker, the minimum bet size is twice the previous bet.  Use this field to determine
@@ -64,13 +65,11 @@ public class HandEntity implements Serializable {
     private int lastBetAmount;
 
     public HandEntity(Game game) {
-        board = new BoardEntity();
         players = game.getPlayers();
         currentToAct = players.first();
         lastBetOrRaise = null;
-        deck = new Deck();
         pot = 0;
-        totalBetAmount = 0;
+        betAmount = 0;
     }
 
     public void removePlayer(Player player) {

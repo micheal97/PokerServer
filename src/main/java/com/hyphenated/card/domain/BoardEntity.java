@@ -24,11 +24,14 @@ THE SOFTWARE.
 package com.hyphenated.card.domain;
 
 import com.hyphenated.card.Card;
+import com.hyphenated.card.Deck;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Transient;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.io.Serializable;
@@ -37,6 +40,7 @@ import java.util.List;
 
 @Getter
 @Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED, force = true)
 @Embeddable
 public class BoardEntity implements Serializable {
     @Enumerated(EnumType.STRING)
@@ -49,6 +53,14 @@ public class BoardEntity implements Serializable {
     private Card turn;
     @Enumerated(EnumType.STRING)
     private Card river;
+
+    public BoardEntity(Deck deck) {
+        flop1 = deck.dealCard();
+        flop2 = deck.dealCard();
+        flop3 = deck.dealCard();
+        turn = deck.dealCard();
+        river = deck.dealCard();
+    }
 
     /**
      * Get all of the cards on the board in list form.

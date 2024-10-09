@@ -108,7 +108,7 @@ public class IntegrationTest extends AbstractSpringTest {
         assertEquals(980, bb.getChips());
         assertEquals(30, hand.getPot());
         assertEquals(20, hand.getLastBetAmount());
-        assertEquals(20, hand.getTotalBetAmount());
+        assertEquals(20, hand.getBetAmount());
     }
 
     @Test
@@ -171,7 +171,7 @@ public class IntegrationTest extends AbstractSpringTest {
         playerActionService.call(co, hand);
         //Three callers, one fold.  BB out 20 chips, 3 in for 80
         assertEquals(260, hand.getPot());
-        assertEquals(80, hand.getTotalBetAmount());
+        assertEquals(80, hand.getBetAmount());
         assertEquals(60, hand.getLastBetAmount());
 
         hand = handService.flop(hand);
@@ -219,7 +219,7 @@ public class IntegrationTest extends AbstractSpringTest {
         playerActionService.call(co, hand);
         //Three callers, one fold.  BB out 20 chips, 3 in for 65
         assertEquals(215, hand.getPot());
-        assertEquals(65, hand.getTotalBetAmount());
+        assertEquals(65, hand.getBetAmount());
         assertEquals(45, hand.getLastBetAmount());
         for (PlayerHand ph : hand.getPlayers()) {
             assertEquals(65, ph.getBetAmount());
@@ -305,7 +305,7 @@ public class IntegrationTest extends AbstractSpringTest {
         assertTrue(playerActionService.fold(bb, hand));
         assertTrue(playerActionService.call(co, hand));
         assertEquals(2030, hand.getPot());
-        assertEquals(1000, hand.getTotalBetAmount());
+        assertEquals(1000, hand.getBetAmount());
         assertEquals(980, hand.getLastBetAmount());
 
         assertEquals(PlayerStatus.SIT_OUT, playerActionService.getPlayerStatus(sb));
@@ -370,7 +370,7 @@ public class IntegrationTest extends AbstractSpringTest {
         playerActionService.fold(bb, hand);
 
         assertEquals(2020, hand.getPot());
-        assertEquals(1000, hand.getTotalBetAmount());
+        assertEquals(1000, hand.getBetAmount());
         assertEquals(980, hand.getLastBetAmount());
 
         handService.flop(hand);
@@ -433,7 +433,7 @@ public class IntegrationTest extends AbstractSpringTest {
         playerActionService.fold(bb, hand);
 
         assertEquals(2020, hand.getPot());
-        assertEquals(1000, hand.getTotalBetAmount());
+        assertEquals(1000, hand.getBetAmount());
         assertEquals(980, hand.getLastBetAmount());
 
         handService.flop(hand);
@@ -588,14 +588,14 @@ public class IntegrationTest extends AbstractSpringTest {
         assertTrue(playerActionService.bet(bb, hand, 500));
 
         assertEquals(PlayerStatus.ALL_IN, playerActionService.getPlayerStatus(bb));
-        assertEquals(480, hand.getTotalBetAmount());
+        assertEquals(480, hand.getBetAmount());
         assertEquals(480, hand.getLastBetAmount());
 
         assertTrue(playerActionService.call(co, hand));
         assertTrue(playerActionService.bet(btn, hand, 1200)); //Shove
 
         assertEquals(900, hand.getLastBetAmount()); //Actual amount shoved
-        assertEquals(1380, hand.getTotalBetAmount());
+        assertEquals(1380, hand.getBetAmount());
         assertTrue(playerActionService.call(co, hand));
 
         assertEquals(5200, hand.getPot()); //80 + 480 + 980 + 1780 + 1780 + 100 extra from btn
