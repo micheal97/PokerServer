@@ -29,6 +29,7 @@ import lombok.*;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.SortedSet;
 
 @Getter
@@ -70,6 +71,10 @@ public class HandEntity implements Serializable {
         lastBetOrRaise = null;
         pot = 0;
         betAmount = 0;
+    }
+
+    public Optional<Player> findPlayerInBTN() {
+        return players.stream().filter(Player::isPlayerInButton).findAny();
     }
 
     public void removePlayer(Player player) {

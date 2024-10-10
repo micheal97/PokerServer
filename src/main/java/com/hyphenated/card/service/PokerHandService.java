@@ -28,8 +28,6 @@ import com.hyphenated.card.domain.Game;
 import com.hyphenated.card.domain.HandEntity;
 import com.hyphenated.card.domain.Player;
 
-import java.util.Optional;
-
 /**
  * Service to handle operations related to a poker hand.  Tracks the board state and players.
  *
@@ -37,7 +35,7 @@ import java.util.Optional;
  */
 public interface PokerHandService {
 
-    Optional<HandEntity> handleNextGameStatus(Game game);
+    void handleNextGameStatus(Game game);
 
     /**
      * Start a new hand on the given game
@@ -52,10 +50,8 @@ public interface PokerHandService {
      * <br /><br />
      * Be aware, once a hand has ended, it will no longer be tied directly to the game
      * and cannot be retrieved through game.getCurrentHand()
-     *
-     * @param hand Hand to be finished.
      */
-    Player endHand(HandEntity hand);
+    boolean endHand(Game game);
 
     /**
      * Get the hand from the persistence context based on the unique id

@@ -6,7 +6,6 @@ import lombok.*;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.util.Optional;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -38,10 +37,6 @@ public class Game implements Serializable {
     private GameStatus gameStatus = GameStatus.NOT_STARTED;
     private final boolean privateGame;
 
-    public Optional<Player> findPlayerInBTN() {
-        return players.stream().filter(Player::isPlayerInButton).findAny();
-    }
-
     @Nullable
     public Player getPrivateGameCreator() {
         if (isPrivateGame()) {
@@ -60,6 +55,9 @@ public class Game implements Serializable {
     }
 
     public void removePlayer(Player player) {
+        int tableChips = player.getTableChips();
+        player.addChips(tableChips);
+        player.removeTableChips(tableChips);
         players.remove(player);
     }
 

@@ -72,24 +72,19 @@ public class PlayerUtil {
      * @return Player who will be next to act
      */
     @Nullable
-    public static Player getNextPlayerToAct(HandEntity hand, Player startPlayer) {
+    public static Player getNextPlayerToAct(HandEntity hand, @Nullable Player startPlayer) {
         SortedSet<Player> players = hand.getPlayers();
         Player next = startPlayer;
 
         while (true) {
             next = PlayerUtil.getNextPlayerInGameOrder(players, next);
-            //If the player is not sitting out and still has chips, then this player is next to act
-            if (next.getChips() > 0) {
-                continue;
-            }
             //Escape condition
-            if (next.equals(startPlayer)) {
+            if (next.equals(startPlayer) || next.equals(hand.getLastBetOrRaise())) {
                 return null;
             }
-            if (next.equals(hand.getLastBetOrRaise()) || hand.getBetAmount() == 0) {
+            if (next.getChips() > 0) {
                 return next;
             }
-
         }
     }
 

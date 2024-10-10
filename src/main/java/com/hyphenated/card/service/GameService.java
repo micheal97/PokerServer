@@ -40,7 +40,7 @@ public interface GameService {
 
     void addNewPlayerToGame(Game game, Player player, int startingTableChips);
 
-    void removePlayerFromGame(Player player);
+    void removePlayerFromGame(Game game, Player player);
 
     List<Game> findAll();
 

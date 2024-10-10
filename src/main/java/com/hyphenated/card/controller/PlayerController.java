@@ -71,10 +71,7 @@ public class PlayerController {
 
     @RequestMapping("/register")
     public @ResponseBody ResponseEntity.BodyBuilder registerPlayer(@RequestParam String name, @RequestParam String password) {
-        Player player = new Player();
-        player.setChips(1000);
-        player.setPassword(password);
-        player.setName(name);
+        Player player = new Player(name, password);
         return playerService.registerPlayer(player) ? ResponseEntity.ok() : ResponseEntity.badRequest();
     }
 
@@ -237,7 +234,7 @@ public class PlayerController {
             Game game = optionalGame.get();
             Player player = optionalPlayer.get();
             scheduledPlayerActionService.handlePlayerRoundAction(PlayerHandRoundAction.FOLD, player, 0, game);
-            gameService.removePlayerFromGame(player);
+            gameService.removePlayerFromGame(game, player);
             tableTasksController.playerLeft(player.getName(), game.getId());
             return ResponseEntity.ok().body(null);
         }

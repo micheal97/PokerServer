@@ -24,9 +24,13 @@ THE SOFTWARE.
 package com.hyphenated.card.service;
 
 import com.hyphenated.card.Deck;
+import com.hyphenated.card.controller.TableTasksController;
 import com.hyphenated.card.dao.GameDao;
 import com.hyphenated.card.dao.PlayerDao;
-import com.hyphenated.card.domain.*;
+import com.hyphenated.card.domain.Game;
+import com.hyphenated.card.domain.HandEntity;
+import com.hyphenated.card.domain.Player;
+import com.hyphenated.card.domain.PlayerHand;
 import com.hyphenated.card.util.PlayerHandBetAmountComparator;
 import com.hyphenated.card.util.PlayerUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,39 +42,41 @@ import java.util.*;
 @Service
 public class PokerHandServiceImpl implements PokerHandService {
 
-
     @Autowired
     private GameDao gameDao;
-
     @Autowired
     private PlayerDao playerDao;
+    @Autowired
+    private PlayerActionService playerActionService;
+    @Autowired
+    private TableTasksController tableTasksController;
 
-    public Optional<HandEntity> handleNextGameStatus(Game game) {
+    public void handleNextGameStatus(Game game) {
         if (game.getHand().getPlayers().size() < 2) {
             game.setGameStatusEndHand();
         } else {
             game.setNextGameStatus();
         }
         gameDao.save(game);
-        HandEntity currentHand = game.getHand();
-        return switch (game.getGameStatus()) {
-            case PREFLOP -> Optional.of(startNewHand(game));
-            case FLOP -> Optional.of(flop(currentHand));
-            case TURN -> Optional.of(turn(currentHand));
-            case RIVER -> Optional.of(river(currentHand));
+        resetRoundValues(game);
+        switch (game.getGameStatus()) {
+            case PREFLOP -> startNewHand(game);
+            case FLOP -> flop(game);
+            case TURN -> turn(game);
+            case RIVER -> river(game);
             case END_HAND -> {
-                if (endHand(currentHand) == null) {
+                if (endHand(game)) {
                     game.setGameStatusNotStarted();
                     gameDao.save(game);
-                    yield Optional.empty();
                 } else {
                     game.setNextGameStatus();
                     gameDao.save(game);
+                    startNewHand(game);
                 }
-                yield Optional.of(startNewHand(game));
             }
             default -> throw new IllegalStateException("Unexpected value: " + game.getGameStatus());
-        };
+        }
+        ;
     }
 
     @Override
@@ -83,7 +89,7 @@ public class PokerHandServiceImpl implements PokerHandService {
                 .setPlayerHand(new PlayerHand(deck.dealCard(), deck.dealCard())));
 
         //Sort and get the next player to act (immediately after the big blind)
-        Player nextToAct = PlayerUtil.getNextPlayerToAct(hand, this.getPlayerInBB(hand));
+        Player nextToAct = PlayerUtil.getNextPlayerToAct(hand, getPlayerInBB(hand));
         hand.setCurrentToAct(nextToAct);
 
         //Register the Forced Small and Big Blind bets as part of the hand
@@ -93,172 +99,116 @@ public class PokerHandServiceImpl implements PokerHandService {
             playerHand.setBetAmount(sbBet);
             playerHand.setRoundBetAmount(sbBet);
         });
-        smallBlind.setChips(smallBlind.getChips() - sbBet);
+        smallBlind.removeTableChips(sbBet);
         Player bigBlind = getPlayerInBB(hand);
         int bbBet = Math.min(game.getBlindLevel().getBigBlind(), bigBlind.getChips());
         Optional.ofNullable(bigBlind.getPlayerHand()).ifPresent(playerHand -> {
             playerHand.setBetAmount(bbBet);
             playerHand.setRoundBetAmount(bbBet);
         });
-        bigBlind.setChips(bigBlind.getChips() - bbBet);
+        bigBlind.removeTableChips(bbBet);
         hand.setBetAmount(game.getBlindLevel().getBigBlind());
         hand.setLastBetAmount(game.getBlindLevel().getBigBlind());
         hand.setPot(sbBet + bbBet);
 
-        BoardEntity b = new BoardEntity();
-        hand.setBoard(b);
+        HandEntity newHand = new HandEntity(game);
         game.setHand(hand);
         playerDao.save(bigBlind);
         playerDao.save(smallBlind);
         gameDao.save(game);
-        return hand;
+        return newHand;
     }
 
     @Override
     @Transactional
-    public Player endHand(Game game) {
+    public boolean endHand(Game game) {
         HandEntity hand = game.getHand();
-        if (!isActionResolved(hand)) {
-            throw new IllegalStateException("There are unresolved betting actions");
-        }
-
-        hand.setCurrentToAct(null);
-
         determineWinner(hand);
-        Player playerInBTN = game.findPlayerInBTN().orElse(game.getPlayers().first());
+        Player playerInBTN = hand.findPlayerInBTN().orElse(game.getPlayers().first());
         game.getPlayers().stream().filter(player -> player.getTableChips() <= 0).forEach(game::removePlayer);
         if (game.getPlayers().size() < 2) {
-            return null;
+            return true;
         }
         boolean playerToRemove = game.addPlayer(playerInBTN);
         hand.addAllPlayers(game.getPlayers());
         //Rotate Button.  Use Simplified Moving Button algorithm (for ease of coding)
         //This means we always rotate button.  Blinds will be next two active players.  May skip blinds.
-        Player nextButton = PlayerUtil.getNextPlayerToAct(game.getHand(), playerInBTN);
-        assert nextButton != null;
-        nextButton.setPlayerInButton(true);
-        assert playerInBTN != null;
+        Optional<Player> btn = hand.findPlayerInBTN();
+        btn.ifPresent(player ->
+                player.setPlayerInButton(false));
+        Optional<Player> nextButton = Optional.ofNullable(PlayerUtil.getNextPlayerToAct(hand, btn.orElse(null)));
+        if (nextButton.isPresent()) {
+            nextButton.get().setPlayerInButton(true);
+        } else {
+            hand.getPlayers().first().setPlayerInButton(true);
+        }
+        hand.setCurrentToAct(null);
         if (playerToRemove) {
             game.removePlayer(playerInBTN);
             hand.removePlayer(playerInBTN);
         }
         gameDao.save(game);
-        return nextButton;
+        return false;
     }
 
 
     @Override
     @Transactional
-    public Game flop(Game game) throws IllegalStateException {
-        HandEntity hand = game.getHand();
-        if (hand.getBoard().getFlop1() != null) {
-            throw new IllegalStateException("Unexpected Flop.");
-        }
-        //Re-attach to persistent context for this transaction (Lazy Loading stuff)
-        if (!isActionResolved(hand)) {
-            throw new IllegalStateException("There are unresolved preflop actions");
-        }
-        BoardEntity board = hand.getBoard();
-        Deck deck = hand.getDeck();
-        board.setFlop1(deck.dealCard());
-        board.setFlop2(deck.dealCard());
-        board.setFlop3(deck.dealCard());
-        hand.setDeck(deck);
-        resetRoundValues(hand);//TODO:Check PlayerUtil.next()
-        game.setHand(hand);
-        return gameDao.save(game);
+    public void flop(Game game) throws IllegalStateException {
+        tableTasksController.sendFlop(game.getHand().getBoard().getFlop(), game.getId());
     }
 
     @Override
     @Transactional
-    public HandEntity turn(HandEntity hand) throws IllegalStateException {
-        if (hand.getBoard().getFlop1() == null || hand.getBoard().getTurn() != null) {
-            throw new IllegalStateException("Unexpected Turn.");
-        }
-        if (!isActionResolved(hand)) {
-            throw new IllegalStateException("There are unresolved flop actions");
-        }
-
-        Deck d = new Deck(hand.getCards());
-        d.shuffleDeck();
-        BoardEntity board = hand.getBoard();
-        board.setTurn(d.dealCard());
-        hand.setCards(d.exportDeck());
-        resetRoundValues(hand);
-        return handDao.save(hand);
+    public void turn(Game game) throws IllegalStateException {
+        tableTasksController.sendTurn(game.getHand().getBoard().getTurn(), game.getId());
     }
 
     @Override
     @Transactional
-    public HandEntity river(HandEntity hand) throws IllegalStateException {
-        if (hand.getBoard().getFlop1() == null || hand.getBoard().getTurn() == null
-                || hand.getBoard().getRiver() != null) {
-            throw new IllegalStateException("Unexpected River.");
-        }
-        if (!isActionResolved(hand)) {
-            throw new IllegalStateException("There are unresolved turn actions");
-        }
+    public void river(Game game) throws IllegalStateException {
+        tableTasksController.sendTurn(game.getHand().getBoard().getRiver(), game.getId());
 
-        Deck d = new Deck(hand.getCards());
-        d.shuffleDeck();
-        BoardEntity board = hand.getBoard();
-        board.setRiver(d.dealCard());
-        hand.setCards(d.exportDeck());
-        resetRoundValues(hand);
-        return handDao.save(hand);
     }
 
     @Override
     public Player getPlayerInSB(HandEntity hand) {
-        Player button = hand.getGame().getPlayerInBTN();
+        Player button = hand.findPlayerInBTN().orElseThrow(() -> new IllegalStateException("No player in btn"));
         //Heads up the Button is the Small Blind
         if (hand.getPlayers().size() == 2) {
             return button;
         }
-        List<PlayerHand> players = new ArrayList<>(hand.getPlayers());
-        return PlayerUtil.getNextPlayerInGameOrderPH(players, button);
+        return PlayerUtil.getNextPlayerToAct(hand, button);
     }
 
     @Override
     public Player getPlayerInBB(HandEntity hand) {
-        Player button = hand.getGame().getPlayerInBTN();
-        List<PlayerHand> players = new ArrayList<>(hand.getPlayers());
-        Player leftOfButton = PlayerUtil.getNextPlayerInGameOrderPH(players, button);
+        Optional<Player> button = hand.findPlayerInBTN();
+        Player leftOfButton = PlayerUtil.getNextPlayerToAct(hand, button.orElse(null));
         //Heads up, the player who is not the Button is the Big blind
         if (hand.getPlayers().size() == 2) {
             return leftOfButton;
         }
-        return PlayerUtil.getNextPlayerInGameOrderPH(players, leftOfButton);
+        return PlayerUtil.getNextPlayerToAct(hand, leftOfButton);
     }
 
-    private void resetRoundValues(HandEntity hand) {
+    private void resetRoundValues(Game game) {
+        HandEntity hand = game.getHand();
         hand.setBetAmount(0);
         hand.setLastBetAmount(0);
-
-        List<Player> playersInHand = new ArrayList<Player>();
-        for (PlayerHand ph : hand.getPlayers()) {
-            ph.setRoundBetAmount(0);
-            playersInHand.add(ph.getPlayer());
-        }
+        hand.getPlayers().stream().filter(player -> player.getPlayerHand() != null).forEach(player -> {
+            PlayerHand playerHand = player.getPlayerHand();
+            playerHand.setRoundBetAmount(0);
+            playerHand.setRoundAction(null);
+            player.setPlayerHand(playerHand);
+            playerDao.save(player);
+        });
         //Next player is to the left of the button.  Given that the button may have been eliminated
         //In a round of betting, we need to put the button back to determine relative position.
-        Player btn = hand.getGame().getPlayerInBTN();
-        if (!playersInHand.contains(btn)) {
-            playersInHand.add(btn);
-        }
-
-        Player next = PlayerUtil.getNextPlayerInGameOrder(playersInHand, btn);
-        Player firstNext = next;
-
-        //Skip all in players and players that are sitting out
-        while (next.getChips() <= 0 || next.isSittingOut()) {
-            next = PlayerUtil.getNextPlayerInGameOrder(playersInHand, next);
-            if (next.equals(firstNext)) {
-                //Exit condition if all players are all in.
-                break;
-            }
-        }
-        hand.setCurrentToAct(next);
+        Player btn = hand.findPlayerInBTN().orElseThrow(() -> new IllegalStateException("No Player in Button"));
+        hand.setCurrentToAct(btn);
+        game.setHand(hand);
+        gameDao.save(game);
     }
 
     private void determineWinner(HandEntity hand) {
@@ -299,16 +249,5 @@ public class PokerHandServiceImpl implements PokerHandService {
         }
     }
 
-    //Helper method to see if there are any outstanding actions left in a betting round
-    private boolean isActionResolved(HandEntity hand) {
-        int roundBetAmount = hand.getBetAmount();
-        for (PlayerHand ph : hand.getPlayers()) {
-            //All players should have paid the roundBetAmount or should be all in
-            if (ph.getRoundBetAmount() != roundBetAmount && ph.getPlayer().getChips() > 0) {
-                return false;
-            }
-        }
-        return true;
-    }
 
 }

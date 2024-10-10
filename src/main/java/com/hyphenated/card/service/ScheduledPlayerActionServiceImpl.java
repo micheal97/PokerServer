@@ -29,6 +29,8 @@ public class ScheduledPlayerActionServiceImpl implements ScheduledPlayerActionSe
     private TableTasksController tableTasksController;
     @Autowired
     private PlayerDao playerDao;
+    @Autowired
+    private PokerHandService pokerHandService;
     List<ThreadPoolTaskScheduler> schedulers = new ArrayList<>();
 
     {
@@ -86,6 +88,7 @@ public class ScheduledPlayerActionServiceImpl implements ScheduledPlayerActionSe
             case BET -> playerActionService.bet(player, game, betAmount);
         };
         if (nextPlayer == null) {
+            pokerHandService.handleNextGameStatus(game);
             tableTasksController.gameStopped(game.getId());
         } else {
             String playerName = player.getName();
@@ -98,7 +101,7 @@ public class ScheduledPlayerActionServiceImpl implements ScheduledPlayerActionSe
                 case CHECK -> tableTasksController.playerChecked(playerName, gameId);
                 case BET -> tableTasksController.playerBet(new PlayerBet(
                                 playerName,
-                                playerHand.getRoundBetAmount()),
+                                playerHand.getBetAmount()),
                         gameId);
             }
             playerHand.getScheduledExecutorService().shutdownNow();

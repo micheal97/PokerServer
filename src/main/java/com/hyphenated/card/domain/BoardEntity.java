@@ -28,7 +28,6 @@ import com.hyphenated.card.Deck;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.Transient;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -44,45 +43,29 @@ import java.util.List;
 @Embeddable
 public class BoardEntity implements Serializable {
     @Enumerated(EnumType.STRING)
+    @Setter(AccessLevel.NONE)
     private Card flop1;
     @Enumerated(EnumType.STRING)
+    @Setter(AccessLevel.NONE)
     private Card flop2;
     @Enumerated(EnumType.STRING)
+    @Setter(AccessLevel.NONE)
     private Card flop3;
     @Enumerated(EnumType.STRING)
+    @Setter(AccessLevel.NONE)
     private Card turn;
     @Enumerated(EnumType.STRING)
+    @Setter(AccessLevel.NONE)
     private Card river;
+
+    private List<Card> flop = new ArrayList<>();
 
     public BoardEntity(Deck deck) {
         flop1 = deck.dealCard();
         flop2 = deck.dealCard();
         flop3 = deck.dealCard();
+        flop = List.of(flop1, flop2, flop3);
         turn = deck.dealCard();
         river = deck.dealCard();
     }
-
-    /**
-     * Get all of the cards on the board in list form.
-     * The list is ordered with flop first, then turn, then river.
-     *
-     * @return
-     */
-    @Transient
-    public List<Card> getBoardCards() {
-        List<Card> cards = new ArrayList<>();
-        if (flop1 != null) {
-            cards.add(flop1);
-            cards.add(flop2);
-            cards.add(flop3);
-        }
-        if (turn != null) {
-            cards.add(turn);
-        }
-        if (river != null) {
-            cards.add(river);
-        }
-        return cards.stream().toList();
-    }
-
 }

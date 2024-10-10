@@ -111,14 +111,14 @@ public class GameServiceImpl implements GameService {
         if (game.getBlindLevel().getBigBlind() * 50 < player.getChips()) {
             throw new IllegalStateException("Too many Chips");
         }
+        player.removeChips(startingTableChips);
+        player.addTableChips(startingTableChips);
         game.addPlayer(player);
         gameDao.save(game);
     }
 
     @Override
     public void removePlayerFromGame(Game game, Player player) {
-        player.setChips();
-        player.setTableChips(0);
         game.removePlayer(player);
         gameDao.save(game);
     }
