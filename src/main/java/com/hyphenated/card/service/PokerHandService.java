@@ -41,9 +41,8 @@ public interface PokerHandService {
      * Start a new hand on the given game
      *
      * @param game {@link Game} to start the hand with
-     * @return {@link HandEntity} for the hand
      */
-    HandEntity startNewHand(Game game);
+    void startNewHand(Game game);
 
     /**
      * End the hand. Update dependencies on Players, position, dealer, big blind, etc.

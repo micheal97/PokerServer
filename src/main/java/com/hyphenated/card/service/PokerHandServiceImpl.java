@@ -82,8 +82,8 @@ public class PokerHandServiceImpl implements PokerHandService {
 
     @Override
     @Transactional
-    public HandEntity startNewHand(Game game) {
-        HandEntity hand = new HandEntity(game);
+    public void startNewHand(Game game) {
+        HandEntity hand = new HandEntity();
         game.setHand(hand);
         Deck deck = hand.getDeck();
         hand.getPlayers().forEach(player -> player
@@ -112,7 +112,7 @@ public class PokerHandServiceImpl implements PokerHandService {
         hand.setLastBetAmount(game.getBlindLevel().getBigBlind());
         hand.setPot(sbBet + bbBet);
 
-        HandEntity newHand = new HandEntity(game);
+        HandEntity newHand = new HandEntity();
         game.setHand(hand);
         hand.getPlayers().forEach(player -> {
             PlayerHand playerHand = player.getPlayerHand();
@@ -123,7 +123,6 @@ public class PokerHandServiceImpl implements PokerHandService {
         playerDao.save(bigBlind);
         playerDao.save(smallBlind);
         gameDao.save(game);
-        return newHand;
     }
 
     @Override

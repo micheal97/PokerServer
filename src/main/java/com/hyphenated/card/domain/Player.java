@@ -60,6 +60,12 @@ public class Player implements Comparable<Player>, Serializable {
     private boolean privateGameCreator;
     @Setter(value = AccessLevel.NONE)
     private int strikes;
+    @ManyToOne
+    @JoinColumn(name = "game_id")
+    private Game game;
+    @Transient
+    @Nullable
+    private Thread thread;
 
     public void addTableChips(int tableChips) {
         this.tableChips += tableChips;

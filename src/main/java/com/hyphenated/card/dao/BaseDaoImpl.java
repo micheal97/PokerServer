@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class BaseDaoImpl<T> implements BaseDao<T> {
+
     @Autowired
     SessionFactory sessionFactory;
     private final Class<T> persistentClass;

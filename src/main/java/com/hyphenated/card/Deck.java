@@ -44,16 +44,11 @@ public class Deck {
      */
     public Deck() {
         initDeck();
-        shuffleDeck();
     }
 
     public void initDeck() {
         Collections.shuffle(cards);
         cards = cards.stream().toList();
-    }
-
-    public void shuffleDeck() {
-        Collections.shuffle(cards);
     }
 
     /**

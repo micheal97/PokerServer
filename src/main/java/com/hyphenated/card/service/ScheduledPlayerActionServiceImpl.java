@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -31,13 +32,14 @@ public class ScheduledPlayerActionServiceImpl implements ScheduledPlayerActionSe
     private PlayerDao playerDao;
     @Autowired
     private PokerHandService pokerHandService;
-    List<ThreadPoolTaskScheduler> schedulers = new ArrayList<>();
+    private final List<ThreadPoolTaskScheduler> schedulers = new ArrayList<>();
 
     {
-        List<ThreadPoolTaskScheduler> idleSchedulers = new ArrayList<>(2);
+        schedulers.add(newScheduler());
+        List<ThreadPoolTaskScheduler> idleSchedulers = new ArrayList<>();
         scheduler.scheduleAtFixedRate(() -> {
             schedulers.forEach(scheduler1 -> {
-                if (scheduler1.getActiveCount() == 0) {
+                if (scheduler1.getActiveCount() == POOL_SIZE) {
                     idleSchedulers.add(scheduler1);
                 }
             });
@@ -45,7 +47,7 @@ public class ScheduledPlayerActionServiceImpl implements ScheduledPlayerActionSe
                 idleSchedulers.remove(0);
                 idleSchedulers.forEach(ExecutorConfigurationSupport::destroy);
             }
-        }, 0, 15, TimeUnit.SECONDS);
+        }, 0, 5, TimeUnit.SECONDS);
     }
 
     private ThreadPoolTaskScheduler newScheduler() {
@@ -63,19 +65,20 @@ public class ScheduledPlayerActionServiceImpl implements ScheduledPlayerActionSe
     }
 
     @Override
-    public ScheduledExecutorService scheduleDefaultAction(Player player, Game game) {
+    public void scheduleDefaultAction(Player next, Game game) {
         ScheduledExecutorService executor = getIdleScheduler().getScheduledExecutor();
+        executor.execute(() -> next.setThread(Thread.currentThread()));
         executor.schedule(() -> {
-                    player.addStrike();
-                    if (player.getStrikes() > 2) {
-                        game.removePlayer(player);
+                    next.setThread(null);
+                    next.addStrike();
+                    if (next.getStrikes() > 2) {
+                        game.removePlayer(next);
                     }
-                    playerDao.save(player);
-                    handlePlayerRoundAction(PlayerHandRoundAction.FOLD, player, 0, game);
+                    playerDao.save(next);
+                    handlePlayerRoundAction(PlayerHandRoundAction.FOLD, next, 0, game);
                 },
                 8,
                 TimeUnit.SECONDS);
-        return executor;
     }
 
     @Override
@@ -104,8 +107,9 @@ public class ScheduledPlayerActionServiceImpl implements ScheduledPlayerActionSe
                                 playerHand.getBetAmount()),
                         gameId);
             }
-            playerHand.getScheduledExecutorService().shutdownNow();
-            nextPlayerHand.setScheduledExecutorService(scheduleDefaultAction(nextPlayer, game));
+
+            Optional.ofNullable(player.getThread()).ifPresent(Thread::interrupt);
+            scheduleDefaultAction(nextPlayer, game);
             tableTasksController.playersTurn(player.getName(), gameId);
             if (nextPlayerHand.getRoundAction() != null) {
                 if (nextPlayerHand.getRoundAction() == PlayerHandRoundAction.CALL_CURRENT) {

@@ -38,10 +38,6 @@ public class PlayerActionServiceImpl implements PlayerActionService {
     private PlayerDao playerDao;
     @Autowired
     private GameDao gameDao;
-    @Autowired
-    private PokerHandService pokerHandService;
-    @Autowired
-    private GameService GameService;
 
 
     private boolean actionNotCurrentToAct(Player player, Game game, PlayerHandRoundAction action, int betAmount) {

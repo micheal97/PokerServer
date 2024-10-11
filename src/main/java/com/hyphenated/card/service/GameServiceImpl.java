@@ -34,6 +34,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 @Service
 public class GameServiceImpl implements GameService {
@@ -46,6 +48,7 @@ public class GameServiceImpl implements GameService {
 
     @Autowired
     ScheduledPlayerActionService scheduledPlayerActionService;
+    private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
 
     @Override
     @Transactional(readOnly = true)//TODO:readonly everywhere
@@ -63,7 +66,6 @@ public class GameServiceImpl implements GameService {
     @Transactional
     public void startGame(Game game) {
         new ScheduledExecutorTask(() -> {
-
             if (game.getPlayers().size() < 2) {
                 throw new IllegalStateException("Not Enough Players");
             }
@@ -77,19 +79,16 @@ public class GameServiceImpl implements GameService {
             //Get all players associated with the game.
             //Assign random position.  Save the player.
             List<Player> players = new ArrayList<>(game.getPlayers());
-            Collections.shuffle(players);
-            for (int i = 0; i < players.size(); i++) {
-                Player p = players.get(i);
-                p.setGamePosition(i + 1);
-                players.forEach(player -> playerDao.save(player));
-            }
+            players.forEach(player -> {
+                player.setGamePosition(players.size() - 1 >= player.getGamePosition() ? player.getGamePosition() + 1 : 0);
+                playerDao.save(player);
+            });
 
             //Set Button and Big Blind.  Button is position 1 (index 0)
             Collections.sort(players);
             Player player = players.get(0);
             player.setPlayerInButton(true);
-
-            player.getPlayerHand().setScheduledExecutorService(scheduledPlayerActionService.scheduleDefaultAction(player, game));
+            scheduledPlayerActionService.scheduleDefaultAction(player, game);
             //Save and return the updated game
             playerDao.save(player);
             gameDao.save(game);

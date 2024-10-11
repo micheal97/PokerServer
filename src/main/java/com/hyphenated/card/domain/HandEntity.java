@@ -28,15 +28,16 @@ import com.hyphenated.card.holder.Board;
 import jakarta.persistence.*;
 import lombok.*;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.SortedSet;
+import java.util.TreeSet;
 
 @Getter
 @Setter
-@NoArgsConstructor(force = true, access = AccessLevel.PROTECTED)
-@RequiredArgsConstructor
+@NoArgsConstructor(force = true)
 @EqualsAndHashCode
 @Embeddable
 public class HandEntity implements Serializable {
@@ -44,16 +45,21 @@ public class HandEntity implements Serializable {
     @Embedded
     @OneToMany
     @Setter(value = AccessLevel.NONE)
-    private final SortedSet<Player> players;
+    @NonNull
+    private final SortedSet<Player> players = new TreeSet<>();
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn
-    private Player currentToAct;
+    @Nullable
+    private Player currentToAct = null;
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn
-    private Player lastBetOrRaise;
+    @Nullable
+    private Player lastBetOrRaise = null;
     @Embedded
+    @NonNull
     private final Deck deck = new Deck();
     @Embedded
+    @NonNull
     private final BoardEntity boardEntity = new BoardEntity(deck);
     private int pot;
     private int betAmount;
@@ -68,14 +74,6 @@ public class HandEntity implements Serializable {
 
     public Board getBoard() {
         return new Board(boardEntity.getFlop1(), boardEntity.getFlop2(), boardEntity.getFlop3(), boardEntity.getRiver(), boardEntity.getTurn());
-    }
-
-    public HandEntity(Game game) {
-        players = game.getPlayers();
-        currentToAct = players.first();
-        lastBetOrRaise = null;
-        pot = 0;
-        betAmount = 0;
     }
 
     public Optional<Player> findPlayerInBTN() {

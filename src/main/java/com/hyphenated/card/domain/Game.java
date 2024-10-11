@@ -26,13 +26,12 @@ public class Game implements Serializable {
     @NonNull
     private final String name;
     @Setter(value = AccessLevel.NONE)
-    @OneToMany(mappedBy = "table_structure", fetch = FetchType.LAZY)
-    @JoinColumn
+    @OneToMany(mappedBy = "game", fetch = FetchType.LAZY)
     @NonNull
     private SortedSet<Player> players = new TreeSet<>();
     @Embedded
-    @NonNull
-    private HandEntity hand = new HandEntity(this);
+    @Nullable
+    private HandEntity hand = null;
     @NonNull
     private GameStatus gameStatus = GameStatus.NOT_STARTED;
     private final boolean privateGame;

@@ -32,7 +32,6 @@ import jakarta.persistence.Transient;
 import lombok.*;
 
 import java.io.Serializable;
-import java.util.concurrent.ScheduledExecutorService;
 
 @Getter
 @Setter
@@ -60,7 +59,6 @@ public class PlayerHand implements Serializable {
      */
     private int roundBetAmount;
     private PlayerHandRoundAction roundAction;
-    private ScheduledExecutorService scheduledExecutorService;
 
 
     /**

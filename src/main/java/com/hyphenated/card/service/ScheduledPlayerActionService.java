@@ -4,11 +4,9 @@ import com.hyphenated.card.domain.Game;
 import com.hyphenated.card.domain.Player;
 import com.hyphenated.card.domain.PlayerHandRoundAction;
 
-import java.util.concurrent.ScheduledExecutorService;
-
 public interface ScheduledPlayerActionService {
 
-    ScheduledExecutorService scheduleDefaultAction(Player player, Game game);
+    void scheduleDefaultAction(Player next, Game game);
 
     void handlePlayerRoundAction(PlayerHandRoundAction action, Player player, int betAmount, Game game);
 
