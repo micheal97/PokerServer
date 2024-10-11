@@ -24,6 +24,7 @@ THE SOFTWARE.
 package com.hyphenated.card.domain;
 
 import com.hyphenated.card.Deck;
+import com.hyphenated.card.holder.Board;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -53,7 +54,7 @@ public class HandEntity implements Serializable {
     @Embedded
     private final Deck deck = new Deck();
     @Embedded
-    private final BoardEntity board = new BoardEntity(deck);
+    private final BoardEntity boardEntity = new BoardEntity(deck);
     private int pot;
     private int betAmount;
     /**
@@ -64,6 +65,10 @@ public class HandEntity implements Serializable {
      * @return The last bet/raise amount
      */
     private int lastBetAmount;
+
+    public Board getBoard() {
+        return new Board(boardEntity.getFlop1(), boardEntity.getFlop2(), boardEntity.getFlop3(), boardEntity.getRiver(), boardEntity.getTurn());
+    }
 
     public HandEntity(Game game) {
         players = game.getPlayers();

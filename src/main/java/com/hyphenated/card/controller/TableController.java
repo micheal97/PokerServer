@@ -23,11 +23,13 @@ THE SOFTWARE.
 */
 package com.hyphenated.card.controller;
 
-import com.hyphenated.card.domain.*;
+import com.hyphenated.card.domain.BlindLevel;
+import com.hyphenated.card.domain.Game;
+import com.hyphenated.card.domain.GameStatus;
+import com.hyphenated.card.domain.Player;
 import com.hyphenated.card.service.GameService;
 import com.hyphenated.card.service.PlayerServiceManager;
 import com.hyphenated.card.service.PokerHandService;
-import com.hyphenated.card.service.ScheduledPlayerActionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.ResponseEntity;
@@ -36,7 +38,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Controller class that will handle the API interactions with the front-end for the GameController.
@@ -53,26 +58,10 @@ public class TableController {
     @Autowired
     private GameService gameService;
     @Autowired
-    private ScheduledPlayerActionService scheduledPlayerActionService;
-    @Autowired
     private PokerHandService handService;
-    @Autowired
-    private TableTasksController tableTasksController;
     @Autowired
     private PlayerServiceManager playerServiceManager;
 
-    /**
-     * Get a list of currently available game structures
-     * <br /><br />
-     * The standard URL Request to the path /structures with no parameters.
-     *
-     * @return The response is a JSON array of {@link CommonTournamentFormats} objects in JSON Object form.
-     * Each object will contain a "name" that is the unique identifier for that format type.
-     */
-    @RequestMapping("/structures")
-    public @ResponseBody List<CommonTournamentFormats> getGameStructures() {
-        return Arrays.asList(CommonTournamentFormats.values());
-    }
 
     /**
      * Create a new game based on the parameters from the URL Request
@@ -127,80 +116,6 @@ public class TableController {
         }
         return ResponseEntity.badRequest();
     }
-
-    /**
-     * Deal the flop for the hand. This should be called when preflop actions are complete
-     * and the players are ready to deal the flop cards
-     *
-     * @param handId unique ID for the hand where the flop is being dealt
-     * @return A map represented as a JSON String for the three cards dealt on the flop.
-     * The cards are denoted by the rank and the suit, with <em>2-9,T,J,Q,K,A</em> as the rank and
-     * <em>c,s,d,h</em> as the suit.  For example: Ace of clubs is <em>Ac</em> and Nine of Diamonds
-     * is <em>9d</em>
-     * <br /><br />
-     * The json field values are card1, card2, card3.  Example: {"card1":"Xx","card2":"Xx","card3":"Xx"}
-     */
-    @RequestMapping("/flop")
-    @CacheEvict(value = "game", allEntries = true)
-    public @ResponseBody Map<String, String> flop(@RequestParam long handId) {
-        HandEntity hand = handService.getHandById(handId);
-        hand = handService.flop(hand);
-        Map<String, String> result = new HashMap<>();
-        result.put("card1", hand.getBoard().getFlop1().toString());
-        result.put("card2", hand.getBoard().getFlop2().toString());
-        result.put("card3", hand.getBoard().getFlop3().toString());
-        return result;
-    }
-
-    /**
-     * Deal the turn  for the hand. This should be called when the flop actions are complete
-     * and the players are ready for the turn card to be dealt.
-     *
-     * @param handId unique ID for the hand to receive the turn card.
-     * @return Map represented as a JSON String for the turn card, labeled as card4.
-     * Example: {"card4":"Xx"}
-     */
-    @RequestMapping("/turn")
-    @CacheEvict(value = "game", allEntries = true)
-    public @ResponseBody Map<String, String> turn(@RequestParam long handId) {
-        HandEntity hand = handService.getHandById(handId);
-        hand = handService.turn(hand);
-        return Collections.singletonMap("card4", hand.getBoard().getTurn().toString());
-    }
-
-    /**
-     * Deal the river card for the hand. This should be called when the turn action is complete
-     * and the players are ready for the river card to be dealt.
-     *
-     * @param handId Unique ID for the hand to receive the river card
-     * @return Map represented as a JSON String for the river card, labeled as card5.
-     * Example: {"card5":"Xx"}
-     */
-    @RequestMapping("/river")
-    @CacheEvict(value = "game", allEntries = true)
-    public @ResponseBody Map<String, String> river(@RequestParam long handId) {
-        HandEntity hand = handService.getHandById(handId);
-        hand = handService.river(hand);
-        return Collections.singletonMap("card5", hand.getBoard().getRiver().toString());
-    }
-
-    /**
-     * End the hand. This completes all actions that can be done on the hand.  The winners
-     * are determined and the chips given to the appropriate players.  This will detach
-     * the hand from the game, and no more actions may be taken on this hand.
-     *
-     * @param handId Unique ID for the hand to be ended
-     * @return Map represented as a JSON String determining if the action was successful.
-     * Example: {"success":true}
-     */
-    @RequestMapping("/endhand")
-    @CacheEvict(value = "game", allEntries = true)
-    public @ResponseBody Map<String, Boolean> endHand(@RequestParam long handId) {
-        HandEntity hand = handService.getHandById(handId);
-        handService.endHand(hand);
-        return Collections.singletonMap("success", true);
-    }
-
 
     /**
      * Sometimes it is nice to know that everything is working

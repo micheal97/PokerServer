@@ -31,6 +31,7 @@ import com.hyphenated.card.domain.Game;
 import com.hyphenated.card.domain.HandEntity;
 import com.hyphenated.card.domain.Player;
 import com.hyphenated.card.domain.PlayerHand;
+import com.hyphenated.card.holder.Board;
 import com.hyphenated.card.util.PlayerUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -113,7 +114,12 @@ public class PokerHandServiceImpl implements PokerHandService {
 
         HandEntity newHand = new HandEntity(game);
         game.setHand(hand);
-        tableTasksController.sendCardsToUser()
+        hand.getPlayers().forEach(player -> {
+            PlayerHand playerHand = player.getPlayerHand();
+            tableTasksController.sendCardsToUser(
+                    Arrays.stream(playerHand.getHand().getCards()).map(Enum::name).toList(),
+                    player.getId());
+        });
         playerDao.save(bigBlind);
         playerDao.save(smallBlind);
         gameDao.save(game);
@@ -150,7 +156,7 @@ public class PokerHandServiceImpl implements PokerHandService {
         }
         game.setHand(hand);
 
-        tableTasksController.sendPlayersForUpdatingAmountsWon(hand.getPlayers())
+        tableTasksController.sendPlayersForUpdatingAmountsWon(hand.getPlayers().stream().map(Player::getPlayerDTO).toList(), game.getId());
         gameDao.save(game);
         return false;
     }
@@ -159,19 +165,19 @@ public class PokerHandServiceImpl implements PokerHandService {
     @Override
     @Transactional
     public void flop(Game game) throws IllegalStateException {
-        tableTasksController.sendFlop(game.getHand().getBoard().getFlop(), game.getId());
+        tableTasksController.sendFlop(game.getHand().getBoardEntity().getFlop(), game.getId());
     }
 
     @Override
     @Transactional
     public void turn(Game game) throws IllegalStateException {
-        tableTasksController.sendTurn(game.getHand().getBoard().getTurn(), game.getId());
+        tableTasksController.sendTurn(game.getHand().getBoardEntity().getTurn(), game.getId());
     }
 
     @Override
     @Transactional
     public void river(Game game) throws IllegalStateException {
-        tableTasksController.sendTurn(game.getHand().getBoard().getRiver(), game.getId());
+        tableTasksController.sendTurn(game.getHand().getBoardEntity().getRiver(), game.getId());
 
     }
 
@@ -227,22 +233,33 @@ public class PokerHandServiceImpl implements PokerHandService {
                         }));
         TreeMap<Integer, List<Player>> sortedMap = new TreeMap<>(playerBetAmountMap);
         sortedMap.put(0, Collections.emptyList());
-        calculateWinners(sortedMap);
+        calculateWinners(hand.getBoard(), sortedMap);
     }
 
-    private void calculateWinners(TreeMap<Integer, List<Player>> sortedMap) {
+    private void calculateWinners(Board board, TreeMap<Integer, List<Player>> sortedMap) {
         Optional.ofNullable(sortedMap.lastEntry()).ifPresent(lastEntry -> {
             Optional<Map.Entry<Integer, List<Player>>> optionalLowerEntry = Optional.ofNullable(sortedMap.lowerEntry(lastEntry.getKey()));
             if (optionalLowerEntry.isPresent()) {
-                int diff = lastEntry.getKey() - optionalLowerEntry.get().getKey();
-                List<Player> winners = lastEntry.getValue();
-                PlayerUtil.getAmountWonInHandForAllPlayers(winners, diff).forEach((player, betAmount) -> {
-                    player.addTableChips(betAmount);
-                    playerDao.save(player);
+                int amountToWinNext = optionalLowerEntry.get().getKey();
+                int diff = lastEntry.getKey() - amountToWinNext;
+                List<Player> participatingPlayers = lastEntry.getValue();
+                List<Player> winners = PlayerUtil.getWinnersOfHand(board, participatingPlayers);
+                int amountToWin = diff * participatingPlayers.size() / winners.size();
+                int leftOnesToWin = diff * participatingPlayers.size() % winners.size();
+                winners.forEach((winner) -> {
+                    winner.addTableChips(amountToWin);
+                    playerDao.save(winner);
                 });
+                for (int i = 0; i < leftOnesToWin; i++) {
+                    winners.get(i).addTableChips(1);
+                    playerDao.save(winners.get(i));
+                }
+                calculateWinners(board, new TreeMap<>(sortedMap.headMap(lastEntry.getKey())));
             }
+
         });
     }
-
-
 }
+
+
+

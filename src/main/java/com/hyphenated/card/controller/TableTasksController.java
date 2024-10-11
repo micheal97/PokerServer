@@ -2,6 +2,7 @@ package com.hyphenated.card.controller;
 
 import com.hyphenated.card.Card;
 import com.hyphenated.card.controller.dto.PlayerBet;
+import com.hyphenated.card.controller.dto.PlayerDTO;
 import com.hyphenated.card.domain.Game;
 import com.hyphenated.card.domain.Player;
 import lombok.Setter;
@@ -10,6 +11,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -19,10 +21,10 @@ public class TableTasksController {
     @Autowired
     private SimpMessagingTemplate template;
     @Setter
-    private ImmutableMap<UUID, Game> Games = ImmutableMap.of();
+    private Map<UUID, Game> games = Map.of();
 
     private Stream<UUID> getPlayerUuidStream(UUID gameId) {
-        return Games.get(gameId).getPlayers().stream().map(Player::getId);
+        return games.get(gameId).getPlayers().stream().map(Player::getId);
     }
 
     public void playerJoined(String name, UUID gameId) {
@@ -75,5 +77,14 @@ public class TableTasksController {
 
     public void sendRiver(Card river, UUID gameId) {
         getPlayerUuidStream(gameId).forEach(uuid -> template.convertAndSendToUser(uuid.toString(), "/river", river.name()));
+    }
+
+    public void sendPlayersForUpdatingAmountsWon(List<PlayerDTO> players, UUID gameId) {
+        getPlayerUuidStream(gameId).forEach(uuid -> template.convertAndSendToUser(uuid.toString(), "/amountsWon", players));
+    }
+
+    public void sendCardsToUser(List<String> cards, UUID userId) {
+        template.convertAndSendToUser(userId.toString(), "/cards", cards);
+
     }
 }
