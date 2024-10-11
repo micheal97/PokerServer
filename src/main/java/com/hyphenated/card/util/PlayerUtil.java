@@ -143,16 +143,11 @@ public class PlayerUtil {
      * if the {@link HandEntity} is in the incorrect state (not at the river) or the proper showdown conditions have
      * not been met.
      */
-    public static Map<Player, Integer> getAmountWonInHandForAllPlayers(HandEntity hand) {
-        if (hand.getBoard().getRiver() == null) {
-            return null;
-        }
-
+    public static Map<Player, Integer> getAmountWonInHandForAllPlayers(List<Player> winners, int amountWonn) {
         Map<Player, Integer> winnersMap = new HashMap<>();
-
         //Make deep copy of players.  We will manipulate this set in the following methods
-        Set<Player> currentPlayers = new HashSet<>(hand.getPlayers());
-
+        Set<Player> currentPlayers = new HashSet<>(winners);
+//TODO:Weiter machen
         resolveSidePot(winnersMap, hand, 0, currentPlayers);
         resolveDeadMoney(winnersMap, hand);
 
@@ -184,6 +179,7 @@ public class PlayerUtil {
      */
     private static void resolveSidePot(Map<Player, Integer> winnersMap, HandEntity hand,
                                        int allInBetRunningTotal, Set<Player> playersInvolved) {
+        //TODO: Check method
         //Determine all in player if applicable
         Player allInPlayer = null;
         Player potentialAllInPlayer = null;

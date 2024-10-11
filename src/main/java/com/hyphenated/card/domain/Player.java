@@ -92,6 +92,6 @@ public class Player implements Comparable<Player>, Serializable {
     @Override
     @Transient
     public int compareTo(Player p) {
-        return this.getGamePosition() - p.getGamePosition();
+        return Integer.compare(this.getGamePosition(), p.getGamePosition());
     }
 }

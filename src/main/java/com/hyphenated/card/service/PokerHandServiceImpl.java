@@ -31,13 +31,13 @@ import com.hyphenated.card.domain.Game;
 import com.hyphenated.card.domain.HandEntity;
 import com.hyphenated.card.domain.Player;
 import com.hyphenated.card.domain.PlayerHand;
-import com.hyphenated.card.util.PlayerHandBetAmountComparator;
 import com.hyphenated.card.util.PlayerUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class PokerHandServiceImpl implements PokerHandService {
@@ -113,6 +113,7 @@ public class PokerHandServiceImpl implements PokerHandService {
 
         HandEntity newHand = new HandEntity(game);
         game.setHand(hand);
+        tableTasksController.sendCardsToUser()
         playerDao.save(bigBlind);
         playerDao.save(smallBlind);
         gameDao.save(game);
@@ -123,7 +124,7 @@ public class PokerHandServiceImpl implements PokerHandService {
     @Transactional
     public boolean endHand(Game game) {
         HandEntity hand = game.getHand();
-        determineWinner(hand);
+        handleWinners(hand);
         Player playerInBTN = hand.findPlayerInBTN().orElse(game.getPlayers().first());
         game.getPlayers().stream().filter(player -> player.getTableChips() <= 0).forEach(game::removePlayer);
         if (game.getPlayers().size() < 2) {
@@ -147,6 +148,9 @@ public class PokerHandServiceImpl implements PokerHandService {
             game.removePlayer(playerInBTN);
             hand.removePlayer(playerInBTN);
         }
+        game.setHand(hand);
+
+        tableTasksController.sendPlayersForUpdatingAmountsWon(hand.getPlayers())
         gameDao.save(game);
         return false;
     }
@@ -211,42 +215,33 @@ public class PokerHandServiceImpl implements PokerHandService {
         gameDao.save(game);
     }
 
-    private void determineWinner(HandEntity hand) {
-        //if only one PH left, everyone else folded
-        if (hand.getPlayers().size() == 1) {
-            Player winner = hand.getPlayers().iterator().next().getPlayer();
-            winner.setChips(winner.getChips() + hand.getPot());
-            playerDao.save(winner);
-        } else {
-            //Refund all in overbet player if applicable before determining winner
-            refundOverbet(hand);
-
-            //Iterate through map of players to their amount won.  Persist.
-            Map<Player, Integer> winners = PlayerUtil.getAmountWonInHandForAllPlayers(hand);
-            if (winners == null) {
-                return;
-            }
-            for (Map.Entry<Player, Integer> entry : winners.entrySet()) {
-                Player player = entry.getKey();
-                player.setChips(player.getChips() + entry.getValue());
-                playerDao.save(player);
-            }
-        }
+    private void handleWinners(HandEntity hand) {
+        Map<Integer, List<Player>> playerBetAmountMap = hand.getPlayers().stream()
+                .filter(player -> player.getPlayerHand() != null)
+                .collect(Collectors.toConcurrentMap(player -> player.getPlayerHand().getBetAmount()
+                        , List::of, (s, a) -> {
+                            List<Player> players = new ArrayList<>();
+                            players.addAll(s);
+                            players.addAll(a);
+                            return List.copyOf(players);
+                        }));
+        TreeMap<Integer, List<Player>> sortedMap = new TreeMap<>(playerBetAmountMap);
+        sortedMap.put(0, Collections.emptyList());
+        calculateWinners(sortedMap);
     }
 
-    private void refundOverbet(HandEntity hand) {
-        List<PlayerHand> phs = new ArrayList<>(hand.getPlayers());
-        //Sort from most money contributed, to the least
-        phs.sort(new PlayerHandBetAmountComparator());
-        Collections.reverse(phs);
-        //If there are at least 2 players, and the top player contributed more to the pot than the next player
-        if (phs.size() >= 2 && (phs.get(0).getBetAmount() > phs.get(1).getBetAmount())) {
-            //Refund that extra amount contributed. Remove from pot, add back to player
-            int diff = phs.get(0).getBetAmount() - phs.get(1).getBetAmount();
-            phs.get(0).setBetAmount(phs.get(1).getBetAmount());
-            phs.get(0).getPlayer().setChips(phs.get(0).getPlayer().getChips() + diff);
-            hand.setPot(hand.getPot() - diff);
-        }
+    private void calculateWinners(TreeMap<Integer, List<Player>> sortedMap) {
+        Optional.ofNullable(sortedMap.lastEntry()).ifPresent(lastEntry -> {
+            Optional<Map.Entry<Integer, List<Player>>> optionalLowerEntry = Optional.ofNullable(sortedMap.lowerEntry(lastEntry.getKey()));
+            if (optionalLowerEntry.isPresent()) {
+                int diff = lastEntry.getKey() - optionalLowerEntry.get().getKey();
+                List<Player> winners = lastEntry.getValue();
+                PlayerUtil.getAmountWonInHandForAllPlayers(winners, diff).forEach((player, betAmount) -> {
+                    player.addTableChips(betAmount);
+                    playerDao.save(player);
+                });
+            }
+        });
     }
 
 
