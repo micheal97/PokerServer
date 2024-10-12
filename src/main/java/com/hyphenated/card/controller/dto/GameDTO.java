@@ -5,6 +5,7 @@ import com.hyphenated.card.domain.GameStatus;
 import lombok.NonNull;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.UUID;
 
 public record GameDTO(
@@ -12,6 +13,6 @@ public record GameDTO(
         @NonNull BlindLevel blindLevel,
         int maxPlayers,
         @NonNull String name,
-        int players,
+        @NonNull List<String> players,
         @NonNull GameStatus gameStatus) implements Serializable {
 }

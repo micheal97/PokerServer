@@ -48,7 +48,7 @@ public class Game {
     }
 
     public GameDTO getGameDTO() {
-        return new GameDTO(id, blindLevel, maxPlayers, name, players.size(), gameStatus);
+        return new GameDTO(id, blindLevel, maxPlayers, name, players.stream().map(Player::getName).toList(), gameStatus);
     }
 
     public boolean addPlayer(Player player) {
