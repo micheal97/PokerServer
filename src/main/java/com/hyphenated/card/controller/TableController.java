@@ -78,13 +78,14 @@ public class TableController {
      */
     @RequestMapping(value = "/create")
     public @ResponseBody ResponseEntity<UUID> createGame(@RequestParam String gameName,
+                                                         @RequestParam String password,
                                                          @RequestParam int maxPlayers,
                                                          @RequestParam BlindLevel blindLevel,
                                                          @RequestParam UUID playerId) {
         //TODO:evaluate if player is allowed and setTableCoins not linked to playerAccount
         Optional<Player> player = playerServiceManager.findPlayerById(playerId);
         if (player.isPresent()) {
-            Game game = new Game(blindLevel, maxPlayers, gameName, true);
+            Game game = new Game(blindLevel, maxPlayers, gameName, true, password);
             game = gameService.saveGame(game);
             player.get().setPrivateGameCreator(true);
             return ResponseEntity.ok(game.getId());

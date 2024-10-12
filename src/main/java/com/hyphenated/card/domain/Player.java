@@ -37,6 +37,7 @@ import java.util.UUID;
 @NoArgsConstructor(force = true, access = AccessLevel.PROTECTED)
 @RequiredArgsConstructor
 public class Player implements Comparable<Player> {
+    //TODO: userSession, password
     @Column(name = "player_id")
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -59,7 +60,7 @@ public class Player implements Comparable<Player> {
     @Setter(value = AccessLevel.NONE)
     private int strikes;
     @ManyToOne
-    @JoinColumn(name = "game_id")
+    @JoinColumn(name = "id")
     private Game game;
     @Transient
     @Nullable
@@ -94,7 +95,6 @@ public class Player implements Comparable<Player> {
     }
 
     @Override
-    @Transient
     public int compareTo(Player p) {
         return Integer.compare(this.getGamePosition(), p.getGamePosition());
     }

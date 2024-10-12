@@ -30,7 +30,6 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import lombok.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -59,13 +58,14 @@ public class BoardEntity {
     @NonNull
     private final Card river;
 
-    private List<Card> flop = new ArrayList<>();
+    public List<Card> getFlop() {
+        return List.of(flop1, flop2, flop3);
+    }
 
     public BoardEntity(Deck deck) {
         flop1 = deck.dealCard();
         flop2 = deck.dealCard();
         flop3 = deck.dealCard();
-        flop = List.of(flop1, flop2, flop3);
         turn = deck.dealCard();
         river = deck.dealCard();
     }

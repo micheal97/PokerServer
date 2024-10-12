@@ -34,11 +34,14 @@ public class Game {
     @NonNull
     private GameStatus gameStatus = GameStatus.NOT_STARTED;
     private final boolean privateGame;
+    @Nullable
+    @Setter(value = AccessLevel.NONE)
+    private final String password;
 
     @Nullable
     public Player getPrivateGameCreator() {
         if (isPrivateGame()) {
-            return players.stream().filter(Player::isPrivateGameCreator).findAny().orElseThrow(() -> new IllegalArgumentException("Private Game Creator left"));
+            return players.stream().filter(Player::isPrivateGameCreator).findAny().orElseThrow(() -> new IllegalStateException("Private Game Creator left"));
         } else {
             return null;
         }

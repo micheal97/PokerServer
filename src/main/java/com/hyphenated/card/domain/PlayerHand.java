@@ -28,7 +28,6 @@ import com.hyphenated.card.holder.Hand;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.Transient;
 import lombok.*;
 
 import javax.annotation.Nullable;
@@ -69,7 +68,6 @@ public class PlayerHand {
      *
      * @return {@link Hand} container for the two hole cards. Null if both hole cards not specified
      */
-    @Transient
     public Hand getHand() {
         return new Hand(card1, card2);
     }
