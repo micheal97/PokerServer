@@ -31,20 +31,22 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Transient;
 import lombok.*;
 
-import java.io.Serializable;
+import javax.annotation.Nullable;
 
 @Getter
 @Setter
 @Embeddable
 @NoArgsConstructor(force = true, access = AccessLevel.PROTECTED)
 @RequiredArgsConstructor
-public class PlayerHand implements Serializable {
+public class PlayerHand {
 
     @Enumerated(EnumType.STRING)
     @Getter(value = AccessLevel.NONE)
+    @NonNull
     private final Card card1;
     @Enumerated(EnumType.STRING)
     @Getter(value = AccessLevel.NONE)
+    @NonNull
     private final Card card2;
     /**
      * -- GETTER --
@@ -58,6 +60,7 @@ public class PlayerHand implements Serializable {
      * current betting round
      */
     private int roundBetAmount;
+    @Nullable
     private PlayerHandRoundAction roundAction;
 
 
@@ -68,9 +71,6 @@ public class PlayerHand implements Serializable {
      */
     @Transient
     public Hand getHand() {
-        if (card1 == null || card2 == null) {
-            return null;
-        }
         return new Hand(card1, card2);
     }
 }

@@ -28,7 +28,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import javax.annotation.Nullable;
-import java.io.Serializable;
 import java.util.UUID;
 
 @Getter
@@ -37,8 +36,7 @@ import java.util.UUID;
 @EqualsAndHashCode
 @NoArgsConstructor(force = true, access = AccessLevel.PROTECTED)
 @RequiredArgsConstructor
-public class Player implements Comparable<Player>, Serializable {
-    //TODO:Serializable in DTO
+public class Player implements Comparable<Player> {
     @Column(name = "player_id")
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

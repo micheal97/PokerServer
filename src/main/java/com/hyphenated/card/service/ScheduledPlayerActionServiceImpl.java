@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ExecutorConfigurationSupport;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -65,6 +66,7 @@ public class ScheduledPlayerActionServiceImpl implements ScheduledPlayerActionSe
     }
 
     @Override
+    @Transactional
     public void scheduleDefaultAction(Player next, Game game) {
         ScheduledExecutorService executor = getIdleScheduler().getScheduledExecutor();
         executor.execute(() -> next.setThread(Thread.currentThread()));

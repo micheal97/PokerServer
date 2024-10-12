@@ -51,7 +51,7 @@ public class GameServiceImpl implements GameService {
     private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
 
     @Override
-    @Transactional(readOnly = true)//TODO:readonly everywhere
+    @Transactional(readOnly = true)
     public Optional<Game> findGameById(UUID id) {
         return gameDao.findById(id);
     }
@@ -123,6 +123,7 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Game> findAll() {
         return gameDao.findAll();
     }

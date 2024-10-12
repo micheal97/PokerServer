@@ -52,6 +52,7 @@ public class PokerHandServiceImpl implements PokerHandService {
     @Autowired
     private TableTasksController tableTasksController;
 
+    @Transactional
     public void handleNextGameStatus(Game game) {
         if (game.getHand().getPlayers().size() < 2) {
             game.setGameStatusEndHand();
@@ -162,22 +163,18 @@ public class PokerHandServiceImpl implements PokerHandService {
 
 
     @Override
-    @Transactional
     public void flop(Game game) throws IllegalStateException {
         tableTasksController.sendFlop(game.getHand().getBoardEntity().getFlop(), game.getId());
     }
 
     @Override
-    @Transactional
     public void turn(Game game) throws IllegalStateException {
         tableTasksController.sendTurn(game.getHand().getBoardEntity().getTurn(), game.getId());
     }
 
     @Override
-    @Transactional
     public void river(Game game) throws IllegalStateException {
-        tableTasksController.sendTurn(game.getHand().getBoardEntity().getRiver(), game.getId());
-
+        tableTasksController.sendRiver(game.getHand().getBoardEntity().getRiver(), game.getId());
     }
 
     @Override
@@ -201,6 +198,7 @@ public class PokerHandServiceImpl implements PokerHandService {
         return PlayerUtil.getNextPlayerToAct(hand, leftOfButton);
     }
 
+    @Transactional
     private void resetRoundValues(Game game) {
         HandEntity hand = game.getHand();
         hand.setBetAmount(0);
@@ -235,6 +233,7 @@ public class PokerHandServiceImpl implements PokerHandService {
         calculateWinners(hand.getBoard(), sortedMap);
     }
 
+    @Transactional
     private void calculateWinners(Board board, TreeMap<Integer, List<Player>> sortedMap) {
         Optional.ofNullable(sortedMap.lastEntry()).ifPresent(lastEntry -> {
             Optional<Map.Entry<Integer, List<Player>>> optionalLowerEntry = Optional.ofNullable(sortedMap.lowerEntry(lastEntry.getKey()));

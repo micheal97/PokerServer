@@ -27,7 +27,6 @@ import com.google.common.collect.Iterators;
 import com.hyphenated.card.Card;
 import lombok.Getter;
 
-import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Iterator;
 
@@ -35,7 +34,7 @@ import java.util.Iterator;
  * A container designed for storing cards.
  */
 @Getter
-public class CardHolder implements Serializable {
+public class CardHolder {
 
     private final Card[] cards;
 

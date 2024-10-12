@@ -5,7 +5,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import javax.annotation.Nullable;
-import java.io.Serializable;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -15,7 +14,7 @@ import java.util.UUID;
 @Setter
 @RequiredArgsConstructor
 @NoArgsConstructor(force = true, access = AccessLevel.PROTECTED)
-public class Game implements Serializable {
+public class Game {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;

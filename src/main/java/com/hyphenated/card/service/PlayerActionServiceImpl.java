@@ -45,6 +45,7 @@ public class PlayerActionServiceImpl implements PlayerActionService {
         return actionNotCurrentToAct(player, game, action);
     }
 
+    @Transactional
     private boolean actionNotCurrentToAct(Player player, Game game, PlayerHandRoundAction action) {
         HandEntity hand = game.getHand();
         if (player.equals(hand.getCurrentToAct())) {
@@ -71,7 +72,6 @@ public class PlayerActionServiceImpl implements PlayerActionService {
 
 
     @Override
-    @Transactional
     public Player check(Player player, Game game) {
         HandEntity hand = game.getHand();
         //check out of turn
@@ -80,7 +80,6 @@ public class PlayerActionServiceImpl implements PlayerActionService {
     }
 
     @Override
-    @Transactional
     public Player bet(Player player, Game game, int betAmount) {
         PlayerHand playerHand = player.getPlayerHand();
         HandEntity hand = game.getHand();
@@ -107,7 +106,6 @@ public class PlayerActionServiceImpl implements PlayerActionService {
     }
 
     @Override
-    @Transactional
     public Player callAny(Player player, Game game) {
         HandEntity hand = game.getHand();
         PlayerHand playerHand = player.getPlayerHand();
@@ -130,7 +128,6 @@ public class PlayerActionServiceImpl implements PlayerActionService {
     }
 
     @Override
-    @Transactional
     public Player callCurrent(Player player, Game game, int roundBetAmount) {
         HandEntity hand = game.getHand();
         PlayerHand playerHand = player.getPlayerHand();
@@ -158,6 +155,7 @@ public class PlayerActionServiceImpl implements PlayerActionService {
     }
 
 
+    @Transactional
     private Player afterActionSave(Player player, Game game, HandEntity hand) {
         Player next = PlayerUtil.getNextPlayerToAct(hand, player);
         hand.setCurrentToAct(next);
@@ -167,6 +165,7 @@ public class PlayerActionServiceImpl implements PlayerActionService {
         return next;
     }
 
+    @Transactional
     private Player afterActionSaveAll(Player player, Game game, HandEntity hand) {
         Player next = PlayerUtil.getNextPlayerToAct(hand, player);
         hand.setCurrentToAct(next);

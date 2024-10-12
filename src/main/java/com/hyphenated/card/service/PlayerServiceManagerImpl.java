@@ -55,7 +55,8 @@ public class PlayerServiceManagerImpl implements PlayerServiceManager {
     }
 
     @Override
-    @Transactional
+
+    @Transactional(readOnly = true)
     public boolean playerExistsByName(String name) {
         return playerDao.existsByName(name);
     }
@@ -71,13 +72,13 @@ public class PlayerServiceManagerImpl implements PlayerServiceManager {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public Optional<Player> findPlayerByNameAndPassword(String name, String password) {
         return playerDao.findByNameAndPassword(name, password);
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public Optional<Player> findPlayerById(UUID id) {
         return playerDao.findById(id);
     }

@@ -1,12 +1,15 @@
 package com.hyphenated.card.controller.dto;
 
+import lombok.NonNull;
+
+import java.io.Serializable;
 import java.util.UUID;
 
 public record PlayerDTO(
-        UUID id,
-        String name,
+        @NonNull UUID id,
+        @NonNull String name,
         int chips,
         int tableChips,
         int gamePosition,
-        boolean sittingOut) {
+        boolean sittingOut) implements Serializable {
 }

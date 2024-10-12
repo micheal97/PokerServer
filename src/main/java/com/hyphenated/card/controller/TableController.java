@@ -53,7 +53,6 @@ import java.util.UUID;
  */
 @Controller
 public class TableController {
-    //TODO:DeleteClass
 
     @Autowired
     private GameService gameService;
@@ -82,7 +81,7 @@ public class TableController {
                                                          @RequestParam int maxPlayers,
                                                          @RequestParam BlindLevel blindLevel,
                                                          @RequestParam UUID playerId) {
-        //TODO:evaluate if player is allowed and set TableCoins not linked to playerAccount
+        //TODO:evaluate if player is allowed and setTableCoins not linked to playerAccount
         Optional<Player> player = playerServiceManager.findPlayerById(playerId);
         if (player.isPresent()) {
             Game game = new Game(blindLevel, maxPlayers, gameName, true);

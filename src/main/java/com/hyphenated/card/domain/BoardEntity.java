@@ -28,12 +28,8 @@ import com.hyphenated.card.Deck;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,22 +37,27 @@ import java.util.List;
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED, force = true)
 @Embeddable
-public class BoardEntity implements Serializable {
+public class BoardEntity {
     @Enumerated(EnumType.STRING)
     @Setter(AccessLevel.NONE)
-    private Card flop1;
+    @NonNull
+    private final Card flop1;
     @Enumerated(EnumType.STRING)
     @Setter(AccessLevel.NONE)
-    private Card flop2;
+    @NonNull
+    private final Card flop2;
     @Enumerated(EnumType.STRING)
     @Setter(AccessLevel.NONE)
-    private Card flop3;
+    @NonNull
+    private final Card flop3;
     @Enumerated(EnumType.STRING)
     @Setter(AccessLevel.NONE)
-    private Card turn;
+    @NonNull
+    private final Card turn;
     @Enumerated(EnumType.STRING)
     @Setter(AccessLevel.NONE)
-    private Card river;
+    @NonNull
+    private final Card river;
 
     private List<Card> flop = new ArrayList<>();
 

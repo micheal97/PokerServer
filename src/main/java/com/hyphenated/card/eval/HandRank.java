@@ -25,12 +25,10 @@ package com.hyphenated.card.eval;
 
 import com.hyphenated.card.HandType;
 
-import java.io.Serializable;
-
 /**
  * Representation of the poker hand strength.
  */
-public class HandRank implements Comparable<HandRank>, Serializable {
+public class HandRank implements Comparable<HandRank> {
 
 
     private final int rankValue;

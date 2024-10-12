@@ -29,7 +29,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import javax.annotation.Nullable;
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.SortedSet;
@@ -40,7 +39,7 @@ import java.util.TreeSet;
 @NoArgsConstructor(force = true)
 @EqualsAndHashCode
 @Embeddable
-public class HandEntity implements Serializable {
+public class HandEntity {
 
     @Embedded
     @OneToMany
