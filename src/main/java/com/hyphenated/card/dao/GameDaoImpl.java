@@ -23,8 +23,8 @@ THE SOFTWARE.
 */
 package com.hyphenated.card.dao;
 
-import com.hyphenated.card.domain.BlindLevel;
 import com.hyphenated.card.domain.Game;
+import com.hyphenated.card.enums.BlindLevel;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;

@@ -23,7 +23,7 @@ THE SOFTWARE.
 */
 package com.hyphenated.card.domain;
 
-import com.hyphenated.card.controller.dto.PlayerDTO;
+import com.hyphenated.card.dto.PlayerDTO;
 import jakarta.persistence.*;
 import lombok.*;
 

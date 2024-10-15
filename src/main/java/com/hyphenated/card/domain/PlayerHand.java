@@ -24,6 +24,7 @@ THE SOFTWARE.
 package com.hyphenated.card.domain;
 
 import com.hyphenated.card.Card;
+import com.hyphenated.card.enums.PlayerHandRoundAction;
 import com.hyphenated.card.holder.Hand;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EnumType;
@@ -59,6 +60,7 @@ public class PlayerHand {
      * current betting round
      */
     private int roundBetAmount;
+    @Enumerated(EnumType.STRING)
     @Nullable
     private PlayerHandRoundAction roundAction;
 

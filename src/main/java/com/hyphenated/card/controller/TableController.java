@@ -23,20 +23,20 @@ THE SOFTWARE.
 */
 package com.hyphenated.card.controller;
 
-import com.hyphenated.card.domain.BlindLevel;
 import com.hyphenated.card.domain.Game;
-import com.hyphenated.card.domain.GameStatus;
 import com.hyphenated.card.domain.Player;
+import com.hyphenated.card.enums.BlindLevel;
+import com.hyphenated.card.enums.GameStatus;
 import com.hyphenated.card.service.GameService;
 import com.hyphenated.card.service.PlayerServiceManager;
 import com.hyphenated.card.service.PokerHandService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Collections;
 import java.util.Map;
@@ -51,7 +51,7 @@ import java.util.UUID;
  *
  * @author jacobhyphenated
  */
-@Controller
+@RestController
 public class TableController {
 
     @Autowired
@@ -76,12 +76,12 @@ public class TableController {
      * @return {"gameId":xxxx}.  The Java Method returns the Map<String,Long> which is converted
      * by Spring to the JSON object.
      */
-    @RequestMapping(value = "/create")
-    public @ResponseBody ResponseEntity<UUID> createGame(@RequestParam String gameName,
-                                                         @RequestParam String password,
-                                                         @RequestParam int maxPlayers,
-                                                         @RequestParam BlindLevel blindLevel,
-                                                         @RequestParam UUID playerId) {
+    @GetMapping(value = "/create")
+    public ResponseEntity<UUID> createGame(@RequestParam String gameName,
+                                           @RequestParam String password,
+                                           @RequestParam int maxPlayers,
+                                           @RequestParam BlindLevel blindLevel,
+                                           @RequestParam UUID playerId) {
         //TODO:evaluate if player is allowed and setTableCoins not linked to playerAccount
         Optional<Player> player = playerServiceManager.findPlayerById(playerId);
         if (player.isPresent()) {
@@ -100,9 +100,9 @@ public class TableController {
      * @return Map representing a JSON string with a single field for "success" which is either true or false.
      * example: {"success":true}
      */
-    @RequestMapping("/startprivategame")
+    @GetMapping("/startprivategame")
     @CacheEvict(value = "game", allEntries = true)
-    public @ResponseBody ResponseEntity.BodyBuilder startGame(@RequestParam UUID gameId, @RequestParam UUID playerId) {
+    public @ResponseBody ResponseEntity<Object> startGame(@RequestParam UUID gameId, @RequestParam UUID playerId) {
         Optional<Game> optionalGame = gameService.findGameById(gameId);
         Optional<Player> optionalPlayer = playerServiceManager.findPlayerById(playerId);
         if (optionalGame.isPresent() && optionalPlayer.isPresent()) {
@@ -111,10 +111,10 @@ public class TableController {
             if (game.getGameStatus().equals(GameStatus.NOT_STARTED) && player.equals(game.getPrivateGameCreator())) {
                 gameService.startGame(game);
                 handService.startNewHand(game);
-                return ResponseEntity.ok();
+                return ResponseEntity.ok().body(null);
             }
         }
-        return ResponseEntity.badRequest();
+        return ResponseEntity.badRequest().body(null);
     }
 
     /**
@@ -122,7 +122,7 @@ public class TableController {
      *
      * @return {"success":true}
      */
-    @RequestMapping("/ping")
+    @GetMapping("/ping")
     public @ResponseBody Map<String, Boolean> pingServer() {
         return Collections.singletonMap("success", true);
     }

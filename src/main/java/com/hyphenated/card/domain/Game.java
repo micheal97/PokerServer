@@ -1,6 +1,8 @@
 package com.hyphenated.card.domain;
 
-import com.hyphenated.card.controller.dto.GameDTO;
+import com.hyphenated.card.dto.GameDTO;
+import com.hyphenated.card.enums.BlindLevel;
+import com.hyphenated.card.enums.GameStatus;
 import jakarta.persistence.*;
 import lombok.*;
 

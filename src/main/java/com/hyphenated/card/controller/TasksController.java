@@ -1,7 +1,7 @@
 package com.hyphenated.card.controller;
 
-import com.hyphenated.card.domain.BlindLevel;
 import com.hyphenated.card.domain.Game;
+import com.hyphenated.card.enums.BlindLevel;
 import com.hyphenated.card.service.GameService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;

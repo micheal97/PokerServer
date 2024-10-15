@@ -1,12 +1,12 @@
 package com.hyphenated.card.service;
 
 import com.hyphenated.card.controller.TableTasksController;
-import com.hyphenated.card.controller.dto.PlayerBet;
 import com.hyphenated.card.dao.PlayerDao;
 import com.hyphenated.card.domain.Game;
 import com.hyphenated.card.domain.Player;
 import com.hyphenated.card.domain.PlayerHand;
-import com.hyphenated.card.domain.PlayerHandRoundAction;
+import com.hyphenated.card.dto.PlayerBet;
+import com.hyphenated.card.enums.PlayerHandRoundAction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ExecutorConfigurationSupport;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
