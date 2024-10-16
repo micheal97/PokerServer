@@ -2,9 +2,9 @@ package com.hyphenated.card.controller;
 
 import com.hyphenated.card.domain.Game;
 import com.hyphenated.card.domain.Player;
-import com.hyphenated.card.dto.Card;
 import com.hyphenated.card.dto.PlayerBet;
 import com.hyphenated.card.dto.PlayerDTO;
+import com.hyphenated.card.enums.Card;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;

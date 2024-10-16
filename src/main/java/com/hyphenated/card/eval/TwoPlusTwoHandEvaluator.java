@@ -23,7 +23,7 @@ THE SOFTWARE.
 */
 package com.hyphenated.card.eval;
 
-import com.hyphenated.card.dto.Card;
+import com.hyphenated.card.enums.Card;
 import com.hyphenated.card.holder.Board;
 import com.hyphenated.card.holder.CardIterator;
 import com.hyphenated.card.holder.Hand;

@@ -23,7 +23,7 @@ THE SOFTWARE.
 */
 package com.hyphenated.card.holder;
 
-import com.hyphenated.card.dto.Card;
+import com.hyphenated.card.enums.Card;
 
 /**
  * A CardHolder for storing 2 hole cards for a player

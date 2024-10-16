@@ -23,7 +23,7 @@ THE SOFTWARE.
 */
 package com.hyphenated.card.domain;
 
-import com.hyphenated.card.dto.Card;
+import com.hyphenated.card.enums.Card;
 import com.hyphenated.card.enums.PlayerHandRoundAction;
 import com.hyphenated.card.holder.Hand;
 import jakarta.persistence.Embeddable;

@@ -23,8 +23,8 @@ THE SOFTWARE.
 */
 package com.hyphenated.card.holder;
 
-import com.hyphenated.card.dto.Card;
-import com.hyphenated.card.dto.HandType;
+import com.hyphenated.card.enums.Card;
+import com.hyphenated.card.enums.HandType;
 import com.hyphenated.card.eval.HandRank;
 import com.hyphenated.card.eval.HandRankEvaluator;
 import com.hyphenated.card.eval.TwoPlusTwoHandEvaluator;

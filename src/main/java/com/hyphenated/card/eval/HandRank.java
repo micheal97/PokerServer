@@ -23,7 +23,7 @@ THE SOFTWARE.
 */
 package com.hyphenated.card.eval;
 
-import com.hyphenated.card.dto.HandType;
+import com.hyphenated.card.enums.HandType;
 
 /**
  * Representation of the poker hand strength.
