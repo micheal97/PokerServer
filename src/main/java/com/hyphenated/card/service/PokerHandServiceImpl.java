@@ -31,6 +31,8 @@ import com.hyphenated.card.domain.Game;
 import com.hyphenated.card.domain.HandEntity;
 import com.hyphenated.card.domain.Player;
 import com.hyphenated.card.domain.PlayerHand;
+import com.hyphenated.card.dto.Cards;
+import com.hyphenated.card.dto.PlayerCards;
 import com.hyphenated.card.holder.Board;
 import com.hyphenated.card.util.PlayerUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -118,7 +120,7 @@ public class PokerHandServiceImpl implements PokerHandService {
         hand.getPlayers().forEach(player -> {
             PlayerHand playerHand = player.getPlayerHand();
             tableTasksController.sendCardsToUser(
-                    Arrays.stream(playerHand.getHand().getCards()).map(Enum::name).toList(),
+                    new Cards(Arrays.stream(playerHand.getHand().getCards()).toList()),
                     player.getId());
         });
         playerDao.save(bigBlind);
@@ -156,10 +158,10 @@ public class PokerHandServiceImpl implements PokerHandService {
         }
         game.setHand(hand);
 
-        tableTasksController.endGame(Map.copyOf(hand.getPlayers().stream().collect(Collectors.toConcurrentMap(Player::getPlayerDTO, player -> {
+        tableTasksController.endGame(new PlayerCards(Map.copyOf(hand.getPlayers().stream().collect(Collectors.toConcurrentMap(Player::getPlayerDTO, player -> {
             PlayerHand playerHand = player.getPlayerHand();
             return List.of(playerHand.getCard1(), playerHand.getCard2());
-        }))), game.getId());
+        })))), game.getId());
         gameDao.save(game);
         return false;
     }
@@ -167,7 +169,7 @@ public class PokerHandServiceImpl implements PokerHandService {
 
     @Override
     public void flop(Game game) throws IllegalStateException {
-        tableTasksController.sendFlop(game.getHand().getBoardEntity().getFlop(), game.getId());
+        tableTasksController.sendFlop(new Cards(game.getHand().getBoardEntity().getFlop()), game.getId());
     }
 
     @Override

@@ -2,15 +2,15 @@ package com.hyphenated.card.controller;
 
 import com.hyphenated.card.domain.Game;
 import com.hyphenated.card.domain.Player;
+import com.hyphenated.card.dto.Cards;
 import com.hyphenated.card.dto.PlayerBet;
-import com.hyphenated.card.dto.PlayerDTO;
+import com.hyphenated.card.dto.PlayerCards;
 import com.hyphenated.card.enums.Card;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -68,8 +68,8 @@ public class TableTasksController {
                 template.convertAndSendToUser(uuid.toString(), "/playersturn", name));
     }
 
-    public void sendFlop(List<Card> flop, UUID gameId) {
-        getPlayerUuidStream(gameId).forEach(uuid -> template.convertAndSendToUser(uuid.toString(), "/flop", flop.stream().map(Card::name).toList()));
+    public void sendFlop(Cards flop, UUID gameId) {
+        getPlayerUuidStream(gameId).forEach(uuid -> template.convertAndSendToUser(uuid.toString(), "/flop", flop.getCards().stream().map(Card::name).toList()));
     }
 
     public void sendTurn(Card turn, UUID gameId) {
@@ -80,12 +80,11 @@ public class TableTasksController {
         getPlayerUuidStream(gameId).forEach(uuid -> template.convertAndSendToUser(uuid.toString(), "/river", river.name()));
     }
 
-    public void endGame(Map<PlayerDTO, List<Card>> playerCards, UUID gameId) {
+    public void endGame(PlayerCards playerCards, UUID gameId) {
         getPlayerUuidStream(gameId).forEach(uuid -> template.convertAndSendToUser(uuid.toString(), "/amountsWon", playerCards));
     }
 
-    public void sendCardsToUser(List<String> cards, UUID userId) {
+    public void sendCardsToUser(Cards cards, UUID userId) {
         template.convertAndSendToUser(userId.toString(), "/cards", cards);
-
     }
 }
