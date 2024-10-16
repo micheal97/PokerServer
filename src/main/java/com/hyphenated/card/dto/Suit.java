@@ -21,23 +21,35 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package com.hyphenated.card.holder;
-
-import com.hyphenated.card.dto.Card;
+package com.hyphenated.card.dto;
 
 /**
- * A CardHolder for storing 2 hole cards for a player
+ * Enumeration of the card suits.
  */
-public class Hand extends CardHolder {
+public enum Suit {
+
+    CLUBS("c"),
+    DIAMONDS("d"),
+    HEARTS("h"),
+    SPADES("s");
 
     /**
-     * Creates new hand with two cards.
-     *
-     * @param card1 first card
-     * @param card2 second card
+     * Short string representation of the suit (one letter symbol).
      */
-    public Hand(Card card1, Card card2) {
-        super(card1, card2);
+    private final String name;
+
+    private Suit(String name) {
+        this.name = name;
+    }
+
+    /**
+     * Returns the name of the suit.
+     *
+     * @see java.lang.Enum#toString()
+     */
+    @Override
+    public String toString() {
+        return name;
     }
 
 }

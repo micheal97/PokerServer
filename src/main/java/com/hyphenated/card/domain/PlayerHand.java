@@ -23,7 +23,7 @@ THE SOFTWARE.
 */
 package com.hyphenated.card.domain;
 
-import com.hyphenated.card.Card;
+import com.hyphenated.card.dto.Card;
 import com.hyphenated.card.enums.PlayerHandRoundAction;
 import com.hyphenated.card.holder.Hand;
 import jakarta.persistence.Embeddable;
@@ -41,11 +41,9 @@ import javax.annotation.Nullable;
 public class PlayerHand {
 
     @Enumerated(EnumType.STRING)
-    @Getter(value = AccessLevel.NONE)
     @NonNull
     private final Card card1;
     @Enumerated(EnumType.STRING)
-    @Getter(value = AccessLevel.NONE)
     @NonNull
     private final Card card2;
     /**

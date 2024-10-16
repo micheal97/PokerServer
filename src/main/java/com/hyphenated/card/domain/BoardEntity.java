@@ -23,8 +23,8 @@ THE SOFTWARE.
 */
 package com.hyphenated.card.domain;
 
-import com.hyphenated.card.Card;
 import com.hyphenated.card.Deck;
+import com.hyphenated.card.dto.Card;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;

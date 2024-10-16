@@ -156,7 +156,10 @@ public class PokerHandServiceImpl implements PokerHandService {
         }
         game.setHand(hand);
 
-        tableTasksController.sendPlayersForUpdatingAmountsWon(hand.getPlayers().stream().map(Player::getPlayerDTO).toList(), game.getId());
+        tableTasksController.endGame(Map.copyOf(hand.getPlayers().stream().collect(Collectors.toConcurrentMap(Player::getPlayerDTO, player -> {
+            PlayerHand playerHand = player.getPlayerHand();
+            return List.of(playerHand.getCard1(), playerHand.getCard2());
+        }))), game.getId());
         gameDao.save(game);
         return false;
     }

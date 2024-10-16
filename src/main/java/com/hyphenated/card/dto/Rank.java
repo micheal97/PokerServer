@@ -21,23 +21,44 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package com.hyphenated.card.holder;
-
-import com.hyphenated.card.dto.Card;
+package com.hyphenated.card.dto;
 
 /**
- * A CardHolder for storing 2 hole cards for a player
+ * Enumeration of the card ranks.
  */
-public class Hand extends CardHolder {
+public enum Rank {
+
+    TWO("2"),
+    THREE("3"),
+    FOUR("4"),
+    FIVE("5"),
+    SIX("6"),
+    SEVEN("7"),
+    EIGHT("8"),
+    NINE("9"),
+    TEN("T"),
+    JACK("J"),
+    QUEEN("Q"),
+    KING("K"),
+    ACE("A");
 
     /**
-     * Creates new hand with two cards.
-     *
-     * @param card1 first card
-     * @param card2 second card
+     * Short string representation of the rank.
      */
-    public Hand(Card card1, Card card2) {
-        super(card1, card2);
+    private final String name;
+
+    private Rank(String name) {
+        this.name = name;
+    }
+
+    /**
+     * Returns the name of the rank.
+     *
+     * @see java.lang.Enum#toString()
+     */
+    @Override
+    public String toString() {
+        return name;
     }
 
 }

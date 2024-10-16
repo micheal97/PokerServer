@@ -1,8 +1,8 @@
 package com.hyphenated.card.controller;
 
-import com.hyphenated.card.Card;
 import com.hyphenated.card.domain.Game;
 import com.hyphenated.card.domain.Player;
+import com.hyphenated.card.dto.Card;
 import com.hyphenated.card.dto.PlayerBet;
 import com.hyphenated.card.dto.PlayerDTO;
 import lombok.Setter;
@@ -44,7 +44,8 @@ public class TableTasksController {
     }
 
     public void playerFolded(String name, UUID gameId) {
-        template.convertAndSend("/playerfolded", name);
+
+        getPlayerUuidStream(gameId).forEach(uuid -> template.convertAndSendToUser(uuid.toString(), "/playerfolded", name));
     }
 
     public void playerCalled(String name, UUID gameId) {
@@ -79,8 +80,8 @@ public class TableTasksController {
         getPlayerUuidStream(gameId).forEach(uuid -> template.convertAndSendToUser(uuid.toString(), "/river", river.name()));
     }
 
-    public void sendPlayersForUpdatingAmountsWon(List<PlayerDTO> players, UUID gameId) {
-        getPlayerUuidStream(gameId).forEach(uuid -> template.convertAndSendToUser(uuid.toString(), "/amountsWon", players));
+    public void endGame(Map<PlayerDTO, List<Card>> playerCards, UUID gameId) {
+        getPlayerUuidStream(gameId).forEach(uuid -> template.convertAndSendToUser(uuid.toString(), "/amountsWon", playerCards));
     }
 
     public void sendCardsToUser(List<String> cards, UUID userId) {

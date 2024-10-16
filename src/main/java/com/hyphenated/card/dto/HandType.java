@@ -21,25 +21,26 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package com.hyphenated.card;
+package com.hyphenated.card.dto;
+
 /**
  * Enum that represents the possible types of poker hands.
  * <br /><br />
  * The ordering here corresponds to the handtypes defined by the highest order
  * bit in the two plus two hand evaluation score.
- * 
+ *
  * @author jacobhypehanted
  * Copyright (c) 2013
  */
 public enum HandType {
-	BAD,
-	HIGH_CARD,
-	PAIR, 
-	TWO_PAIR,
-	THREE_OF_A_KIND,
-	STRAIGHT,
-	FLUSH,
-	FULL_HOUSE,
-	FOUR_OF_A_KIND,
-	STRAIGHT_FLUSH;
+    BAD,
+    HIGH_CARD,
+    PAIR,
+    TWO_PAIR,
+    THREE_OF_A_KIND,
+    STRAIGHT,
+    FLUSH,
+    FULL_HOUSE,
+    FOUR_OF_A_KIND,
+    STRAIGHT_FLUSH;
 }

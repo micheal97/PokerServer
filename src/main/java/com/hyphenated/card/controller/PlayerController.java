@@ -35,8 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.List;
@@ -70,13 +69,13 @@ public class PlayerController {
     }
 
     @GetMapping("/register")
-    public @ResponseBody ResponseEntity<Object> registerPlayer(@RequestParam String name, @RequestParam String password) {
+    public @ResponseBody ResponseEntity<Object> registerPlayer(@RequestHeader String name, @RequestHeader String password) {
         Player player = new Player(name, password);
         return playerService.registerPlayer(player) ? ResponseEntity.ok().body(null) : ResponseEntity.badRequest().body(null);
     }
 
     @GetMapping("/login")
-    public @ResponseBody ResponseEntity<PlayerDTO> login(@RequestParam String name, @RequestParam String password) {
+    public @ResponseBody ResponseEntity<PlayerDTO> login(@RequestHeader String name, @RequestHeader String password) {
         Optional<Player> optionalPlayer = playerService.findPlayerByNameAndPassword(name, password);
         return optionalPlayer.map(player -> ResponseEntity.ok(player.getPlayerDTO()))
                 .orElseGet(() -> ResponseEntity.badRequest().body(null));
@@ -87,7 +86,9 @@ public class PlayerController {
      * Have a new player join a game.
      */
     @GetMapping("/join")
-    public @ResponseBody ResponseEntity<Object> joinGame(@RequestBody UUID gameId, @RequestParam UUID playerId, @RequestParam int startingTableChips) {
+    public @ResponseBody ResponseEntity<Object> joinGame(@RequestHeader String gameIdString, @RequestHeader String playerIdString, @RequestHeader int startingTableChips) {
+        UUID gameId = UUID.fromString(gameIdString);
+        UUID playerId = UUID.fromString(playerIdString);
         Optional<Game> optionalGame = gameService.findGameById(gameId);
         Optional<Player> optionalPlayer = playerService.findPlayerById(playerId);
         if (optionalGame.isPresent() && optionalPlayer.isPresent()) {
@@ -108,13 +109,14 @@ public class PlayerController {
     /**
      * Fold the hand.
      *
-     * @param gameId Unique ID of the game being played
      * @return Map with a single field for success, if the player successfully folded or not.
      * If fold is not a legal action, or it is not this players turn to act, success will be false.
      * Example: {"success":true}
      */
     @GetMapping("/fold")
-    public @ResponseBody ResponseEntity<Object> fold(@RequestParam UUID gameId, @RequestParam UUID playerId) {
+    public @ResponseBody ResponseEntity<Object> fold(@RequestHeader String gameIdString, @RequestHeader String playerIdString) {
+        UUID gameId = UUID.fromString(gameIdString);
+        UUID playerId = UUID.fromString(playerIdString);
         Optional<Game> optionalGame = gameService.findGameById(gameId);
         Optional<Player> optionalPlayer = playerService.findPlayerById(playerId);
         if (optionalGame.isPresent() && optionalPlayer.isPresent()) {
@@ -129,14 +131,15 @@ public class PlayerController {
     /**
      * Call a bet.
      *
-     * @param gameId Unique ID of the game being played
      * @return Map represented as a JSON String with two fields, success and chips.  If calling is
      * not a legal action, or it is not this player's turn, success will be false. The Chips field
      * represents the current amount of chips the player has left after taking this action.
      * Example: {"success":true,"chips":xxx}
      */
     @GetMapping("/callany")
-    public @ResponseBody ResponseEntity<Object> callAny(@RequestParam UUID gameId, @RequestParam UUID playerId) {
+    public @ResponseBody ResponseEntity<Object> callAny(@RequestHeader String gameIdString, @RequestHeader String playerIdString) {
+        UUID gameId = UUID.fromString(gameIdString);
+        UUID playerId = UUID.fromString(playerIdString);
         Optional<Game> optionalGame = gameService.findGameById(gameId);
         Optional<Player> optionalPlayer = playerService.findPlayerById(playerId);
         if (optionalGame.isPresent() && optionalPlayer.isPresent()) {
@@ -147,7 +150,9 @@ public class PlayerController {
     }
 
     @GetMapping("/callCurrent")
-    public @ResponseBody ResponseEntity<Object> callCurrent(@RequestParam UUID gameId, @RequestParam UUID playerId, @RequestParam int callAmount) {
+    public @ResponseBody ResponseEntity<Object> callCurrent(@RequestHeader String gameIdString, @RequestHeader String playerIdString, @RequestHeader int callAmount) {
+        UUID gameId = UUID.fromString(gameIdString);
+        UUID playerId = UUID.fromString(playerIdString);
         Optional<Game> optionalGame = gameService.findGameById(gameId);
         Optional<Player> optionalPlayer = playerService.findPlayerById(playerId);
         if (optionalGame.isPresent() && optionalPlayer.isPresent()) {
@@ -164,13 +169,14 @@ public class PlayerController {
     /**
      * Check the action in this hand.
      *
-     * @param gameId Unique ID of the game being played
      * @return Map represented as a JSON String with a single field: success.  If checking is not
      * a legal action, or it is not this player's turn, success will be false.
      * Example: {"success":false}
      */
     @GetMapping("/check")
-    public @ResponseBody ResponseEntity<Object> check(@RequestParam UUID gameId, @RequestParam UUID playerId) {
+    public @ResponseBody ResponseEntity<Object> check(@RequestHeader String gameIdString, @RequestHeader String playerIdString) {
+        UUID gameId = UUID.fromString(gameIdString);
+        UUID playerId = UUID.fromString(playerIdString);
         Optional<Game> optionalGame = gameService.findGameById(gameId);
         Optional<Player> optionalPlayer = playerService.findPlayerById(playerId);
         if (optionalGame.isPresent() && optionalPlayer.isPresent()) {
@@ -187,7 +193,6 @@ public class PlayerController {
     /**
      * Bet or Raise.
      *
-     * @param gameId    unique ID of the game being played
      * @param betAmount amount of the bet.  This is the total amount, so if there was a bet
      *                  before, and this is the raise, this value represents the amount bet for only this raise from the player.
      *                  To put in another way, this betAmount value is the amount is the amount bet <em>in addition to</em>
@@ -201,7 +206,9 @@ public class PlayerController {
      * Example: {"success":true,"chips":xxx}
      */
     @GetMapping("/bet")
-    public @ResponseBody ResponseEntity<Object> bet(@RequestParam UUID gameId, @RequestParam UUID playerId, @RequestParam int betAmount) {
+    public @ResponseBody ResponseEntity<Object> bet(@RequestHeader String gameIdString, @RequestHeader String playerIdString, @RequestHeader int betAmount) {
+        UUID gameId = UUID.fromString(gameIdString);
+        UUID playerId = UUID.fromString(playerIdString);
         Optional<Game> optionalGame = gameService.findGameById(gameId);
         Optional<Player> optionalPlayer = playerService.findPlayerById(playerId);
         if (optionalGame.isPresent() && optionalPlayer.isPresent()) {
@@ -218,12 +225,13 @@ public class PlayerController {
     /**
      * Sit back in the game after having sat out
      *
-     * @param playerId Player being sat back in
      * @return {"success":true} when the player is sat back in the game
      */
 
     @GetMapping("/leave")
-    public @ResponseBody ResponseEntity<Object> leave(@RequestParam UUID gameId, @RequestParam UUID playerId) {
+    public @ResponseBody ResponseEntity<Object> leave(@RequestHeader String gameIdString, @RequestHeader String playerIdString) {
+        UUID gameId = UUID.fromString(gameIdString);
+        UUID playerId = UUID.fromString(playerIdString);
         Optional<Game> optionalGame = gameService.findGameById(gameId);
         Optional<Player> optionalPlayer = playerService.findPlayerById(playerId);
         if (optionalGame.isPresent() && optionalPlayer.isPresent()) {

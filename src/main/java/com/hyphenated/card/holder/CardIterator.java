@@ -24,7 +24,7 @@ THE SOFTWARE.
 package com.hyphenated.card.holder;
 
 import com.google.common.collect.Iterators;
-import com.hyphenated.card.Card;
+import com.hyphenated.card.dto.Card;
 
 import java.util.Iterator;
 

@@ -101,7 +101,7 @@ public class PlayerUtil {
      */
     public static List<Player> getWinnersOfHand(Board board, List<Player> players) {
         return new TreeMap<>(players.stream()
-                .collect(Collectors.toConcurrentMap((player -> evaluator.evaluate(board, ((Player) (player)).getPlayerHand().getHand())),
+                .collect(Collectors.toConcurrentMap((player -> evaluator.evaluate(board, player.getPlayerHand().getHand())),
                         List::of, (s, a) -> {
                             List<Player> players1 = new ArrayList<>();
                             players1.addAll(s);

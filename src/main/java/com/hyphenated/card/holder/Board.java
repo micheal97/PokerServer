@@ -23,7 +23,7 @@ THE SOFTWARE.
 */
 package com.hyphenated.card.holder;
 
-import com.hyphenated.card.Card;
+import com.hyphenated.card.dto.Card;
 
 /**
  * A {@link CardHolder} for storing five community cards.

@@ -23,6 +23,7 @@ THE SOFTWARE.
 */
 package com.hyphenated.card;
 
+import com.hyphenated.card.dto.Card;
 import jakarta.persistence.Embeddable;
 
 import java.util.Arrays;
