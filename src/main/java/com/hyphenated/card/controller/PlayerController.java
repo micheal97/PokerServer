@@ -25,7 +25,7 @@ package com.hyphenated.card.controller;
 
 import com.hyphenated.card.domain.Game;
 import com.hyphenated.card.domain.Player;
-import com.hyphenated.card.dto.GameDTO;
+import com.hyphenated.card.dto.GameDTOs;
 import com.hyphenated.card.dto.PlayerDTO;
 import com.hyphenated.card.enums.PlayerHandRoundAction;
 import com.hyphenated.card.service.GameService;
@@ -38,7 +38,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -64,8 +63,9 @@ public class PlayerController {
     private ScheduledPlayerActionService scheduledPlayerActionService;
 
     @GetMapping("/games")
-    public @ResponseBody ResponseEntity<List<GameDTO>> getGames() {
-        return ResponseEntity.ok(gameService.findAll().stream().map(Game::getGameDTO).toList());
+    public @ResponseBody ResponseEntity<GameDTOs> getGames() {
+        return ResponseEntity.ok(new GameDTOs(
+                gameService.findAll().stream().map(Game::getGameDTO).toList()));
     }
 
     @GetMapping("/register")

@@ -32,7 +32,7 @@ public class TasksController {
         scheduler.scheduleAtFixedRate(() -> {
             GameService.updateTables(Arrays.stream(BlindLevel.values()).map(Enum::name).toList());
             List<Game> games = GameService.findAll();
-            template.convertAndSend("/tables", new GameDTOs(games.stream().map(Game::getGameDTO).toList()));
+            template.convertAndSend("/games", new GameDTOs(games.stream().map(Game::getGameDTO).toList()));
             Map<UUID, Game> GameMap = Map.copyOf(games.stream().collect(Collectors.toConcurrentMap(Game::getId, Function.identity())));
             tableTasksController.setGames(GameMap);
         }, 0, 5, TimeUnit.SECONDS);
