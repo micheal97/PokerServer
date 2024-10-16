@@ -40,6 +40,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Optional;
 import java.util.UUID;
 
+import static com.hyphenated.card.Header.*;
 import static com.hyphenated.card.UrlConstant.*;
 
 
@@ -71,13 +72,13 @@ public class PlayerController {
     }
 
     @GetMapping(REGISTER)
-    public ResponseEntity<Object> registerPlayer(@RequestHeader String name, @RequestHeader String password) {
+    public ResponseEntity<Object> registerPlayer(@RequestHeader(NAME) String name, @RequestHeader(PASSWORD) String password) {
         Player player = new Player(name, password);
         return playerService.registerPlayer(player) ? ResponseEntity.ok().body(null) : ResponseEntity.badRequest().body(null);
     }
 
     @GetMapping(LOGIN)
-    public ResponseEntity<PlayerDTO> login(@RequestHeader String name, @RequestHeader String password) {
+    public ResponseEntity<PlayerDTO> login(@RequestHeader(NAME) String name, @RequestHeader(PASSWORD) String password) {
         Optional<Player> optionalPlayer = playerService.findPlayerByNameAndPassword(name, password);
         return optionalPlayer.map(player -> ResponseEntity.ok(player.getPlayerDTO()))
                 .orElseGet(() -> ResponseEntity.badRequest().body(null));
@@ -88,7 +89,7 @@ public class PlayerController {
      * Have a new player join a game.
      */
     @GetMapping(JOIN)
-    public ResponseEntity<Object> joinGame(@RequestHeader String gameIdString, @RequestHeader String playerIdString, @RequestHeader int startingTableChips) {
+    public ResponseEntity<Object> joinGame(@RequestHeader(GAME_ID_STRING) String gameIdString, @RequestHeader(PLAYER_ID_STRING) String playerIdString, @RequestHeader int startingTableChips) {
         UUID gameId = UUID.fromString(gameIdString);
         UUID playerId = UUID.fromString(playerIdString);
         Optional<Game> optionalGame = gameService.findGameById(gameId);
@@ -116,7 +117,7 @@ public class PlayerController {
      * Example: {"success":true}
      */
     @GetMapping(FOLD)
-    public ResponseEntity<Object> fold(@RequestHeader String gameIdString, @RequestHeader String playerIdString) {
+    public ResponseEntity<Object> fold(@RequestHeader(GAME_ID_STRING) String gameIdString, @RequestHeader(PLAYER_ID_STRING) String playerIdString) {
         UUID gameId = UUID.fromString(gameIdString);
         UUID playerId = UUID.fromString(playerIdString);
         Optional<Game> optionalGame = gameService.findGameById(gameId);
@@ -139,7 +140,7 @@ public class PlayerController {
      * Example: {"success":true,"chips":xxx}
      */
     @GetMapping(CALL_ANY)
-    public ResponseEntity<Object> callAny(@RequestHeader String gameIdString, @RequestHeader String playerIdString) {
+    public ResponseEntity<Object> callAny(@RequestHeader(GAME_ID_STRING) String gameIdString, @RequestHeader(PLAYER_ID_STRING) String playerIdString) {
         UUID gameId = UUID.fromString(gameIdString);
         UUID playerId = UUID.fromString(playerIdString);
         Optional<Game> optionalGame = gameService.findGameById(gameId);
@@ -152,7 +153,7 @@ public class PlayerController {
     }
 
     @GetMapping(CALL_CURRENT)
-    public ResponseEntity<Object> callCurrent(@RequestHeader String gameIdString, @RequestHeader String playerIdString, @RequestHeader int callAmount) {
+    public ResponseEntity<Object> callCurrent(@RequestHeader(GAME_ID_STRING) String gameIdString, @RequestHeader(PLAYER_ID_STRING) String playerIdString, @RequestHeader int callAmount) {
         UUID gameId = UUID.fromString(gameIdString);
         UUID playerId = UUID.fromString(playerIdString);
         Optional<Game> optionalGame = gameService.findGameById(gameId);
@@ -176,7 +177,7 @@ public class PlayerController {
      * Example: {"success":false}
      */
     @GetMapping(CHECK)
-    public ResponseEntity<Object> check(@RequestHeader String gameIdString, @RequestHeader String playerIdString) {
+    public ResponseEntity<Object> check(@RequestHeader(GAME_ID_STRING) String gameIdString, @RequestHeader(PLAYER_ID_STRING) String playerIdString) {
         UUID gameId = UUID.fromString(gameIdString);
         UUID playerId = UUID.fromString(playerIdString);
         Optional<Game> optionalGame = gameService.findGameById(gameId);
@@ -208,7 +209,7 @@ public class PlayerController {
      * Example: {"success":true,"chips":xxx}
      */
     @GetMapping(BET)
-    public ResponseEntity<Object> bet(@RequestHeader String gameIdString, @RequestHeader String playerIdString, @RequestHeader int betAmount) {
+    public ResponseEntity<Object> bet(@RequestHeader(GAME_ID_STRING) String gameIdString, @RequestHeader(PLAYER_ID_STRING) String playerIdString, @RequestHeader int betAmount) {
         UUID gameId = UUID.fromString(gameIdString);
         UUID playerId = UUID.fromString(playerIdString);
         Optional<Game> optionalGame = gameService.findGameById(gameId);
@@ -231,7 +232,7 @@ public class PlayerController {
      */
 
     @GetMapping(LEAVE)
-    public ResponseEntity<Object> leave(@RequestHeader String gameIdString, @RequestHeader String playerIdString) {
+    public ResponseEntity<Object> leave(@RequestHeader(GAME_ID_STRING) String gameIdString, @RequestHeader(PLAYER_ID_STRING) String playerIdString) {
         UUID gameId = UUID.fromString(gameIdString);
         UUID playerId = UUID.fromString(playerIdString);
         Optional<Game> optionalGame = gameService.findGameById(gameId);

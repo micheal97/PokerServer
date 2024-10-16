@@ -34,7 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -43,6 +43,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import static com.hyphenated.card.Header.*;
 import static com.hyphenated.card.UrlConstant.CREATE;
 import static com.hyphenated.card.UrlConstant.START_PRIVATE_GAME;
 
@@ -80,12 +81,13 @@ public class TableController {
      * by Spring to the JSON object.
      */
     @GetMapping(CREATE)
-    public ResponseEntity<UUID> createGame(@RequestParam String gameName,
-                                           @RequestParam String password,
-                                           @RequestParam int maxPlayers,
-                                           @RequestParam BlindLevel blindLevel,
-                                           @RequestParam UUID playerId) {
+    public ResponseEntity<UUID> createGame(@RequestHeader(GAME_NAME) String gameName,
+                                           @RequestHeader(PASSWORD) String password,
+                                           @RequestHeader(MAX_PLAYERS) int maxPlayers,
+                                           @RequestHeader(BLIND_LEVEL) BlindLevel blindLevel,
+                                           @RequestHeader(PLAYER_ID_STRING) String playerIdString) {
         //TODO:evaluate if player is allowed and setTableCoins not linked to playerAccount
+        UUID playerId = UUID.fromString(playerIdString);
         Optional<Player> player = playerServiceManager.findPlayerById(playerId);
         if (player.isPresent()) {
             Game game = new Game(blindLevel, maxPlayers, gameName, true, password);
@@ -99,13 +101,14 @@ public class TableController {
     /**
      * Start the game.  This should be called when the players have joined and everyone is ready to begin.
      *
-     * @param gameId unique ID for the game that is to be started
      * @return Map representing a JSON string with a single field for "success" which is either true or false.
      * example: {"success":true}
      */
     @GetMapping(START_PRIVATE_GAME)
     @CacheEvict(value = "game", allEntries = true)
-    public @ResponseBody ResponseEntity<Object> startGame(@RequestParam UUID gameId, @RequestParam UUID playerId) {
+    public @ResponseBody ResponseEntity<Object> startGame(@RequestHeader(GAME_ID_STRING) String gameIdString, @RequestHeader(PLAYER_ID_STRING) String playerIdString) {
+        UUID gameId = UUID.fromString(gameIdString);
+        UUID playerId = UUID.fromString(playerIdString);
         Optional<Game> optionalGame = gameService.findGameById(gameId);
         Optional<Player> optionalPlayer = playerServiceManager.findPlayerById(playerId);
         if (optionalGame.isPresent() && optionalPlayer.isPresent()) {
