@@ -33,13 +33,15 @@ import com.hyphenated.card.service.PlayerServiceManager;
 import com.hyphenated.card.service.ScheduledPlayerActionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Optional;
 import java.util.UUID;
+
+import static com.hyphenated.card.UrlConstant.*;
+
 
 /**
  * Controller class that will handle the front-end API interactions regarding
@@ -48,7 +50,7 @@ import java.util.UUID;
  * @author jacobhyphenated
  * Copyright (c) 2013
  */
-@Controller
+@RestController
 public class PlayerController {
 
     @Autowired
@@ -62,20 +64,20 @@ public class PlayerController {
     @Autowired
     private ScheduledPlayerActionService scheduledPlayerActionService;
 
-    @GetMapping("/games")
-    public @ResponseBody ResponseEntity<GameDTOs> getGames() {
+    @GetMapping(GAMES)
+    public ResponseEntity<GameDTOs> getGames() {
         return ResponseEntity.ok(new GameDTOs(
                 gameService.findAll().stream().map(Game::getGameDTO).toList()));
     }
 
-    @GetMapping("/register")
-    public @ResponseBody ResponseEntity<Object> registerPlayer(@RequestHeader String name, @RequestHeader String password) {
+    @GetMapping(REGISTER)
+    public ResponseEntity<Object> registerPlayer(@RequestHeader String name, @RequestHeader String password) {
         Player player = new Player(name, password);
         return playerService.registerPlayer(player) ? ResponseEntity.ok().body(null) : ResponseEntity.badRequest().body(null);
     }
 
-    @GetMapping("/login")
-    public @ResponseBody ResponseEntity<PlayerDTO> login(@RequestHeader String name, @RequestHeader String password) {
+    @GetMapping(LOGIN)
+    public ResponseEntity<PlayerDTO> login(@RequestHeader String name, @RequestHeader String password) {
         Optional<Player> optionalPlayer = playerService.findPlayerByNameAndPassword(name, password);
         return optionalPlayer.map(player -> ResponseEntity.ok(player.getPlayerDTO()))
                 .orElseGet(() -> ResponseEntity.badRequest().body(null));
@@ -85,8 +87,8 @@ public class PlayerController {
     /**
      * Have a new player join a game.
      */
-    @GetMapping("/join")
-    public @ResponseBody ResponseEntity<Object> joinGame(@RequestHeader String gameIdString, @RequestHeader String playerIdString, @RequestHeader int startingTableChips) {
+    @GetMapping(JOIN)
+    public ResponseEntity<Object> joinGame(@RequestHeader String gameIdString, @RequestHeader String playerIdString, @RequestHeader int startingTableChips) {
         UUID gameId = UUID.fromString(gameIdString);
         UUID playerId = UUID.fromString(playerIdString);
         Optional<Game> optionalGame = gameService.findGameById(gameId);
@@ -113,8 +115,8 @@ public class PlayerController {
      * If fold is not a legal action, or it is not this players turn to act, success will be false.
      * Example: {"success":true}
      */
-    @GetMapping("/fold")
-    public @ResponseBody ResponseEntity<Object> fold(@RequestHeader String gameIdString, @RequestHeader String playerIdString) {
+    @GetMapping(FOLD)
+    public ResponseEntity<Object> fold(@RequestHeader String gameIdString, @RequestHeader String playerIdString) {
         UUID gameId = UUID.fromString(gameIdString);
         UUID playerId = UUID.fromString(playerIdString);
         Optional<Game> optionalGame = gameService.findGameById(gameId);
@@ -136,8 +138,8 @@ public class PlayerController {
      * represents the current amount of chips the player has left after taking this action.
      * Example: {"success":true,"chips":xxx}
      */
-    @GetMapping("/callany")
-    public @ResponseBody ResponseEntity<Object> callAny(@RequestHeader String gameIdString, @RequestHeader String playerIdString) {
+    @GetMapping(CALL_ANY)
+    public ResponseEntity<Object> callAny(@RequestHeader String gameIdString, @RequestHeader String playerIdString) {
         UUID gameId = UUID.fromString(gameIdString);
         UUID playerId = UUID.fromString(playerIdString);
         Optional<Game> optionalGame = gameService.findGameById(gameId);
@@ -149,8 +151,8 @@ public class PlayerController {
         return ResponseEntity.badRequest().body(null);
     }
 
-    @GetMapping("/callCurrent")
-    public @ResponseBody ResponseEntity<Object> callCurrent(@RequestHeader String gameIdString, @RequestHeader String playerIdString, @RequestHeader int callAmount) {
+    @GetMapping(CALL_CURRENT)
+    public ResponseEntity<Object> callCurrent(@RequestHeader String gameIdString, @RequestHeader String playerIdString, @RequestHeader int callAmount) {
         UUID gameId = UUID.fromString(gameIdString);
         UUID playerId = UUID.fromString(playerIdString);
         Optional<Game> optionalGame = gameService.findGameById(gameId);
@@ -173,8 +175,8 @@ public class PlayerController {
      * a legal action, or it is not this player's turn, success will be false.
      * Example: {"success":false}
      */
-    @GetMapping("/check")
-    public @ResponseBody ResponseEntity<Object> check(@RequestHeader String gameIdString, @RequestHeader String playerIdString) {
+    @GetMapping(CHECK)
+    public ResponseEntity<Object> check(@RequestHeader String gameIdString, @RequestHeader String playerIdString) {
         UUID gameId = UUID.fromString(gameIdString);
         UUID playerId = UUID.fromString(playerIdString);
         Optional<Game> optionalGame = gameService.findGameById(gameId);
@@ -205,8 +207,8 @@ public class PlayerController {
      * amount of chips the player has after completing this action.
      * Example: {"success":true,"chips":xxx}
      */
-    @GetMapping("/bet")
-    public @ResponseBody ResponseEntity<Object> bet(@RequestHeader String gameIdString, @RequestHeader String playerIdString, @RequestHeader int betAmount) {
+    @GetMapping(BET)
+    public ResponseEntity<Object> bet(@RequestHeader String gameIdString, @RequestHeader String playerIdString, @RequestHeader int betAmount) {
         UUID gameId = UUID.fromString(gameIdString);
         UUID playerId = UUID.fromString(playerIdString);
         Optional<Game> optionalGame = gameService.findGameById(gameId);
@@ -228,8 +230,8 @@ public class PlayerController {
      * @return {"success":true} when the player is sat back in the game
      */
 
-    @GetMapping("/leave")
-    public @ResponseBody ResponseEntity<Object> leave(@RequestHeader String gameIdString, @RequestHeader String playerIdString) {
+    @GetMapping(LEAVE)
+    public ResponseEntity<Object> leave(@RequestHeader String gameIdString, @RequestHeader String playerIdString) {
         UUID gameId = UUID.fromString(gameIdString);
         UUID playerId = UUID.fromString(playerIdString);
         Optional<Game> optionalGame = gameService.findGameById(gameId);

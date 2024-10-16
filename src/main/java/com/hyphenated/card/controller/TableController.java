@@ -43,6 +43,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import static com.hyphenated.card.UrlConstant.CREATE;
+import static com.hyphenated.card.UrlConstant.START_PRIVATE_GAME;
+
 /**
  * Controller class that will handle the API interactions with the front-end for the GameController.
  * The game controller is the device that handles the community cards, setting up the game, dealing, etc.
@@ -76,7 +79,7 @@ public class TableController {
      * @return {"gameId":xxxx}.  The Java Method returns the Map<String,Long> which is converted
      * by Spring to the JSON object.
      */
-    @GetMapping(value = "/create")
+    @GetMapping(CREATE)
     public ResponseEntity<UUID> createGame(@RequestParam String gameName,
                                            @RequestParam String password,
                                            @RequestParam int maxPlayers,
@@ -100,7 +103,7 @@ public class TableController {
      * @return Map representing a JSON string with a single field for "success" which is either true or false.
      * example: {"success":true}
      */
-    @GetMapping("/startprivategame")
+    @GetMapping(START_PRIVATE_GAME)
     @CacheEvict(value = "game", allEntries = true)
     public @ResponseBody ResponseEntity<Object> startGame(@RequestParam UUID gameId, @RequestParam UUID playerId) {
         Optional<Game> optionalGame = gameService.findGameById(gameId);

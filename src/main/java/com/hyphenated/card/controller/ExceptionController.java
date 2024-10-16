@@ -47,7 +47,7 @@ import java.util.Map;
 @ControllerAdvice
 public class ExceptionController {
 
-    Logger log = LogManager.getLogger();
+    private final Logger log = LogManager.getLogger();
 
     /**
      * Handles any Illegal State Exception from a controller method
