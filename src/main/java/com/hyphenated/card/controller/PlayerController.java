@@ -89,7 +89,8 @@ public class PlayerController {
      * Have a new player join a game.
      */
     @GetMapping(JOIN)
-    public ResponseEntity<Object> joinGame(@RequestHeader(GAME_ID_STRING) String gameIdString, @RequestHeader(PLAYER_ID_STRING) String playerIdString, @RequestHeader int startingTableChips) {
+    public ResponseEntity<Object> joinGame(@RequestHeader(GAME_ID_STRING) String gameIdString, @RequestHeader(PLAYER_ID_STRING) String playerIdString, @RequestHeader(STARTING_TABLE_CHIPS) String startingTableChips1) {
+        int startingTableChips = Integer.parseInt(startingTableChips1);
         UUID gameId = UUID.fromString(gameIdString);
         UUID playerId = UUID.fromString(playerIdString);
         Optional<Game> optionalGame = gameService.findGameById(gameId);
@@ -153,7 +154,8 @@ public class PlayerController {
     }
 
     @GetMapping(CALL_CURRENT)
-    public ResponseEntity<Object> callCurrent(@RequestHeader(GAME_ID_STRING) String gameIdString, @RequestHeader(PLAYER_ID_STRING) String playerIdString, @RequestHeader int callAmount) {
+    public ResponseEntity<Object> callCurrent(@RequestHeader(GAME_ID_STRING) String gameIdString, @RequestHeader(PLAYER_ID_STRING) String playerIdString, @RequestHeader(CALL_AMOUNT) String callAmount1) {
+        int callAmount = Integer.parseInt(callAmount1);
         UUID gameId = UUID.fromString(gameIdString);
         UUID playerId = UUID.fromString(playerIdString);
         Optional<Game> optionalGame = gameService.findGameById(gameId);
@@ -209,7 +211,7 @@ public class PlayerController {
      * Example: {"success":true,"chips":xxx}
      */
     @GetMapping(BET)
-    public ResponseEntity<Object> bet(@RequestHeader(GAME_ID_STRING) String gameIdString, @RequestHeader(PLAYER_ID_STRING) String playerIdString, @RequestHeader int betAmount) {
+    public ResponseEntity<Object> bet(@RequestHeader(GAME_ID_STRING) String gameIdString, @RequestHeader(PLAYER_ID_STRING) String playerIdString, @RequestHeader(BET_AMOUNT) int betAmount) {
         UUID gameId = UUID.fromString(gameIdString);
         UUID playerId = UUID.fromString(playerIdString);
         Optional<Game> optionalGame = gameService.findGameById(gameId);
