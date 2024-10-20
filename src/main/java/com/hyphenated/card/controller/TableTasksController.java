@@ -46,7 +46,6 @@ public class TableTasksController {
     }
 
     public void playerFolded(String name, UUID gameId) {
-
         getPlayerUuidStream(gameId).forEach(uuid -> template.convertAndSendToUser(uuid.toString(), PLAYER_FOLDED, name));
     }
 

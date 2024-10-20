@@ -25,6 +25,7 @@ package com.hyphenated.card.controller;
 
 import com.hyphenated.card.domain.Game;
 import com.hyphenated.card.domain.Player;
+import com.hyphenated.card.dto.GameDTO;
 import com.hyphenated.card.dto.GameDTOs;
 import com.hyphenated.card.dto.PlayerDTO;
 import com.hyphenated.card.enums.PlayerHandRoundAction;
@@ -89,7 +90,7 @@ public class PlayerController {
      * Have a new player join a game.
      */
     @GetMapping(JOIN)
-    public ResponseEntity<Object> joinGame(@RequestHeader(GAME_ID_STRING) String gameIdString, @RequestHeader(PLAYER_ID_STRING) String playerIdString, @RequestHeader(STARTING_TABLE_CHIPS) String startingTableChips1) {
+    public ResponseEntity<GameDTO> joinGame(@RequestHeader(GAME_ID_STRING) String gameIdString, @RequestHeader(PLAYER_ID_STRING) String playerIdString, @RequestHeader(STARTING_TABLE_CHIPS) String startingTableChips1) {
         int startingTableChips = Integer.parseInt(startingTableChips1);
         UUID gameId = UUID.fromString(gameIdString);
         UUID playerId = UUID.fromString(playerIdString);
@@ -105,7 +106,7 @@ public class PlayerController {
             if (game.getPlayers().size() == 2 && game.getPrivateGameCreator() == null) {
                 gameService.startGame(game);
             }
-            return ResponseEntity.ok(null);
+            return ResponseEntity.ok(game.getGameDTO());
         }
         return ResponseEntity.badRequest().body(null);
     }
