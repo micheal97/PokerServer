@@ -2,9 +2,7 @@ package com.hyphenated.card.controller;
 
 import com.hyphenated.card.domain.Game;
 import com.hyphenated.card.domain.Player;
-import com.hyphenated.card.dto.Cards;
-import com.hyphenated.card.dto.PlayerBet;
-import com.hyphenated.card.dto.PlayerCards;
+import com.hyphenated.card.dto.*;
 import com.hyphenated.card.enums.Card;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -81,8 +79,8 @@ public class TableTasksController {
         getPlayerUuidStream(gameId).forEach(uuid -> template.convertAndSendToUser(uuid.toString(), RIVER, river.name()));
     }
 
-    public void endGame(PlayerCards playerCards, UUID gameId) {
-        getPlayerUuidStream(gameId).forEach(uuid -> template.convertAndSendToUser(uuid.toString(), AMOUNTS_WON, playerCards));
+    public void endGame(PlayerCards playerCards, UUID gameId, PlayersWonOrderDTO playersWonOrder) {
+        getPlayerUuidStream(gameId).forEach(uuid -> template.convertAndSendToUser(uuid.toString(), AMOUNTS_WON, new EndGameDTO(playerCards, playersWonOrder)));
     }
 
     public void sendCardsToUser(Cards cards, UUID userId) {

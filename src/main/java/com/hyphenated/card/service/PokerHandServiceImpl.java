@@ -33,6 +33,8 @@ import com.hyphenated.card.domain.Player;
 import com.hyphenated.card.domain.PlayerHand;
 import com.hyphenated.card.dto.Cards;
 import com.hyphenated.card.dto.PlayerCards;
+import com.hyphenated.card.dto.PlayerDTO;
+import com.hyphenated.card.dto.PlayersWonOrderDTO;
 import com.hyphenated.card.holder.Board;
 import com.hyphenated.card.util.PlayerUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -132,7 +134,7 @@ public class PokerHandServiceImpl implements PokerHandService {
     @Transactional
     public boolean endHand(Game game) {
         HandEntity hand = game.getHand();
-        handleWinners(hand);
+        PlayersWonOrderDTO PlayersWonOrderDTO = handleWinners(hand);
         Player playerInBTN = hand.findPlayerInBTN().orElse(game.getPlayers().first());
         game.getPlayers().stream().filter(player -> player.getTableChips() <= 0).forEach(game::removePlayer);
         if (game.getPlayers().size() < 2) {
@@ -157,11 +159,10 @@ public class PokerHandServiceImpl implements PokerHandService {
             hand.removePlayer(playerInBTN);
         }
         game.setHand(hand);
-
         tableTasksController.endGame(new PlayerCards(Map.copyOf(hand.getPlayers().stream().collect(Collectors.toConcurrentMap(Player::getPlayerDTO, player -> {
             PlayerHand playerHand = player.getPlayerHand();
             return List.of(playerHand.getCard1(), playerHand.getCard2());
-        })))), game.getId());
+        })))), game.getId(), PlayersWonOrderDTO);
         gameDao.save(game);
         return false;
     }
@@ -223,7 +224,7 @@ public class PokerHandServiceImpl implements PokerHandService {
         gameDao.save(game);
     }
 
-    private void handleWinners(HandEntity hand) {
+    private PlayersWonOrderDTO handleWinners(HandEntity hand) {
         Map<Integer, List<Player>> playerBetAmountMap = hand.getPlayers().stream()
                 .filter(player -> player.getPlayerHand() != null)
                 .collect(Collectors.toConcurrentMap(player -> player.getPlayerHand().getBetAmount()
@@ -235,32 +236,34 @@ public class PokerHandServiceImpl implements PokerHandService {
                         }));
         TreeMap<Integer, List<Player>> sortedMap = new TreeMap<>(playerBetAmountMap);
         sortedMap.put(0, Collections.emptyList());
-        calculateWinners(hand.getBoard(), sortedMap);
+        return calculateWinners(hand.getBoard(), sortedMap, new TreeMap<>());
     }
 
     @Transactional
-    private void calculateWinners(Board board, TreeMap<Integer, List<Player>> sortedMap) {
-        Optional.ofNullable(sortedMap.lastEntry()).ifPresent(lastEntry -> {
-            Optional<Map.Entry<Integer, List<Player>>> optionalLowerEntry = Optional.ofNullable(sortedMap.lowerEntry(lastEntry.getKey()));
-            if (optionalLowerEntry.isPresent()) {
-                int amountToWinNext = optionalLowerEntry.get().getKey();
-                int diff = lastEntry.getKey() - amountToWinNext;
-                List<Player> participatingPlayers = lastEntry.getValue();
-                List<Player> winners = PlayerUtil.getWinnersOfHand(board, participatingPlayers);
-                int amountToWin = diff * participatingPlayers.size() / winners.size();
-                int leftOnesToWin = diff * participatingPlayers.size() % winners.size();
-                winners.forEach((winner) -> {
-                    winner.addTableChips(amountToWin);
-                    playerDao.save(winner);
-                });
-                for (int i = 0; i < leftOnesToWin; i++) {
-                    winners.get(i).addTableChips(1);
-                    playerDao.save(winners.get(i));
-                }
-                calculateWinners(board, new TreeMap<>(sortedMap.headMap(lastEntry.getKey())));
+    private PlayersWonOrderDTO calculateWinners(Board board, TreeMap<Integer, List<Player>> playerBetAmountMap, TreeMap<Integer, List<PlayerDTO>> winnersMap) {
+        Map.Entry<Integer, List<Player>> lastEntry = playerBetAmountMap.lastEntry();
+        Optional<Map.Entry<Integer, List<Player>>> optionalLowerEntry = Optional.ofNullable(playerBetAmountMap.lowerEntry(lastEntry.getKey()));
+        while (optionalLowerEntry.isPresent()) {
+            int amountToWinNext = optionalLowerEntry.get().getKey();
+            int diff = lastEntry.getKey() - amountToWinNext;
+            List<Player> participatingPlayers = lastEntry.getValue();
+            List<Player> winners = PlayerUtil.getWinnersOfHand(board, participatingPlayers);
+            int amountToWin = diff * participatingPlayers.size() / winners.size();
+            int leftOnesToWin = diff * participatingPlayers.size() % winners.size();
+            int numberOfWinner = winnersMap.isEmpty() ? 1 : winnersMap.lastKey();
+            winnersMap.put(numberOfWinner, winners.stream().map(Player::getPlayerDTO).toList());
+            winners.forEach((winner) -> {
+                winner.addTableChips(amountToWin);
+                playerDao.save(winner);
+            });
+            for (int i = 0; i < leftOnesToWin; i++) {
+                winners.get(i).addTableChips(1);
+                playerDao.save(winners.get(i));
             }
-
-        });
+            lastEntry = new TreeMap(playerBetAmountMap.headMap(lastEntry.getKey())).lastEntry();
+            optionalLowerEntry = Optional.ofNullable(playerBetAmountMap.lowerEntry(lastEntry.getKey()));
+        }
+        return new PlayersWonOrderDTO(winnersMap);
     }
 }
 
