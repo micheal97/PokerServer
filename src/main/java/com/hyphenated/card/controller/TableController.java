@@ -105,7 +105,7 @@ public class TableController {
      * example: {"success":true}
      */
     @GetMapping(START_PRIVATE_GAME)
-    @CacheEvict(value = "game", allEntries = true)
+    @CacheEvict(value = "game", allEntries = true) //TODO:Check what this makes
     public @ResponseBody ResponseEntity<Object> startGame(@RequestHeader(GAME_ID_STRING) String gameIdString, @RequestHeader(PLAYER_ID_STRING) String playerIdString) {
         UUID gameId = UUID.fromString(gameIdString);
         UUID playerId = UUID.fromString(playerIdString);
