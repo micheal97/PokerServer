@@ -27,11 +27,11 @@ import com.hyphenated.card.domain.Game;
 import com.hyphenated.card.domain.Player;
 import com.hyphenated.card.enums.BlindLevel;
 import com.hyphenated.card.enums.GameStatus;
+import com.hyphenated.card.enums.Payment;
 import com.hyphenated.card.service.GameService;
 import com.hyphenated.card.service.PlayerServiceManager;
 import com.hyphenated.card.service.PokerHandService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -88,12 +88,15 @@ public class TableController {
                                            @RequestHeader(PLAYER_ID_STRING) String playerIdString) {
         //TODO:evaluate if player is allowed and setTableCoins not linked to playerAccount
         UUID playerId = UUID.fromString(playerIdString);
-        Optional<Player> player = playerServiceManager.findPlayerById(playerId);
-        if (player.isPresent()) {
-            Game game = new Game(blindLevel, maxPlayers, gameName, true, password);
-            game = gameService.saveGame(game);
-            player.get().setPrivateGameCreator(true);
-            return ResponseEntity.ok(game.getId());
+        Optional<Player> optionalPlayer = playerServiceManager.findPlayerById(playerId);
+        if (optionalPlayer.isPresent()) {
+            Player player = optionalPlayer.get();
+            if (player.getPayments().getPayments().contains(Payment.GAME_CREATOR)) {
+                Game game = new Game(blindLevel, maxPlayers, gameName, true, password);
+                game = gameService.saveGame(game);
+                player.setPrivateGameCreator(true);
+                return ResponseEntity.ok(game.getId());
+            }
         }
         return ResponseEntity.badRequest().body(null);
     }
@@ -105,7 +108,6 @@ public class TableController {
      * example: {"success":true}
      */
     @GetMapping(START_PRIVATE_GAME)
-    @CacheEvict(value = "game", allEntries = true) //TODO:Check what this makes
     public @ResponseBody ResponseEntity<Object> startGame(@RequestHeader(GAME_ID_STRING) String gameIdString, @RequestHeader(PLAYER_ID_STRING) String playerIdString) {
         UUID gameId = UUID.fromString(gameIdString);
         UUID playerId = UUID.fromString(playerIdString);

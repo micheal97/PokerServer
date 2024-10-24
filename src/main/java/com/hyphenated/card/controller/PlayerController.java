@@ -28,6 +28,8 @@ import com.hyphenated.card.domain.Player;
 import com.hyphenated.card.dto.GameDTO;
 import com.hyphenated.card.dto.GameDTOs;
 import com.hyphenated.card.dto.PlayerDTO;
+import com.hyphenated.card.enums.BlindLevel;
+import com.hyphenated.card.enums.Payment;
 import com.hyphenated.card.enums.PlayerHandRoundAction;
 import com.hyphenated.card.service.GameService;
 import com.hyphenated.card.service.PlayerServiceManager;
@@ -99,14 +101,17 @@ public class PlayerController {
         if (optionalGame.isPresent() && optionalPlayer.isPresent()) {
             Game game = optionalGame.get();
             Player player = optionalPlayer.get();
-            gameService.addNewPlayerToGame(game, player, startingTableChips);
-            player.clearStrikes();
-            playerService.savePlayer(player);
-            tableTasksController.playerJoined(player.getName(), gameId);
-            if (game.getPlayers().size() == 2 && game.getPrivateGameCreator() == null) {
-                gameService.startGame(game);
+            if (player.getPayments().getPayments().contains(Payment.STORY_MODE)
+                    || game.getBlindLevel().equals(BlindLevel.BLIND_10_20)) {
+                gameService.addNewPlayerToGame(game, player, startingTableChips);
+                player.clearStrikes();
+                playerService.savePlayer(player);
+                tableTasksController.playerJoined(player.getName(), gameId);
+                if (game.getPlayers().size() == 2 && game.getPrivateGameCreator() == null) {
+                    gameService.startGame(game);
+                }
+                return ResponseEntity.ok(game.getGameDTO());
             }
-            return ResponseEntity.ok(game.getGameDTO());
         }
         return ResponseEntity.badRequest().body(null);
     }
