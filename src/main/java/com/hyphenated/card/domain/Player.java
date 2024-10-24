@@ -28,6 +28,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.UUID;
 
 @Getter
@@ -38,7 +39,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class Player implements Comparable<Player> {
     //TODO: userSession, password
-    @Column(name = "player_id")
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
@@ -60,11 +60,13 @@ public class Player implements Comparable<Player> {
     @Setter(value = AccessLevel.NONE)
     private int strikes;
     @ManyToOne
-    @JoinColumn(name = "id")
+    @JoinColumn
     private Game game;
     @Transient
     @Nullable
     private Thread thread;
+    @Embedded
+    private PlayerPayments payments;
 
     public void addTableChips(int tableChips) {
         this.tableChips += tableChips;
@@ -83,7 +85,7 @@ public class Player implements Comparable<Player> {
     }
 
     public PlayerDTO getPlayerDTO() {
-        return new PlayerDTO(id, name, chips, tableChips, gamePosition, sittingOut);
+        return new PlayerDTO(id, name, chips, tableChips, gamePosition, sittingOut, Collections.emptyList());
     }
 
     public void addStrike() {

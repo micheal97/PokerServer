@@ -47,11 +47,11 @@ public class HandEntity {
     @NonNull
     private final SortedSet<Player> players = new TreeSet<>();
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id")
+    @JoinColumn
     @Nullable
     private Player currentToAct = null;
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id")
+    @JoinColumn
     @Nullable
     private Player lastBetOrRaise = null;
     @Embedded

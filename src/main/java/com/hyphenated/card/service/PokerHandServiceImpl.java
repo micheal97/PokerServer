@@ -89,7 +89,6 @@ public class PokerHandServiceImpl implements PokerHandService {
     @Transactional
     public void startNewHand(Game game) {
         HandEntity hand = new HandEntity();
-        game.setHand(hand);
         Deck deck = hand.getDeck();
         hand.getPlayers().forEach(player -> player
                 .setPlayerHand(new PlayerHand(deck.dealCard(), deck.dealCard())));
@@ -117,7 +116,6 @@ public class PokerHandServiceImpl implements PokerHandService {
         hand.setLastBetAmount(game.getBlindLevel().getBigBlind());
         hand.setPot(sbBet + bbBet);
 
-        HandEntity newHand = new HandEntity();
         game.setHand(hand);
         hand.getPlayers().forEach(player -> {
             PlayerHand playerHand = player.getPlayerHand();
