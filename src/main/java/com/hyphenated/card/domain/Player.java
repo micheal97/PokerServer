@@ -24,6 +24,7 @@ THE SOFTWARE.
 package com.hyphenated.card.domain;
 
 import com.hyphenated.card.dto.PlayerDTO;
+import com.hyphenated.card.enums.Payment;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -66,7 +67,12 @@ public class Player implements Comparable<Player> {
     @Nullable
     private Thread thread;
     @Embedded
+    @Setter(value = AccessLevel.NONE)
     private PlayerPayments payments;
+
+    public void addPayment(Payment payment) {
+        payments.getPayments().add(payment);
+    }
 
     public void addTableChips(int tableChips) {
         this.tableChips += tableChips;

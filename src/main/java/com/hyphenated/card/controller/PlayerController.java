@@ -40,6 +40,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -84,6 +85,18 @@ public class PlayerController {
     public ResponseEntity<PlayerDTO> login(@RequestHeader(NAME) String name, @RequestHeader(PASSWORD) String password) {
         Optional<Player> optionalPlayer = playerService.findPlayerByNameAndPassword(name, password);
         return optionalPlayer.map(player -> ResponseEntity.ok(player.getPlayerDTO()))
+                .orElseGet(() -> ResponseEntity.badRequest().body(null));
+    }
+
+    @GetMapping(BUY)
+    public ResponseEntity<PlayerDTO> buy(@RequestHeader(NAME) String playerId, @RequestHeader(PAYMENTS) List<String> payments) {
+        Optional<Player> optionalPlayer = playerService.findPlayerById(UUID.fromString(playerId));
+        return optionalPlayer.map(player -> {
+                    payments.forEach(payment ->
+                            player.addPayment(Payment.valueOf(payment)));
+                    return player.getPlayerDTO();
+                })
+                .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.badRequest().body(null));
     }
 

@@ -24,7 +24,9 @@ THE SOFTWARE.
 package com.hyphenated.card.service;
 
 import com.hyphenated.card.domain.Player;
+import org.springframework.util.MultiValueMap;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -52,4 +54,5 @@ public interface PlayerServiceManager {
 
     Optional<Player> findPlayerById(UUID playerId);
 
+    Optional<Player> buyPayments(String name, MultiValueMap<String, List<String>> payments);
 }

@@ -28,7 +28,9 @@ import com.hyphenated.card.domain.Player;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.MultiValueMap;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -81,6 +83,11 @@ public class PlayerServiceManagerImpl implements PlayerServiceManager {
     @Transactional(readOnly = true)
     public Optional<Player> findPlayerById(UUID id) {
         return playerDao.findById(id);
+    }
+
+    @Override
+    public Optional<Player> buyPayments(String name, MultiValueMap<String, List<String>> payments) {
+        return Optional.empty();
     }
 
 
