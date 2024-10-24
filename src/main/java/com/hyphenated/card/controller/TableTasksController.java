@@ -43,18 +43,18 @@ public class TableTasksController {
                 template.convertAndSendToUser(uuid.toString(), GAME_STOPPED, true));
     }
 
-    public void playerFolded(String name, UUID gameId) {
-        getPlayerUuidStream(gameId).forEach(uuid -> template.convertAndSendToUser(uuid.toString(), PLAYER_FOLDED, name));
+    public void playerFolded(PlayerDTO playerDTO, UUID gameId) {
+        getPlayerUuidStream(gameId).forEach(uuid -> template.convertAndSendToUser(uuid.toString(), PLAYER_FOLDED, playerDTO));
     }
 
-    public void playerCalled(String name, UUID gameId) {
+    public void playerCalled(PlayerBet playerBet, UUID gameId) {
         getPlayerUuidStream(gameId).forEach(uuid ->
-                template.convertAndSendToUser(uuid.toString(), PLAYER_CALLED, name));
+                template.convertAndSendToUser(uuid.toString(), PLAYER_CALLED, playerBet));
     }
 
-    public void playerChecked(String name, UUID gameId) {
+    public void playerChecked(PlayerDTO playerDTO, UUID gameId) {
         getPlayerUuidStream(gameId).forEach(uuid ->
-                template.convertAndSendToUser(uuid.toString(), PLAYER_CHECKED, name));
+                template.convertAndSendToUser(uuid.toString(), PLAYER_CHECKED, playerDTO));
     }
 
     public void playerBet(PlayerBet playerBet, UUID gameId) {

@@ -6,6 +6,7 @@ import com.hyphenated.card.domain.Game;
 import com.hyphenated.card.domain.Player;
 import com.hyphenated.card.domain.PlayerHand;
 import com.hyphenated.card.dto.PlayerBet;
+import com.hyphenated.card.dto.PlayerDTO;
 import com.hyphenated.card.enums.PlayerHandRoundAction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ExecutorConfigurationSupport;
@@ -94,18 +95,19 @@ public class ScheduledPlayerActionServiceImpl implements ScheduledPlayerActionSe
         };
         if (nextPlayer == null) {
             pokerHandService.handleNextGameStatus(game);
-            tableTasksController.gameStopped(game.getId());
+            tableTasksController.gameStopped(game.getId());//TODO:CHECK if needed
         } else {
-            String playerName = player.getName();
+            PlayerDTO playerDTO = player.getPlayerDTO();
             UUID gameId = game.getId();
             PlayerHand playerHand = player.getPlayerHand();
             PlayerHand nextPlayerHand = nextPlayer.getPlayerHand();
             switch (action) {
-                case FOLD -> tableTasksController.playerFolded(playerName, gameId);
-                case CALL_ANY, CALL_CURRENT -> tableTasksController.playerCalled(playerName, gameId);
-                case CHECK -> tableTasksController.playerChecked(playerName, gameId);
+                case FOLD -> tableTasksController.playerFolded(playerDTO, gameId);
+                case CALL_ANY, CALL_CURRENT ->
+                        tableTasksController.playerCalled(new PlayerBet(playerDTO, betAmount), gameId);
+                case CHECK -> tableTasksController.playerChecked(playerDTO, gameId);
                 case BET -> tableTasksController.playerBet(new PlayerBet(
-                                playerName,
+                                playerDTO,
                                 playerHand.getBetAmount()),
                         gameId);
             }
