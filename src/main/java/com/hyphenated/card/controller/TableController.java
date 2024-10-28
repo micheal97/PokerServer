@@ -34,7 +34,7 @@ import com.hyphenated.card.service.PokerHandService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -81,11 +81,11 @@ public class TableController {
      * by Spring to the JSON object.
      */
     @GetMapping(CREATE)
-    public ResponseEntity<UUID> createGame(@RequestHeader(GAME_NAME) String gameName,
-                                           @RequestHeader(PASSWORD) String password,
-                                           @RequestHeader(MAX_PLAYERS) int maxPlayers,
-                                           @RequestHeader(BLIND_LEVEL) BlindLevel blindLevel,
-                                           @RequestHeader(PLAYER_ID_STRING) String playerIdString) {
+    public ResponseEntity<UUID> createGame(@RequestParam(GAME_NAME) String gameName,
+                                           @RequestParam(PASSWORD) String password,
+                                           @RequestParam(MAX_PLAYERS) int maxPlayers,
+                                           @RequestParam(BLIND_LEVEL) BlindLevel blindLevel,
+                                           @RequestParam(PLAYER_ID_STRING) String playerIdString) {
         //TODO:evaluate if player is allowed and setTableCoins not linked to playerAccount
         UUID playerId = UUID.fromString(playerIdString);
         Optional<Player> optionalPlayer = playerServiceManager.findPlayerById(playerId);
@@ -108,7 +108,7 @@ public class TableController {
      * example: {"success":true}
      */
     @GetMapping(START_PRIVATE_GAME)
-    public @ResponseBody ResponseEntity<Object> startGame(@RequestHeader(GAME_ID_STRING) String gameIdString, @RequestHeader(PLAYER_ID_STRING) String playerIdString) {
+    public @ResponseBody ResponseEntity<Object> startGame(@RequestParam(GAME_ID_STRING) String gameIdString, @RequestParam(PLAYER_ID_STRING) String playerIdString) {
         UUID gameId = UUID.fromString(gameIdString);
         UUID playerId = UUID.fromString(playerIdString);
         Optional<Game> optionalGame = gameService.findGameById(gameId);
