@@ -42,7 +42,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 import static com.hyphenated.card.Header.*;
 import static com.hyphenated.card.UrlConstant.*;
@@ -90,7 +89,7 @@ public class PlayerController {
 
     @GetMapping(BUY)
     public ResponseEntity<PlayerDTO> buy(@RequestParam(NAME) String playerId, @RequestParam(PAYMENTS) List<String> payments) {
-        Optional<Player> optionalPlayer = playerService.findPlayerById(UUID.fromString(playerId));
+        Optional<Player> optionalPlayer = playerService.findPlayerById(playerId);
         return optionalPlayer.map(player -> {
                     payments.forEach(payment ->
                             player.addPayment(Payment.valueOf(payment)));
@@ -105,10 +104,10 @@ public class PlayerController {
      * Have a new player join a game.
      */
     @GetMapping(JOIN)
-    public ResponseEntity<GameDTO> joinGame(@RequestParam(GAME_ID_STRING) String gameIdString, @RequestParam(PLAYER_ID_STRING) String playerIdString, @RequestParam(STARTING_TABLE_CHIPS) String startingTableChips1) {
+    public ResponseEntity<GameDTO> joinGame(@RequestParam(GAME_ID_STRING) String gameId, @RequestParam(PLAYER_ID_STRING) String playerId, @RequestParam(STARTING_TABLE_CHIPS) String startingTableChips1) {
         int startingTableChips = Integer.parseInt(startingTableChips1);
-        UUID gameId = UUID.fromString(gameIdString);
-        UUID playerId = UUID.fromString(playerIdString);
+
+
         Optional<Game> optionalGame = gameService.findGameById(gameId);
         Optional<Player> optionalPlayer = playerService.findPlayerById(playerId);
         if (optionalGame.isPresent() && optionalPlayer.isPresent()) {
@@ -137,9 +136,9 @@ public class PlayerController {
      * Example: {"success":true}
      */
     @GetMapping(FOLD)
-    public ResponseEntity<Object> fold(@RequestParam(GAME_ID_STRING) String gameIdString, @RequestParam(PLAYER_ID_STRING) String playerIdString) {
-        UUID gameId = UUID.fromString(gameIdString);
-        UUID playerId = UUID.fromString(playerIdString);
+    public ResponseEntity<Object> fold(@RequestParam(GAME_ID_STRING) String gameId, @RequestParam(PLAYER_ID_STRING) String playerId) {
+
+
         Optional<Game> optionalGame = gameService.findGameById(gameId);
         Optional<Player> optionalPlayer = playerService.findPlayerById(playerId);
         if (optionalGame.isPresent() && optionalPlayer.isPresent()) {
@@ -160,9 +159,9 @@ public class PlayerController {
      * Example: {"success":true,"chips":xxx}
      */
     @GetMapping(CALL_ANY)
-    public ResponseEntity<Object> callAny(@RequestParam(GAME_ID_STRING) String gameIdString, @RequestParam(PLAYER_ID_STRING) String playerIdString) {
-        UUID gameId = UUID.fromString(gameIdString);
-        UUID playerId = UUID.fromString(playerIdString);
+    public ResponseEntity<Object> callAny(@RequestParam(GAME_ID_STRING) String gameId, @RequestParam(PLAYER_ID_STRING) String playerId) {
+
+
         Optional<Game> optionalGame = gameService.findGameById(gameId);
         Optional<Player> optionalPlayer = playerService.findPlayerById(playerId);
         if (optionalGame.isPresent() && optionalPlayer.isPresent()) {
@@ -173,10 +172,10 @@ public class PlayerController {
     }
 
     @GetMapping(CALL_CURRENT)
-    public ResponseEntity<Object> callCurrent(@RequestParam(GAME_ID_STRING) String gameIdString, @RequestParam(PLAYER_ID_STRING) String playerIdString, @RequestParam(CALL_AMOUNT) String callAmount1) {
+    public ResponseEntity<Object> callCurrent(@RequestParam(GAME_ID_STRING) String gameId, @RequestParam(PLAYER_ID_STRING) String playerId, @RequestParam(CALL_AMOUNT) String callAmount1) {
         int callAmount = Integer.parseInt(callAmount1);
-        UUID gameId = UUID.fromString(gameIdString);
-        UUID playerId = UUID.fromString(playerIdString);
+
+
         Optional<Game> optionalGame = gameService.findGameById(gameId);
         Optional<Player> optionalPlayer = playerService.findPlayerById(playerId);
         if (optionalGame.isPresent() && optionalPlayer.isPresent()) {
@@ -198,9 +197,9 @@ public class PlayerController {
      * Example: {"success":false}
      */
     @GetMapping(CHECK)
-    public ResponseEntity<Object> check(@RequestParam(GAME_ID_STRING) String gameIdString, @RequestParam(PLAYER_ID_STRING) String playerIdString) {
-        UUID gameId = UUID.fromString(gameIdString);
-        UUID playerId = UUID.fromString(playerIdString);
+    public ResponseEntity<Object> check(@RequestParam(GAME_ID_STRING) String gameId, @RequestParam(PLAYER_ID_STRING) String playerId) {
+
+
         Optional<Game> optionalGame = gameService.findGameById(gameId);
         Optional<Player> optionalPlayer = playerService.findPlayerById(playerId);
         if (optionalGame.isPresent() && optionalPlayer.isPresent()) {
@@ -230,9 +229,9 @@ public class PlayerController {
      * Example: {"success":true,"chips":xxx}
      */
     @GetMapping(BET)
-    public ResponseEntity<Object> bet(@RequestParam(GAME_ID_STRING) String gameIdString, @RequestParam(PLAYER_ID_STRING) String playerIdString, @RequestParam(BET_AMOUNT) int betAmount) {
-        UUID gameId = UUID.fromString(gameIdString);
-        UUID playerId = UUID.fromString(playerIdString);
+    public ResponseEntity<Object> bet(@RequestParam(GAME_ID_STRING) String gameId, @RequestParam(PLAYER_ID_STRING) String playerId, @RequestParam(BET_AMOUNT) int betAmount) {
+
+
         Optional<Game> optionalGame = gameService.findGameById(gameId);
         Optional<Player> optionalPlayer = playerService.findPlayerById(playerId);
         if (optionalGame.isPresent() && optionalPlayer.isPresent()) {
@@ -253,9 +252,9 @@ public class PlayerController {
      */
 
     @GetMapping(LEAVE)
-    public ResponseEntity<Object> leave(@RequestParam(GAME_ID_STRING) String gameIdString, @RequestParam(PLAYER_ID_STRING) String playerIdString) {
-        UUID gameId = UUID.fromString(gameIdString);
-        UUID playerId = UUID.fromString(playerIdString);
+    public ResponseEntity<Object> leave(@RequestParam(GAME_ID_STRING) String gameId, @RequestParam(PLAYER_ID_STRING) String playerId) {
+
+
         Optional<Game> optionalGame = gameService.findGameById(gameId);
         Optional<Player> optionalPlayer = playerService.findPlayerById(playerId);
         if (optionalGame.isPresent() && optionalPlayer.isPresent()) {

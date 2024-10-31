@@ -28,11 +28,10 @@ import com.hyphenated.card.domain.Player;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 public interface GameService {
 
-    Optional<Game> findGameById(UUID id);
+    Optional<Game> findGameById(String id);
 
     Game saveGame(Game game);
 

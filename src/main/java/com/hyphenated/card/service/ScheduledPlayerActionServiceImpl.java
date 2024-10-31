@@ -17,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -98,7 +97,7 @@ public class ScheduledPlayerActionServiceImpl implements ScheduledPlayerActionSe
             tableTasksController.gameStopped(game.getId());//TODO:CHECK if needed
         } else {
             PlayerDTO playerDTO = player.getPlayerDTO();
-            UUID gameId = game.getId();
+            String gameId = game.getId();
             PlayerHand playerHand = player.getPlayerHand();
             PlayerHand nextPlayerHand = nextPlayer.getPlayerHand();
             switch (action) {

@@ -41,7 +41,6 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
 import static com.hyphenated.card.Header.*;
 import static com.hyphenated.card.UrlConstant.CREATE;
@@ -81,13 +80,13 @@ public class TableController {
      * by Spring to the JSON object.
      */
     @GetMapping(CREATE)
-    public ResponseEntity<UUID> createGame(@RequestParam(GAME_NAME) String gameName,
-                                           @RequestParam(PASSWORD) String password,
-                                           @RequestParam(MAX_PLAYERS) int maxPlayers,
-                                           @RequestParam(BLIND_LEVEL) BlindLevel blindLevel,
-                                           @RequestParam(PLAYER_ID_STRING) String playerIdString) {
+    public ResponseEntity<String> createGame(@RequestParam(GAME_NAME) String gameName,
+                                             @RequestParam(PASSWORD) String password,
+                                             @RequestParam(MAX_PLAYERS) int maxPlayers,
+                                             @RequestParam(BLIND_LEVEL) BlindLevel blindLevel,
+                                             @RequestParam(PLAYER_ID_STRING) String playerId) {
         //TODO:evaluate if player is allowed and setTableCoins not linked to playerAccount
-        UUID playerId = UUID.fromString(playerIdString);
+
         Optional<Player> optionalPlayer = playerServiceManager.findPlayerById(playerId);
         if (optionalPlayer.isPresent()) {
             Player player = optionalPlayer.get();
@@ -108,9 +107,8 @@ public class TableController {
      * example: {"success":true}
      */
     @GetMapping(START_PRIVATE_GAME)
-    public @ResponseBody ResponseEntity<Object> startGame(@RequestParam(GAME_ID_STRING) String gameIdString, @RequestParam(PLAYER_ID_STRING) String playerIdString) {
-        UUID gameId = UUID.fromString(gameIdString);
-        UUID playerId = UUID.fromString(playerIdString);
+    public @ResponseBody ResponseEntity<Object> startGame(@RequestParam(GAME_ID_STRING) String gameId, @RequestParam(PLAYER_ID_STRING) String playerId) {
+
         Optional<Game> optionalGame = gameService.findGameById(gameId);
         Optional<Player> optionalPlayer = playerServiceManager.findPlayerById(playerId);
         if (optionalGame.isPresent() && optionalPlayer.isPresent()) {

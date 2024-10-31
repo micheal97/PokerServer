@@ -28,7 +28,6 @@ import org.springframework.util.MultiValueMap;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 /**
  * Class that handles Player interactions that are not related to Player Actions.
@@ -52,7 +51,7 @@ public interface PlayerServiceManager {
 
     Optional<Player> findPlayerByNameAndPassword(String name, String password);
 
-    Optional<Player> findPlayerById(UUID playerId);
+    Optional<Player> findPlayerById(String playerId);
 
     Optional<Player> buyPayments(String name, MultiValueMap<String, List<String>> payments);
 }

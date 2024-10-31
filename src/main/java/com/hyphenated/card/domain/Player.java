@@ -23,6 +23,7 @@ THE SOFTWARE.
 */
 package com.hyphenated.card.domain;
 
+import com.hyphenated.card.SharedUtils;
 import com.hyphenated.card.dto.PlayerDTO;
 import com.hyphenated.card.enums.Payment;
 import jakarta.persistence.*;
@@ -30,7 +31,6 @@ import lombok.*;
 
 import javax.annotation.Nullable;
 import java.util.Collections;
-import java.util.UUID;
 
 @Getter
 @Setter
@@ -41,8 +41,7 @@ import java.util.UUID;
 public class Player implements Comparable<Player> {
     //TODO: userSession, password
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
+    private String id = new SharedUtils().generateIdStrings();
     @NonNull
     private final String name;
     @NonNull

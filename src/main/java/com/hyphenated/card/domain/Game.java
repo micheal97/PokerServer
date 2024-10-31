@@ -1,5 +1,6 @@
 package com.hyphenated.card.domain;
 
+import com.hyphenated.card.SharedUtils;
 import com.hyphenated.card.dto.GameDTO;
 import com.hyphenated.card.enums.BlindLevel;
 import com.hyphenated.card.enums.GameStatus;
@@ -9,7 +10,6 @@ import lombok.*;
 import javax.annotation.Nullable;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.UUID;
 
 @Getter
 @Entity
@@ -18,8 +18,7 @@ import java.util.UUID;
 @NoArgsConstructor(force = true, access = AccessLevel.PROTECTED)
 public class Game {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
+    private String id = new SharedUtils().generateIdStrings();
     @Enumerated(EnumType.STRING)
     @NonNull
     private final BlindLevel blindLevel;

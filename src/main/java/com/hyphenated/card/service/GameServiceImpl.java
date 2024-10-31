@@ -33,7 +33,10 @@ import org.springframework.scheduling.concurrent.ScheduledExecutorTask;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -52,7 +55,7 @@ public class GameServiceImpl implements GameService {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<Game> findGameById(UUID id) {
+    public Optional<Game> findGameById(String id) {
         return gameDao.findById(id);
     }
 

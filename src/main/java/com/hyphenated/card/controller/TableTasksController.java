@@ -10,7 +10,6 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
 import java.util.Map;
-import java.util.UUID;
 import java.util.stream.Stream;
 
 import static com.hyphenated.card.WsUrlConstant.*;
@@ -21,69 +20,69 @@ public class TableTasksController {
     @Autowired
     private SimpMessagingTemplate template;
     @Setter
-    private Map<UUID, Game> games = Map.of();
+    private Map<String, Game> games = Map.of();
 
-    private Stream<UUID> getPlayerUuidStream(UUID gameId) {
+    private Stream<String> getPlayerUuidStream(String gameId) {
         return games.get(gameId).getPlayers().stream().map(Player::getId);
     }
 
-    public void playerJoined(String name, UUID gameId) {
+    public void playerJoined(String name, String gameId) {
         getPlayerUuidStream(gameId).forEach(uuid ->
-                template.convertAndSendToUser(uuid.toString(), PLAYER_JOINED, name));
+                template.convertAndSendToUser(uuid, PLAYER_JOINED, name));
     }
 
 
-    public void playerLeft(String name, UUID gameId) {
+    public void playerLeft(String name, String gameId) {
         getPlayerUuidStream(gameId).forEach(uuid ->
-                template.convertAndSendToUser(uuid.toString(), PLAYER_LEFT, name));
+                template.convertAndSendToUser(uuid, PLAYER_LEFT, name));
     }
 
-    public void gameStopped(UUID gameId) {
+    public void gameStopped(String gameId) {
         getPlayerUuidStream(gameId).forEach(uuid ->
-                template.convertAndSendToUser(uuid.toString(), GAME_STOPPED, true));
+                template.convertAndSendToUser(uuid, GAME_STOPPED, true));
     }
 
-    public void playerFolded(PlayerDTO playerDTO, UUID gameId) {
-        getPlayerUuidStream(gameId).forEach(uuid -> template.convertAndSendToUser(uuid.toString(), PLAYER_FOLDED, playerDTO));
+    public void playerFolded(PlayerDTO playerDTO, String gameId) {
+        getPlayerUuidStream(gameId).forEach(uuid -> template.convertAndSendToUser(uuid, PLAYER_FOLDED, playerDTO));
     }
 
-    public void playerCalled(PlayerBet playerBet, UUID gameId) {
+    public void playerCalled(PlayerBet playerBet, String gameId) {
         getPlayerUuidStream(gameId).forEach(uuid ->
-                template.convertAndSendToUser(uuid.toString(), PLAYER_CALLED, playerBet));
+                template.convertAndSendToUser(uuid, PLAYER_CALLED, playerBet));
     }
 
-    public void playerChecked(PlayerDTO playerDTO, UUID gameId) {
+    public void playerChecked(PlayerDTO playerDTO, String gameId) {
         getPlayerUuidStream(gameId).forEach(uuid ->
-                template.convertAndSendToUser(uuid.toString(), PLAYER_CHECKED, playerDTO));
+                template.convertAndSendToUser(uuid, PLAYER_CHECKED, playerDTO));
     }
 
-    public void playerBet(PlayerBet playerBet, UUID gameId) {
+    public void playerBet(PlayerBet playerBet, String gameId) {
         getPlayerUuidStream(gameId).forEach(uuid ->
-                template.convertAndSendToUser(uuid.toString(), PLAYER_BET, playerBet));
+                template.convertAndSendToUser(uuid, PLAYER_BET, playerBet));
     }
 
-    public void playersTurn(String name, UUID gameId) {
+    public void playersTurn(String name, String gameId) {
         getPlayerUuidStream(gameId).forEach(uuid ->
-                template.convertAndSendToUser(uuid.toString(), PLAYERS_TURN, name));
+                template.convertAndSendToUser(uuid, PLAYERS_TURN, name));
     }
 
-    public void sendFlop(Cards flop, UUID gameId) {
-        getPlayerUuidStream(gameId).forEach(uuid -> template.convertAndSendToUser(uuid.toString(), FLOP, flop.getCards().stream().map(Card::name).toList()));
+    public void sendFlop(Cards flop, String gameId) {
+        getPlayerUuidStream(gameId).forEach(uuid -> template.convertAndSendToUser(uuid, FLOP, flop.getCards().stream().map(Card::name).toList()));
     }
 
-    public void sendTurn(Card turn, UUID gameId) {
-        getPlayerUuidStream(gameId).forEach(uuid -> template.convertAndSendToUser(uuid.toString(), TURN, turn.name()));
+    public void sendTurn(Card turn, String gameId) {
+        getPlayerUuidStream(gameId).forEach(uuid -> template.convertAndSendToUser(uuid, TURN, turn.name()));
     }
 
-    public void sendRiver(Card river, UUID gameId) {
-        getPlayerUuidStream(gameId).forEach(uuid -> template.convertAndSendToUser(uuid.toString(), RIVER, river.name()));
+    public void sendRiver(Card river, String gameId) {
+        getPlayerUuidStream(gameId).forEach(uuid -> template.convertAndSendToUser(uuid, RIVER, river.name()));
     }
 
-    public void endGame(PlayerCards playerCards, UUID gameId, PlayersWonOrderDTO playersWonOrder) {
-        getPlayerUuidStream(gameId).forEach(uuid -> template.convertAndSendToUser(uuid.toString(), AMOUNTS_WON, new EndGameDTO(playerCards, playersWonOrder)));
+    public void endGame(PlayerCards playerCards, String gameId, PlayersWonOrderDTO playersWonOrder) {
+        getPlayerUuidStream(gameId).forEach(uuid -> template.convertAndSendToUser(uuid, AMOUNTS_WON, new EndGameDTO(playerCards, playersWonOrder)));
     }
 
-    public void sendCardsToUser(Cards cards, UUID userId) {
-        template.convertAndSendToUser(userId.toString(), CARDS, cards);
+    public void sendCardsToUser(Cards cards, String userId) {
+        template.convertAndSendToUser(userId, CARDS, cards);
     }
 }

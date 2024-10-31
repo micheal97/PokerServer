@@ -32,7 +32,6 @@ import org.springframework.util.MultiValueMap;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 public class PlayerServiceManagerImpl implements PlayerServiceManager {
@@ -81,7 +80,7 @@ public class PlayerServiceManagerImpl implements PlayerServiceManager {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<Player> findPlayerById(UUID id) {
+    public Optional<Player> findPlayerById(String id) {
         return playerDao.findById(id);
     }
 

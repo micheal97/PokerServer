@@ -261,7 +261,7 @@ public class PokerHandServiceImpl implements PokerHandService {
             lastEntry = new TreeMap(playerBetAmountMap.headMap(lastEntry.getKey())).lastEntry();
             optionalLowerEntry = Optional.ofNullable(playerBetAmountMap.lowerEntry(lastEntry.getKey()));
         }
-        return new PlayersWonOrderDTO(winnersMap);
+        return new PlayersWonOrderDTO(new HashMap<>(winnersMap));
     }
 }
 
