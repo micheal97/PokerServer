@@ -15,7 +15,7 @@ public class DataSourceConfig {
         dataSource.setDriverClassName("com.mysql.cj.jdbc.Driver");
         dataSource.setUrl("jdbc:mysql://localhost:3306/poker");
         dataSource.setUsername("root");
-        dataSource.setPassword("Hoiddeifotzn1!");
+        dataSource.setPassword("meiPass3!");
         return dataSource;
     }
 }
