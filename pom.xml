@@ -61,7 +61,7 @@
             <artifactId>dto</artifactId>
             <version>1.0-Snapshot</version>
             <scope>system</scope>
-            <systemPath>/Users/user/Desktop/dto/build/libs/dto-1.0-SNAPSHOT.jar</systemPath>
+            <systemPath>C:\Users\Unga\Documents\PokerDto\build\libs\dto-1.0-SNAPSHOT.jar</systemPath>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-stdlib -->
@@ -306,7 +306,7 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>3.3.4</version>
+                <version>3.2.3</version>
             </plugin>
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
