@@ -43,4 +43,8 @@ public class Board extends CardHolder {
         super(flop1, flop2, flop3, turn, river);
     }
 
+    public Board(Card[] cards) {
+        super(cards);
+    }
+
 }

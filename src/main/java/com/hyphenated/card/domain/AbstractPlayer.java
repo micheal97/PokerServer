@@ -25,79 +25,40 @@ package com.hyphenated.card.domain;
 
 import com.hyphenated.card.SharedUtils;
 import com.hyphenated.card.dto.PlayerDTO;
-import com.hyphenated.card.enums.Payment;
-import jakarta.persistence.*;
-import lombok.*;
+import com.hyphenated.card.enums.PlayerNames;
+import jakarta.persistence.Id;
+import jakarta.persistence.Transient;
+import lombok.Getter;
+import lombok.NonNull;
 
 import javax.annotation.Nullable;
+import java.util.Arrays;
 import java.util.Collections;
 
 @Getter
-@Setter
-@Entity
-@NoArgsConstructor(force = true, access = AccessLevel.PROTECTED)
-@RequiredArgsConstructor
-public class Player extends AbstractPlayer {
+public abstract class AbstractPlayer implements Comparable<AbstractPlayer> {
     //TODO: userSession, password
     @Id
     private String id = SharedUtils.generateIdStrings();
     @NonNull
-    private final String name;
-    @NonNull
-    private final String password;
-    @Setter(value = AccessLevel.NONE)
-    private int chips = 1000;
-    @Setter(value = AccessLevel.NONE)
+    private final String name = Arrays.stream(PlayerNames.values()).findAny().get() + "_NPC";
+    private int chips;
     private int tableChips;
     private int gamePosition;
-    private boolean sittingOut;
-    @Embedded
-    @Nullable
+    private boolean sittingOut = false;
     private PlayerHand playerHand;
     private boolean playerInButton;
-    private boolean privateGameCreator;
-    @Setter(value = AccessLevel.NONE)
-    private int strikes;
-    @ManyToOne
-    @JoinColumn
     private Game game;
     @Transient
     @Nullable
     private Thread thread;
-    @Embedded
-    @Setter(value = AccessLevel.NONE)
-    private PlayerPayments payments;
-
-    public void addPayment(Payment payment) {
-        payments.getPayments().add(payment);
-    }
-
-    public void addTableChips(int tableChips) {
-        this.tableChips += tableChips;
-    }
-
-    public void removeTableChips(int tableChips) {
-        this.tableChips -= tableChips;
-    }
-
-    public void addChips(int chips) {
-        this.chips += chips;
-    }
-
-    public void removeChips(int chips) {
-        this.chips -= chips;
-    }
 
     public PlayerDTO getPlayerDTO() {
         return new PlayerDTO(id, name, chips, tableChips, gamePosition, sittingOut, Collections.emptyList());
     }
 
-    public void addStrike() {
-        strikes++;
+    @Override
+    public int compareTo(AbstractPlayer p) {
+        return Integer.compare(this.getGamePosition(), p.getGamePosition());
     }
-
-    public void clearStrikes() {
-        strikes = 0;
-    }
-
 }

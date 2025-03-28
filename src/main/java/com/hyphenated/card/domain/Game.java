@@ -18,7 +18,7 @@ import java.util.TreeSet;
 @NoArgsConstructor(force = true, access = AccessLevel.PROTECTED)
 public class Game {
     @Id
-    private String id = new SharedUtils().generateIdStrings();
+    private String id = SharedUtils.generateIdStrings();
     @Enumerated(EnumType.STRING)
     @NonNull
     private final BlindLevel blindLevel;

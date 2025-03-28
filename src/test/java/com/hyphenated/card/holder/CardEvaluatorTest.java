@@ -23,6 +23,8 @@ THE SOFTWARE.
 */
 package com.hyphenated.card.holder;
 
+import com.hyphenated.card.SharedUtils;
+import com.hyphenated.card.dto.Cards;
 import com.hyphenated.card.enums.Card;
 import com.hyphenated.card.enums.HandType;
 import com.hyphenated.card.eval.HandRank;
@@ -30,6 +32,12 @@ import com.hyphenated.card.eval.HandRankEvaluator;
 import com.hyphenated.card.eval.TwoPlusTwoHandEvaluator;
 import junit.framework.TestCase;
 import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Stream;
 
 /**
  * JUnit tests for the Seven Card Poker Hand Evaluation.
@@ -226,5 +234,79 @@ public class CardEvaluatorTest extends TestCase {
         HandRank rank1 = evaluator.evaluate(b, h1);
         HandRank rank2 = evaluator.evaluate(b, h2);
         return rank1.compareTo(rank2);
+    }
+
+    @Test
+    public void testPrintRanking5() {
+        List<Card> knownCards = new ArrayList<>();
+        List<Card> myCards = List.of(Card.ACE_OF_DIAMONDS, Card.ACE_OF_CLUBS);
+        List<Card> boardCards = List.of(Card.ACE_OF_HEARTS, Card.EIGHT_OF_DIAMONDS, Card.FOUR_OF_CLUBS, Card.NINE_OF_DIAMONDS, Card.JACK_OF_CLUBS);
+        knownCards.addAll(myCards);
+        knownCards.addAll(boardCards);
+        printRanking(new Hand(Card.ACE_OF_DIAMONDS, Card.ACE_OF_CLUBS), new Board(boardCards.toArray(new Card[0])), SharedUtils.findAllRemainingCombinations(new Cards(knownCards), SharedUtils.findAllRemainingCards(new Cards(knownCards))), 5);
+    }
+
+    @Test
+    public void testPrintRanking4() {
+        List<Card> knownCards = new ArrayList<>();
+        List<Card> myCards = List.of(Card.ACE_OF_DIAMONDS, Card.ACE_OF_CLUBS);
+        List<Card> boardCards = List.of(Card.ACE_OF_HEARTS, Card.EIGHT_OF_DIAMONDS, Card.FOUR_OF_CLUBS, Card.NINE_OF_DIAMONDS);
+        knownCards.addAll(myCards);
+        knownCards.addAll(boardCards);
+        printRanking(new Hand(Card.ACE_OF_DIAMONDS, Card.ACE_OF_CLUBS), new Board(boardCards.toArray(new Card[0])), SharedUtils.findAllRemainingCombinations(new Cards(knownCards), SharedUtils.findAllRemainingCards(new Cards(knownCards))), 5);
+    }
+
+    @Test
+    public void testPrintRanking3() {
+        List<Card> knownCards = new ArrayList<>();
+        List<Card> myCards = List.of(Card.ACE_OF_DIAMONDS, Card.ACE_OF_CLUBS);
+        List<Card> boardCards = List.of(Card.ACE_OF_HEARTS, Card.EIGHT_OF_DIAMONDS, Card.FOUR_OF_CLUBS);
+        knownCards.addAll(myCards);
+        knownCards.addAll(boardCards);
+        printRanking(new Hand(Card.ACE_OF_DIAMONDS, Card.ACE_OF_CLUBS), new Board(boardCards.toArray(new Card[0])), SharedUtils.findAllRemainingCombinations(new Cards(knownCards), SharedUtils.findAllRemainingCards(new Cards(knownCards))), 5);
+    }
+
+    @Test
+    public void testPrintRanking0() {
+        List<Card> knownCards = new ArrayList<>();
+        List<Card> myCards = List.of(Card.ACE_OF_DIAMONDS, Card.ACE_OF_CLUBS);
+        List<Card> boardCards = List.of(Card.ACE_OF_HEARTS, Card.EIGHT_OF_DIAMONDS, Card.FOUR_OF_CLUBS);
+        knownCards.addAll(myCards);
+        knownCards.addAll(boardCards);
+        printRanking(new Hand(Card.ACE_OF_DIAMONDS, Card.ACE_OF_CLUBS), new Board(boardCards.toArray(new Card[0])), SharedUtils.findAllRemainingCombinations(new Cards(knownCards), SharedUtils.findAllRemainingCards(new Cards(knownCards))), 5);
+    }
+
+    private void printRanking(Hand myHand, Board board, Stream<Cards> cards, int cardsPlayed) {
+        AtomicLong wins = new AtomicLong();
+        AtomicLong losses = new AtomicLong();
+        AtomicLong draws = new AtomicLong();
+        cards.map(Cards::getCards).map(cards1 -> {
+            List<Card> possibleBoard = cards1.subList(2, 7 - cardsPlayed);
+            List<Card> possibleBoard1 = new ArrayList<>();
+            possibleBoard1.addAll(possibleBoard);
+            possibleBoard1.addAll(Arrays.stream(board.getCards()).toList());
+            Card[] cards2 = possibleBoard1.toArray(new Card[0]);
+            int compared1 = compare(myHand, new Hand(cards1.get(0), cards1.get(1)), new Board(cards2));
+            if (compared1 == 0) return null;
+            /*TODO: prettyPrint
+               if (compared1 < 0) {
+                System.out.print((cards1.get(0).toString() + ", " + cards1.get(1).toString()));
+                System.out.println();
+            }
+             */
+            return compared1 > 0;
+        }).forEach(result -> {
+            if (result == null) {
+                draws.set(draws.get() + 1);
+            } else {
+                if (result) {
+                    wins.set(wins.get() + 1);
+                } else {
+                    losses.set(losses.get() + 1);
+                }
+            }
+        });
+        long possibilities = wins.get() + losses.get() + draws.get();
+        System.out.println("possibilities: " + possibilities + "; wins: " + wins.get() * 1000 / possibilities + " ‰; losses: " + losses.get() * 1000 / possibilities + " ‰; draws: " + draws.get() * 1000 / possibilities + " ‰;");
     }
 }
