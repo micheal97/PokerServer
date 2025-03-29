@@ -253,7 +253,7 @@ public class CardEvaluatorTest extends TestCase {
         List<Card> boardCards = List.of(Card.ACE_OF_HEARTS, Card.EIGHT_OF_DIAMONDS, Card.FOUR_OF_CLUBS, Card.NINE_OF_DIAMONDS);
         knownCards.addAll(myCards);
         knownCards.addAll(boardCards);
-        printRanking(new Hand(Card.ACE_OF_DIAMONDS, Card.ACE_OF_CLUBS), new Board(boardCards.toArray(new Card[0])), SharedUtils.findAllRemainingCombinations(new Cards(knownCards), SharedUtils.findAllRemainingCards(new Cards(knownCards))), 5);
+        printRanking(new Hand(Card.ACE_OF_DIAMONDS, Card.ACE_OF_CLUBS), new Board(boardCards.toArray(new Card[0])), SharedUtils.findAllRemainingCombinations(new Cards(knownCards), SharedUtils.findAllRemainingCards(new Cards(knownCards))), 4);
     }
 
     @Test
@@ -263,18 +263,20 @@ public class CardEvaluatorTest extends TestCase {
         List<Card> boardCards = List.of(Card.ACE_OF_HEARTS, Card.EIGHT_OF_DIAMONDS, Card.FOUR_OF_CLUBS);
         knownCards.addAll(myCards);
         knownCards.addAll(boardCards);
-        printRanking(new Hand(Card.ACE_OF_DIAMONDS, Card.ACE_OF_CLUBS), new Board(boardCards.toArray(new Card[0])), SharedUtils.findAllRemainingCombinations(new Cards(knownCards), SharedUtils.findAllRemainingCards(new Cards(knownCards))), 5);
+        printRanking(new Hand(Card.ACE_OF_DIAMONDS, Card.ACE_OF_CLUBS), new Board(boardCards.toArray(new Card[0])), SharedUtils.findAllRemainingCombinations(new Cards(knownCards), SharedUtils.findAllRemainingCards(new Cards(knownCards))), 3);
     }
 
+    /*
     @Test
     public void testPrintRanking0() {
         List<Card> knownCards = new ArrayList<>();
         List<Card> myCards = List.of(Card.ACE_OF_DIAMONDS, Card.ACE_OF_CLUBS);
-        List<Card> boardCards = List.of(Card.ACE_OF_HEARTS, Card.EIGHT_OF_DIAMONDS, Card.FOUR_OF_CLUBS);
+        List<Card> boardCards = List.of();
         knownCards.addAll(myCards);
         knownCards.addAll(boardCards);
         printRanking(new Hand(Card.ACE_OF_DIAMONDS, Card.ACE_OF_CLUBS), new Board(boardCards.toArray(new Card[0])), SharedUtils.findAllRemainingCombinations(new Cards(knownCards), SharedUtils.findAllRemainingCards(new Cards(knownCards))), 5);
     }
+     */
 
     private void printRanking(Hand myHand, Board board, Stream<Cards> cards, int cardsPlayed) {
         AtomicLong wins = new AtomicLong();

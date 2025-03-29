@@ -56,13 +56,6 @@
             <artifactId>hibernate-search-mapper-orm-orm6</artifactId>
             <version>6.2.3.Final</version>
         </dependency>
-        <dependency>
-            <groupId>com.hyphenated.card</groupId>
-            <artifactId>dto</artifactId>
-            <version>1.0-Snapshot</version>
-            <scope>system</scope>
-            <systemPath>C:\Users\Unga\Documents\PokerDto\build\libs\dto-1.0-SNAPSHOT.jar</systemPath>
-        </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-stdlib -->
         <dependency>
@@ -262,7 +255,11 @@
             <version>5.10.2</version>
             <scope>test</scope>
         </dependency><!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-data-jpa -->
-
+        <dependency>
+            <groupId>com.hyphenated</groupId>
+            <artifactId>card</artifactId>
+            <version>1.6</version>
+        </dependency>
     </dependencies>
 
     <build>
