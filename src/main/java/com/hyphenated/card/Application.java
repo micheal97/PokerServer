@@ -10,9 +10,17 @@ import com.hyphenated.card.eval.TwoPlusTwoHandEvaluator;
 import com.hyphenated.card.holder.Board;
 import com.hyphenated.card.holder.Hand;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 
@@ -20,13 +28,58 @@ import java.util.stream.Stream;
 public class Application {
 
     public static void main(String[] args) {
+        /*
         if (args.length > 0) {
             String card = args[0];
             testPrintRanking0(card);
         } else {
             System.out.println("No card provided.");
         }
-        //SpringApplication.run(Application.class, args);
+        SpringApplication.run(Application.class, args);
+         */
+        write(LocalDateTime.now().toString(), "percents");
+        String url = "jdbc:mysql://localhost:3306/mydatabase";
+        String user = "appuser";
+        String password = "app_password";
+        int batchSize = 500_000;
+        int onePercent = 200;
+        AtomicInteger batchCounter = new AtomicInteger(1);
+        AtomicInteger totalCounter = new AtomicInteger(1);
+        try {
+            Connection conn = DriverManager.getConnection(url, user, password);
+            PreparedStatement stmt = conn.prepareStatement("INSERT INTO boards (first,second,third,fourth,fifth,sixth) VALUES (?,?,?,?,?,?)");
+            SharedUtils.findAllCombinationsWithOneMissing().forEach(integers -> {
+                AtomicInteger counter = new AtomicInteger(1);
+                integers.forEach(integer -> {
+                    try {
+                        stmt.setInt(counter.get(), integer);  // Store as int
+                    } catch (SQLException e) {
+                        throw new RuntimeException(e);
+                    }
+                    counter.getAndIncrement();
+                });
+                try {
+                    stmt.addBatch();
+                    if (totalCounter.get() % batchSize == 0) {
+                        stmt.executeBatch();
+                        conn.commit();
+                        totalCounter.set(1);
+                        batchCounter.getAndIncrement();
+                        if (batchCounter.get() % onePercent == 0) {
+                            write(batchCounter.get() / onePercent + "%; " + LocalDateTime.now(), "percents");
+                        }
+                    }
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            stmt.executeBatch();
+            conn.commit();
+            stmt.close();
+            conn.close();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static void testPrintRanking0(String card) {
@@ -52,15 +105,12 @@ public class Application {
     }
 
     private static void write(String stringToWrite, String path) {
-        /*
-        String filePath = "/app/data/card_" + path + ".txt"; // Path inside the container
+        String filePath = "/home/myserver44/card_" + path + ".txt"; // Path inside the container
         try (FileWriter writer = new FileWriter(filePath, true)) { // Append mode
             writer.write(stringToWrite + "\n");
         } catch (IOException e) {
             System.err.println("Error writing to file: " + e.getMessage());
         }
-
-         */
         System.out.println(stringToWrite);
     }
 
